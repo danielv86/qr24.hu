@@ -4,11 +4,13 @@ import { QR_MENU_ORDER, getQrType } from '#shared/qr/content'
 import type { QrTypeId } from '#shared/qr/types'
 import type { ContentFaq } from '#shared/content/types'
 
-const typeOptions = QR_MENU_ORDER.map(id => getQrType(id))
-const type = ref<QrTypeId>('url')
+/** A tömeges listában a szöveg az első, mert ehhez kell a legkevesebb oszlop. */
+const BULK_TYPE_ORDER: QrTypeId[] = ['text', ...QR_MENU_ORDER.filter(id => id !== 'text')]
+const typeOptions = BULK_TYPE_ORDER.map(id => getQrType(id))
+const type = ref<QrTypeId>('text')
 const definition = computed(() => getQrType(type.value))
 
-const raw = ref(bulkSample('url'))
+const raw = ref(bulkSample('text'))
 const result = computed(() => parseBulkInput(raw.value, { type: type.value, limit: BULK_LIMIT }))
 const { customization } = useQrCustomization()
 const { isWorking, progress, error, downloadZip, downloadCsv, printSheet } = useBulkDownload()
