@@ -7,6 +7,7 @@ import type {
 } from '#shared/types/api'
 import { DYNAMIC_QR_STATUS_LABELS, type DynamicQrStatus } from '#shared/qr/dynamic'
 import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
+import { getPlan } from '#shared/qr/plans'
 import { downloadDynamicQr } from '~/utils/qr-download'
 
 definePageMeta({ layout: 'fiok', middleware: 'auth' })
@@ -106,8 +107,10 @@ const form = reactive({
 })
 
 const plan = computed(() => summary.value?.plan || user.value?.plan || 'free')
-const canUseExpiry = computed(() => plan.value !== 'free')
-const canUseCampaign = computed(() => plan.value !== 'free')
+const planFeatures = computed(() => getPlan(plan.value))
+const canUseExpiry = computed(() => planFeatures.value.expiresAt)
+const canUseCampaign = computed(() => planFeatures.value.campaigns)
+const canExport = computed(() => planFeatures.value.csvExport)
 const quotaReached = computed(() => {
   const used = summary.value?.totalQrCodes ?? 0
   const limit = summary.value?.planLimit ?? 5
@@ -216,6 +219,71 @@ async function copyShortUrl(item: UserDynamicQrItem) {
   }
 }
 
+const exporting = ref(false)
+
+/** A szűrt lista összes sorát CSV-be menti, 50-esével lapozva. */
+async function exportCsv() {
+  if (exporting.value || !canExport.value) return
+  exporting.value = true
+  actionError.value = ''
+  try {
+    const rows: UserDynamicQrItem[] = []
+    const maxRows = 2000
+    let currentPage = 1
+    let pages = 1
+    do {
+      const response = await $fetch<ApiSuccess<UserDynamicQrList>>('/api/dynamic-qr', {
+        query: {
+          page: currentPage,
+          perPage: 50,
+          q: debouncedSearch.value,
+          status: status.value,
+          sort: sort.value,
+          dir: dir.value,
+        },
+      })
+      rows.push(...response.data.items)
+      pages = response.data.totalPages
+      currentPage += 1
+    } while (currentPage <= pages && rows.length < maxRows)
+
+    const header = ['Név', 'Rövid kód', 'Rövid cím', 'Cél-URL', 'Állapot', 'Kategória', 'Kampány', 'Beolvasások', 'Létrehozva', 'Utolsó beolvasás']
+    const lines = [header, ...rows.map(item => [
+      item.name || '',
+      item.shortCode,
+      item.shortUrl,
+      item.targetUrl,
+      DYNAMIC_QR_STATUS_LABELS[item.status],
+      item.category || '',
+      item.campaign || '',
+      String(item.scans),
+      item.createdAt,
+      item.lastScanAt || '',
+    ])]
+    const csv = lines.map(line => line.map(csvCell).join(';')).join('\r\n')
+
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `qr24-qr-kodok-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.append(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    actionMessage.value = `${rows.length} QR-kód exportálva CSV-fájlba.`
+  } catch (error) {
+    actionError.value = apiErrorMessage(error, 'Az exportálás nem sikerült.')
+  } finally {
+    exporting.value = false
+  }
+}
+
+function csvCell(value: string): string {
+  const text = String(value ?? '')
+  return /[";\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
 const downloading = ref<string | null>(null)
 async function download(item: UserDynamicQrItem, format: 'png' | 'svg') {
   downloading.value = `${item.shortCode}:${format}`
@@ -242,6 +310,11 @@ function formatDate(value: string | null): string {
   return new Date(value).toLocaleDateString('hu-HU', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+function toggleStatus(item: UserDynamicQrItem) {
+  if (busyCode.value) return
+  return runAction(item, item.status === 'active' ? 'pause' : 'activate')
+}
+
 function statusClass(value: DynamicQrStatus): string {
   if (value === 'active') return 'bg-emerald-50 text-emerald-700'
   if (value === 'paused') return 'bg-amber-50 text-amber-700'
@@ -263,10 +336,6 @@ function statusClass(value: DynamicQrStatus): string {
           </span>
         </p>
       </div>
-      <NuxtLink to="/fiok?uj=1" class="btn-primary" @click="showCreate = true">
-        <Icon name="lucide:plus" class="h-4 w-4" aria-hidden="true" />
-        Új QR-kód
-      </NuxtLink>
     </div>
 
     <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -320,6 +389,22 @@ function statusClass(value: DynamicQrStatus): string {
           <Icon :name="dir === 'desc' ? 'lucide:arrow-down-wide-narrow' : 'lucide:arrow-up-narrow-wide'" class="h-4 w-4" aria-hidden="true" />
         </button>
       </label>
+      <div class="flex items-center gap-2 border-slate-200 sm:border-l sm:pl-3">
+        <button
+          type="button"
+          class="btn-ghost px-2.5 py-2 text-xs"
+          :disabled="exporting || !canExport"
+          :title="canExport ? 'A szűrt lista exportálása CSV-be' : 'A CSV-export a Pro csomagtól elérhető.'"
+          @click="exportCsv"
+        >
+          <Icon :name="exporting ? 'lucide:loader-circle' : 'lucide:download'" :class="['h-4 w-4', { 'animate-spin': exporting }]" aria-hidden="true" />
+          <span class="hidden sm:inline">Exportálás</span>
+        </button>
+        <button type="button" class="btn-primary px-4 py-2.5 text-xs" @click="showCreate = true">
+          <Icon name="lucide:plus" class="h-4 w-4" aria-hidden="true" />
+          Új
+        </button>
+      </div>
     </div>
 
     <div class="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Állapot szerinti szűrés">
@@ -396,28 +481,27 @@ function statusClass(value: DynamicQrStatus): string {
             </p>
           </div>
 
-          <div class="flex shrink-0 flex-wrap items-center gap-1 self-start">
+          <div class="flex shrink-0 flex-wrap items-center gap-1 self-start sm:self-center">
             <button
-              v-if="item.status === 'active'"
+              v-if="item.status !== 'archived'"
               type="button"
-              class="btn-ghost px-2 py-1.5 text-xs"
+              role="switch"
+              :aria-checked="item.status === 'active'"
+              :aria-label="item.status === 'active' ? 'Szüneteltetés' : 'Újraaktiválás'"
               :disabled="busyCode === item.shortCode"
-              title="Szüneteltetés"
-              @click="runAction(item, 'pause')"
+              :class="[
+                'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
+                item.status === 'active' ? 'bg-brand-600' : 'bg-slate-300',
+              ]"
+              @click="toggleStatus(item)"
             >
-              <Icon name="lucide:pause" class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only sm:not-sr-only">Szünet</span>
-            </button>
-            <button
-              v-else-if="item.status !== 'archived'"
-              type="button"
-              class="btn-ghost px-2 py-1.5 text-xs"
-              :disabled="busyCode === item.shortCode"
-              title="Újraaktiválás"
-              @click="runAction(item, 'activate')"
-            >
-              <Icon name="lucide:play" class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only sm:not-sr-only">Aktív</span>
+              <span
+                :class="[
+                  'inline-block transform rounded-full bg-white shadow transition-transform',
+                  item.status === 'active' ? 'translate-x-[22px]' : 'translate-x-[4px]',
+                ]"
+                style="height: 18px; width: 18px"
+              />
             </button>
             <NuxtLink :to="`/fiok/qr/${item.shortCode}`" class="btn-ghost px-2 py-1.5 text-xs" title="Részletek és statisztika">
               <Icon name="lucide:chart-no-axes-column" class="h-4 w-4" aria-hidden="true" />

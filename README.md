@@ -13,9 +13,11 @@ A két app külön `package.json`-nal, külön `yarn.lock`-kal és külön `.out
 rendelkezik, tehát külön is buildelhető és telepíthető. A `frontend/` nem tartalmaz
 adatbázis-hozzáférést vagy Prismát – minden adatot a backend API-n keresztül ér el.
 
-A böngésző továbbra is **ugyanazon az originon** ér mindent el: a Nuxt a `/api/**`
-hívásokat a backendre proxyzza, a `/r/<kód>` rövid címeket pedig egy vékony átjáró
-továbbítja. Így a httpOnly süti és a CSRF-védelem változatlanul működik, nincs
+A böngésző továbbra is **ugyanazon az originon** ér mindent el: a Nuxt a backend
+saját API-útvonalait (`/api/auth`, `/api/dynamic-qr`, `/api/dashboard`,
+`/api/admin`, `/api/settings`, `/api/health`, `/api/__sitemap__`) proxyzza, a
+`/r/<kód>` rövid címeket pedig egy vékony átjáró továbbítja. Minden más `/api/*`
+útvonal (például a `@nuxt/icon` `/api/_nuxt_icon` végpontja) a frontendnél marad. Így a httpOnly süti és a CSRF-védelem változatlanul működik, nincs
 szükség CORS-ra.
 
 ## Fejlesztői indítás

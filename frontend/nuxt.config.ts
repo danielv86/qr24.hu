@@ -97,6 +97,26 @@ export default defineNuxtConfig({
     clientBundle: {
       scan: true,
       sizeLimitKb: 256,
+      // A dinamikusan kötött (`:name`) ikonokat a scanner nem látja, ezért
+      // ezeket itt soroljuk fel, hogy ne 404-eljen a kliens bundle.
+      icons: [
+        'lucide:qr-code',
+        'lucide:chart-no-axes-column',
+        'lucide:globe',
+        'lucide:code-xml',
+        'lucide:credit-card',
+        'lucide:settings',
+        'lucide:book-open',
+        'lucide:log-out',
+        'lucide:arrow-up-right',
+        'lucide:arrow-down-wide-narrow',
+        'lucide:arrow-up-narrow-wide',
+        'lucide:loader-circle',
+        'lucide:download',
+        'lucide:plus',
+        'lucide:check',
+        'lucide:copy',
+      ],
     },
   },
 
@@ -136,8 +156,17 @@ export default defineNuxtConfig({
     // Az egyedi típust megszüntettük; a szöveg típus fedi le ugyanazt az esetet.
     '/egyedi-qr-kod-generator': { redirect: { to: '/szoveg-qr-kod-generator', statusCode: 301 } },
     '/': { headers: { 'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=600' } },
-    // A Nitro backend kiszolgálása ugyanazon az originon.
-    '/api/**': { proxy: `${backendUrl}/api/**` },
+    // A Nitro backend kiszolgálása ugyanazon az originon. Csak a backend saját
+    // útvonalait proxyzzuk: a `/api/_nuxt_icon` (@nuxt/icon) és a Nuxt belső
+    // végpontjai a frontendnél maradnak.
+    '/api/auth/**': { proxy: `${backendUrl}/api/auth/**` },
+    '/api/dynamic-qr/**': { proxy: `${backendUrl}/api/dynamic-qr/**` },
+    '/api/dashboard/**': { proxy: `${backendUrl}/api/dashboard/**` },
+    '/api/admin/**': { proxy: `${backendUrl}/api/admin/**` },
+    '/api/settings/**': { proxy: `${backendUrl}/api/settings/**` },
+    '/api/__sitemap__/**': { proxy: `${backendUrl}/api/__sitemap__/**` },
+    '/api/health': { proxy: `${backendUrl}/api/health` },
+    '/api/**': { headers: { 'Cache-Control': 'no-store' } },
     '/admin/**': { robots: false, headers: { 'Cache-Control': 'no-store' } },
     '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
     '/**': {
