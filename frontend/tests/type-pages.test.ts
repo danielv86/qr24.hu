@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { ALL_LANDING_PAGES, getLandingPage } from '../shared/content/landing-pages'
-import { QR_TYPE_PATHS } from '../shared/content/type-pages'
-import { QR_TYPES } from '../shared/qr/content'
+import { ALL_LANDING_PAGES, getLandingPage } from '#shared/content/landing-pages'
+import { QR_TYPE_PATHS } from '#shared/content/type-pages'
+import { QR_TYPES } from '#shared/qr/content'
 
 describe('típusonkénti SEO-oldalak', () => {
   it('minden QR-típushoz tartozik saját aloldal', () => {

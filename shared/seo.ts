@@ -11,28 +11,10 @@ export interface StructuredDataInput {
   updated?: string
 }
 
-export interface BreadcrumbEntry {
-  name: string
-  path: string
-}
-
 export function absoluteUrl(siteUrl: string, path: string): string {
   const base = siteUrl.replace(/\/$/, '')
   if (path === '/' || !path) return `${base}/`
   return `${base}${path.startsWith('/') ? path : `/${path}`}`
-}
-
-export function buildBreadcrumbs(siteUrl: string, items: BreadcrumbEntry[]) {
-  return {
-    '@type': 'BreadcrumbList',
-    '@id': `${absoluteUrl(siteUrl, items[items.length - 1]?.path || '/')}#breadcrumb`,
-    itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      item: absoluteUrl(siteUrl, item.path),
-    })),
-  }
 }
 
 export function buildStructuredData(input: StructuredDataInput) {

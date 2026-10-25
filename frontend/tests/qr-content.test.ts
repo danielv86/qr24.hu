@@ -8,8 +8,8 @@ import {
   isValidIban,
   normalizePhone,
   parseHttpUrl,
-} from '../shared/qr/content'
-import type { QrFormValues, QrTypeId } from '../shared/qr/types'
+} from '#shared/qr/content'
+import type { QrFormValues, QrTypeId } from '#shared/qr/types'
 
 function build(type: QrTypeId, values: QrFormValues) {
   return buildQrContent(type, { ...createDefaultValues(type), ...values })

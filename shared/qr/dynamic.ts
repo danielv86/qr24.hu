@@ -42,11 +42,6 @@ export function effectiveStatus(state: DynamicQrStateLike, now: Date = new Date(
   return 'active'
 }
 
-/** Csak aktív kód irányíthat a cél-URL-re. */
-export function isRedirectable(state: DynamicQrStateLike, now: Date = new Date()): boolean {
-  return effectiveStatus(state, now) === 'active'
-}
-
 /** A lejárat beállításához használt segédfüggvény (helyi ISO sztring → Date). */
 export function parseExpiry(value: string | null | undefined): Date | null {
   if (!value) return null

@@ -25,11 +25,6 @@ export function getSessionSecret(): string {
   return secret(String(useRuntimeConfig().sessionSecret || ''), 'A munkamenet-titok (NUXT_SESSION_SECRET)')
 }
 
-export function getHashSecret(): string {
-  const value = String(useRuntimeConfig().hashSecret || useRuntimeConfig().sessionSecret || '').trim()
-  return secret(value, 'A hashelési titok (NUXT_HASH_SECRET)')
-}
-
 export function isDynamicQrEnabled(): boolean {
   return useRuntimeConfig().public.dynamicQrEnabled !== false
 }

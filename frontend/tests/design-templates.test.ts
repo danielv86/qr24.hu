@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CUSTOMIZATION } from '../shared/qr/customization'
-import { DESIGN_TEMPLATES, applyDesignTemplate, getDesignTemplate } from '../shared/qr/design-templates'
-import { FRAME_OPTIONS } from '../shared/qr/customization'
+import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
+import { DESIGN_TEMPLATES, applyDesignTemplate, getDesignTemplate } from '#shared/qr/design-templates'
+import { FRAME_OPTIONS } from '#shared/qr/customization'
 
 const customization = {
   ...DEFAULT_CUSTOMIZATION,

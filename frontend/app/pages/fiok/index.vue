@@ -153,16 +153,6 @@ async function submitCreate() {
   }
 }
 
-function apiErrorMessage(error: unknown, fallback: string): string {
-  const data = (error as { data?: { error?: { message?: string, details?: Record<string, string> } } }).data
-  const details = data?.error?.details
-  if (details) {
-    const first = Object.values(details)[0]
-    if (first) return first
-  }
-  return data?.error?.message || fallback
-}
-
 function closeCreated() {
   created.value = null
   if (route.query.uj) router.replace({ query: {} })

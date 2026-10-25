@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildFramedSvg, escapeXml, getFrameLayout } from '../app/utils/qr-frame'
-import { DEFAULT_CUSTOMIZATION } from '../shared/qr/customization'
-import type { QrCustomization } from '../shared/qr/types'
+import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
+import type { QrCustomization } from '#shared/qr/types'
 
 function customization(overrides: Partial<QrCustomization> = {}): QrCustomization {
   return {

@@ -920,13 +920,3 @@ export const LANDING_PAGE_MAP = new Map(ALL_LANDING_PAGES.map(page => [page.slug
 export function getLandingPage(slug: string): LandingPageContent | undefined {
   return LANDING_PAGE_MAP.get(slug.startsWith('/') ? slug : `/${slug}`)
 }
-
-export const INDEXABLE_STATIC_PATHS = [
-  '/',
-  '/dinamikus-qr-kod',
-  '/adatvedelmi-tajekoztato',
-  '/cookie-tajekoztato',
-  '/felhasznalasi-feltetelek',
-  '/impresszum',
-  '/kapcsolat',
-]

@@ -298,10 +298,6 @@ function getSiteUrl(): string {
   return String(useRuntimeConfig().public.siteUrl || 'http://localhost:3000').replace(/\/$/, '')
 }
 
-export async function countUserQrCodes(userId: number | bigint): Promise<number> {
-  return withDb(() => getPrisma().dynamicQrCode.count({ where: { ownerId: BigInt(userId) } }))
-}
-
 export async function assertPlanCapacity(userId: number | bigint, plan: string): Promise<void> {
   const limit = getPlan(plan).maxDynamicQr
   const used = await withDb(() =>

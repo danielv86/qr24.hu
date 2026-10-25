@@ -201,10 +201,6 @@ export function contrastRatio(foreground: string, background: string): number {
 }
 
 /** A csendes zóna arányos átméretezése exportáláshoz. */
-export function marginForSize(margin: number, size: number): number {
-  return Math.max(0, Math.round((margin / 1024) * size))
-}
-
 /**
  * Figyelmeztetések a beolvashatóság veszélyeire. Nem tiltják le a letöltést,
  * de a felületnek jól láthatóan meg kell jelenítenie őket.

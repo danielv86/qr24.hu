@@ -113,13 +113,21 @@ export async function recordScan(
   }
 }
 
-/** Adatmegőrzés: a részletes eseményeket N nap után töröljük, a napi összesítés megmarad. */
-export async function cleanupOldScanEvents(retentionDays = 90): Promise<void> {
+/**
+ * Adatmegőrzés: a részletes eseményeket N nap után töröljük, a napi összesítés
+ * megmarad. A kiszolgálást ez a művelet nem akaszthatja meg, ezért hiba esetén
+ * csak naplózunk.
+ */
+export async function cleanupOldScanEvents(retentionDays = 90): Promise<number> {
   const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000)
   try {
-    await withDb(() => getPrisma().scanEvent.deleteMany({ where: { createdAt: { lt: cutoff } } }))
-  } catch {
-    // A takarítás hibája nem befolyásolja a kiszolgálást.
+    const result = await withDb(() => getPrisma().scanEvent.deleteMany({ where: { createdAt: { lt: cutoff } } }))
+    return result.count
+  } catch (error) {
+    logger.warn('Scan event cleanup failed', {
+      error: error instanceof Error ? { name: error.name, message: error.message } : 'unknown',
+    })
+    return 0
   }
 }
 

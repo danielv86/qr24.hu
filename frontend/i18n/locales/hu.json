@@ -10,8 +10,6 @@
   },
   "actions": {
     "signIn": "Bejelentkezés",
-    "signOut": "Kijelentkezés",
-    "account": "Fiókom",
     "openMenu": "Menü megnyitása",
     "closeMenu": "Menü bezárása"
   },
@@ -35,20 +33,5 @@
     "manageCookies": "Sütibeállítások",
     "tagline": "Ingyenes, regisztráció nélkül használható QR-kód generátor magyarul. A statikus QR-kódok a böngésződben készülnek, az űrlap tartalma nem kerül szerverre.",
     "scanHint": "A QR-kód beolvasásához elég a telefon kamerája – nem kell külön alkalmazás."
-  },
-  "login": {
-    "title": "Bejelentkezés",
-    "noindex": "Bejelentkezés a QR24.hu fiókodba.",
-    "lead": "Jelentkezz be, hogy kezeld a dinamikus QR-kódjaidat és a fiókod beállításait.",
-    "email": "E-mail-cím",
-    "password": "Jelszó",
-    "submit": "Belépés",
-    "loading": "Belépés…",
-    "error": "Sikertelen bejelentkezés. Ellenőrizd az e-mail-címet és a jelszót.",
-    "rateLimited": "Túl sok próbálkozás. Várj egy kicsit, majd próbáld újra.",
-    "backHome": "Vissza a főoldalra",
-    "accountMissing": "Még nincs fiókod? A dinamikus QR-kódokhoz a regisztráció hamarosan elérhető.",
-    "adminNote": "Adminisztrátori fiókkal a belépés után az admin felület nyílik meg.",
-    "databaseMissing": "A bejelentkezéshez az adatbázis még nincs beállítva."
   }
 }

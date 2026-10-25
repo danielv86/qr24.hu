@@ -1641,8 +1641,3 @@ export const POPULAR_QR_TYPES = [
   { id: 'text', label: 'Szöveg', icon: 'lucide:type', path: '/szoveg-qr-kod-generator' },
 ] as const
 
-export function fieldAriaDescribedBy(field: QrFieldDefinition, hasError: boolean): string | undefined {
-  if (hasError) return `${field.key}-error`
-  if (field.help) return `${field.key}-help`
-  return undefined
-}

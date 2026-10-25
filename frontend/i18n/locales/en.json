@@ -10,8 +10,6 @@
   },
   "actions": {
     "signIn": "Sign in",
-    "signOut": "Sign out",
-    "account": "My account",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
@@ -35,20 +33,5 @@
     "manageCookies": "Cookie settings",
     "tagline": "Free QR code generator with no sign-up. Static codes are created in your browser, and the form data never reaches the server.",
     "scanHint": "Your phone camera is enough to scan the code – no extra app needed."
-  },
-  "login": {
-    "title": "Sign in",
-    "noindex": "Sign in to your QR24.hu account.",
-    "lead": "Sign in to manage your dynamic QR codes and account settings.",
-    "email": "Email address",
-    "password": "Password",
-    "submit": "Sign in",
-    "loading": "Signing in…",
-    "error": "Sign-in failed. Check your email address and password.",
-    "rateLimited": "Too many attempts. Wait a moment and try again.",
-    "backHome": "Back to home",
-    "accountMissing": "No account yet? Registration for dynamic QR codes is coming soon.",
-    "adminNote": "With an administrator account the admin area opens after sign-in.",
-    "databaseMissing": "The database is not configured yet, so sign-in is unavailable."
   }
 }

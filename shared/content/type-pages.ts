@@ -626,9 +626,3 @@ function buildPage(seed: TypePageSeed): LandingPageContent {
 }
 
 export const TYPE_PAGES: LandingPageContent[] = SEEDS.map(buildPage)
-
-export const TYPE_PAGE_MAP = new Map(TYPE_PAGES.map(page => [page.slug, page]))
-
-export function getTypePage(slug: string): LandingPageContent | undefined {
-  return TYPE_PAGE_MAP.get(slug.startsWith('/') ? slug : `/${slug}`)
-}
