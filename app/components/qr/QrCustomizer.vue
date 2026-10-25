@@ -132,6 +132,16 @@ function framePreviewClass(frame: FramePreset): string {
   if (frame === 'corners') return 'rounded-none'
   return 'rounded-[4px]'
 }
+
+/** Alapból csak az első öt sablon látszik, egy sorban. */
+const TEMPLATE_PREVIEW_LIMIT = 5
+const showAllTemplates = ref(false)
+const visibleTemplates = computed(() =>
+  showAllTemplates.value ? templates : templates.slice(0, TEMPLATE_PREVIEW_LIMIT),
+)
+const activeTemplate = computed(
+  () => templates.find(template => template.id === customization.value.designTemplate) ?? null,
+)
 </script>
 
 <template>
@@ -142,27 +152,35 @@ function framePreviewClass(frame: FramePreset): string {
     </div>
 
     <div class="mt-4">
-      <h4 class="text-sm font-semibold text-ink">Tervezési sablonok</h4>
+      <div class="flex items-baseline justify-between gap-2">
+        <h4 class="text-sm font-semibold text-ink">Tervezési sablonok</h4>
+        <span v-if="activeTemplate" class="truncate text-[11px] font-semibold text-brand-700">
+          {{ activeTemplate.name }}
+        </span>
+      </div>
       <p class="mt-1 text-xs leading-relaxed text-ink-muted">
         Kattints egy sablonra: a keret, a színek és a formák azonnal érvényesülnek, a tartalom megmarad.
       </p>
-      <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div
+        class="mt-2 grid grid-cols-5 gap-1.5",
+      >
         <button
-          v-for="template in templates"
+          v-for="template in visibleTemplates"
           :key="`template-${template.id}`"
           type="button"
           :aria-pressed="customization.designTemplate === template.id"
+          :title="`${template.name} – ${template.hint}`"
           :class="[
-            'rounded-xl border p-2 text-left transition-colors',
+            'min-w-0 rounded-lg border bg-surface p-1 text-center transition-colors',
             customization.designTemplate === template.id
-              ? 'border-brand-600 bg-brand-50'
-              : 'border-slate-200 bg-surface hover:border-brand-300',
+              ? 'border-brand-600 ring-2 ring-brand-600/25'
+              : 'border-slate-200 hover:border-brand-300',
           ]"
           @click="applyTemplate(template)"
         >
           <span
             :class="[
-              'flex h-[72px] flex-col items-center justify-center gap-1 overflow-hidden p-1.5',
+              'flex aspect-square w-full flex-col items-center justify-center gap-[3px] overflow-hidden p-1',
               framePreviewClass(template.frame),
             ]"
             :style="{
@@ -170,10 +188,11 @@ function framePreviewClass(frame: FramePreset): string {
                 ? '#FFFFFF'
                 : template.frameColor,
               border: template.frame === 'corners' ? `2px solid ${template.frameColor}` : '1px solid rgba(15, 23, 42, 0.08)',
+              containerType: 'inline-size',
             }"
             aria-hidden="true"
           >
-            <span class="block h-10 w-10 rounded-[3px] bg-white p-[2px]">
+            <span class="block min-h-0 w-full flex-1 rounded-[2px] bg-white p-[1px]">
               <QrMiniCode
                 :dot-style="template.dotStyle"
                 :corner-square-style="template.cornerSquareStyle"
@@ -184,16 +203,29 @@ function framePreviewClass(frame: FramePreset): string {
             </span>
             <span
               v-if="template.frameText"
-              class="max-w-full truncate rounded-full px-2 py-[2px] text-[7px] font-bold leading-tight"
-              :style="{ backgroundColor: template.labelColor, color: template.labelTextColor }"
+              class="max-w-full shrink-0 truncate rounded-full px-1 font-bold leading-[1.6]"
+              :style="{
+                backgroundColor: template.labelColor,
+                color: template.labelTextColor,
+                fontSize: 'clamp(4px, 8cqw, 10px)',
+              }"
             >
               {{ template.frameText }}
             </span>
           </span>
-          <span class="mt-1.5 block truncate text-[11px] font-semibold text-ink-soft">{{ template.name }}</span>
-          <span class="mt-0.5 block truncate text-[10px] text-ink-muted">{{ template.hint }}</span>
+          <span class="mt-1 block truncate text-[10px] font-semibold leading-tight text-ink-soft">{{ template.name }}</span>
         </button>
       </div>
+      <button
+        v-if="templates.length > TEMPLATE_PREVIEW_LIMIT"
+        type="button"
+        class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+        :aria-expanded="showAllTemplates"
+        @click="showAllTemplates = !showAllTemplates"
+      >
+        <Icon :name="showAllTemplates ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="h-3.5 w-3.5" aria-hidden="true" />
+        {{ showAllTemplates ? 'Kevesebb sablon' : `További ${templates.length - TEMPLATE_PREVIEW_LIMIT} sablon` }}
+      </button>
     </div>
 
     <div
