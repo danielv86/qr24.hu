@@ -35,7 +35,7 @@ onMounted(render)
 
 <template>
   <figure class="min-w-0 text-center">
-    <div ref="holder" class="overflow-hidden rounded-lg border border-slate-200 bg-white p-2" />
+    <div ref="holder" class="w-full overflow-hidden rounded-lg border border-slate-200 bg-white p-2 [&>svg]:h-auto [&>svg]:w-full" />
     <p v-if="failed" class="mt-1 text-xs text-rose-600">A kód előnézete nem sikerült.</p>
     <figcaption class="mt-1.5 truncate text-xs font-medium text-ink-soft" :title="label">
       {{ label }}
