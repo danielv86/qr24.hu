@@ -139,15 +139,15 @@ useContentSeo({
             </p>
             <p class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-medium text-ink-muted">
               <span class="inline-flex items-center gap-1.5">
-                <Icon name="lucide:check" class="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+                <Icon name="lucide:layout-grid" class="h-4 w-4 text-brand-600" aria-hidden="true" />
                 28 QR-kód típus
               </span>
               <span class="inline-flex items-center gap-1.5">
-                <Icon name="lucide:check" class="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+                <Icon name="lucide:user-x" class="h-4 w-4 text-emerald-600" aria-hidden="true" />
                 Nincs regisztráció
               </span>
               <span class="inline-flex items-center gap-1.5">
-                <Icon name="lucide:check" class="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+                <Icon name="lucide:download" class="h-4 w-4 text-amber-600" aria-hidden="true" />
                 5 exportformátum
               </span>
             </p>
