@@ -22,7 +22,7 @@ interface TypeGroup {
 const groups: TypeGroup[] = [
   {
     title: 'Kapcsolat és névjegy',
-    ids: ['contact', 'vcard', 'business', 'whatsapp', 'social', 'links'],
+    ids: ['contact', 'vcard', 'business', 'whatsapp', 'social'],
   },
   {
     title: 'Web, tartalom és média',
@@ -83,6 +83,28 @@ useContentSeo({
 
     <div class="container-page py-8">
       <div class="space-y-10">
+        <section aria-labelledby="tools-heading">
+          <h2 id="tools-heading" class="text-xl font-semibold">Eszközök</h2>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <NuxtLink
+              to="/tomeges-qr-kod-generator"
+              class="card group flex items-start gap-3 border-brand-200 bg-brand-50/60 p-4 transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lift"
+            >
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+                <Icon name="lucide:layers" class="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span class="min-w-0">
+                <span class="flex items-center gap-2 text-sm font-semibold text-ink group-hover:text-brand-800">
+                  Tömeges QR-kód generálás
+                  <span class="rounded-full bg-brand-600 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Új</span>
+                </span>
+                <span class="mt-0.5 block text-xs leading-relaxed text-ink-muted">
+                  Akár 100 kód egyszerre listából vagy CSV-ből, ZIP-ben vagy A4-es nyomtatóíven.
+                </span>
+              </span>
+            </NuxtLink>
+          </div>
+        </section>
         <section v-for="(group, index) in byGroup" :key="group.title" :aria-labelledby="`group-${index}`">
           <h2 :id="`group-${index}`" class="text-xl font-semibold">{{ group.title }}</h2>
           <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -15,7 +15,6 @@ export type QrTypeId =
   | 'paypal'
   | 'pdf'
   | 'app'
-  | 'links'
   | 'vcard'
   | 'event-page'
   | 'menu'

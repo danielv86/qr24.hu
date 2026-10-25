@@ -2,6 +2,7 @@
   "nav": {
     "generator": "QR code generator",
     "types": "Types",
+    "bulk": "Bulk",
     "guides": "Guides",
     "faq": "FAQ",
     "dynamic": "Dynamic QR codes",

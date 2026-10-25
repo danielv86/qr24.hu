@@ -159,6 +159,8 @@ export default defineNuxtConfig({
     '/qr-kod-etlaphoz': { redirect: { to: '/etlap-qr-kod-generator', statusCode: 301 } },
     // Az egyedi típust megszüntettük; a szöveg típus fedi le ugyanazt az esetet.
     '/egyedi-qr-kod-generator': { redirect: { to: '/szoveg-qr-kod-generator', statusCode: 301 } },
+    // A Linkek típus helyére a tömeges generátor lépett; a régi cím ráirányít.
+    '/linkek-qr-kod-generator': { redirect: { to: '/tomeges-qr-kod-generator', statusCode: 301 } },
     '/': { headers: { 'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=600' } },
     // Az API és a rövid linkek nem cache-elhetők; a sitemap forrása igen.
     '/api/__sitemap__/**': { headers: { 'Cache-Control': 'public, max-age=3600' } },

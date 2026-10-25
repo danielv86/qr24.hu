@@ -907,25 +907,6 @@ export const QR_TYPES: QrTypeDefinition[] = [
     ],
   },
   {
-    id: 'links',
-    label: 'Linkek',
-    shortLabel: 'Linkek',
-    icon: 'lucide:list',
-    description: 'Több link egy helyen: a QR-kód a linkgyűjtő oldaladat nyitja meg.',
-    examples: 'https://linktr.ee/pelda',
-    fields: [
-      {
-        key: 'url',
-        label: 'Linkgyűjtő oldal címe',
-        type: 'url',
-        placeholder: 'https://linktr.ee/pelda',
-        required: true,
-        inputmode: 'url',
-        help: 'Linktree, Taplink vagy a saját „link in bio” oldalad. A QR-kód mindig egyetlen címet tud tárolni.',
-      },
-    ],
-  },
-  {
     id: 'event-page',
     label: 'Eseményoldal',
     shortLabel: 'Eseményoldal',
@@ -1092,7 +1073,6 @@ export const QR_MENU_ORDER: QrTypeId[] = [
   'paypal',
   'pdf',
   'app',
-  'links',
   'vcard',
   'event-page',
   'menu',
@@ -1178,7 +1158,6 @@ export const SAMPLE_VALUES: Partial<Record<QrTypeId, QrFormValues>> = {
   coupon: { code: 'NYAR2026' },
   pdf: { url: 'https://pelda.hu/arlista.pdf' },
   app: { url: 'https://play.google.com/store/apps' },
-  links: { url: 'https://linktr.ee/pelda' },
   'event-page': { url: 'https://pelda.hu/esemeny' },
   menu: { url: 'https://pelda.hu/etlap' },
   feedback: { url: 'https://forms.gle/pelda' },
@@ -1608,7 +1587,6 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
   if (
     typeId === 'pdf' ||
     typeId === 'app' ||
-    typeId === 'links' ||
     typeId === 'event-page' ||
     typeId === 'menu' ||
     typeId === 'feedback' ||

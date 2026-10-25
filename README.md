@@ -119,6 +119,17 @@ A migrációk futtatása: `yarn db:deploy` (éles) vagy `yarn db:migrate` (fejle
 4. Állapotok: `active` → átirányít; `paused` → QR24-s állapotoldal (200, noindex); `expired` → 410; `archived` → 410.
 5. Statisztika: minden beolvasás napi aggregátumba és eseménytáblába kerül; IP-cím és teljes user-agent nem tárolódik, a botforgalom jelölve van.
 
+## Tömeges QR-kód generátor
+
+`/tomeges-qr-kod-generator` – kliensoldali eszköz: listából vagy CSV-ből
+(soronként `Név;Cím`) akár 100 statikus kód, egyetlen megjelenéssel. Letöltés
+ZIP-ben (PNG 512/1024 vagy SVG, benne `riport.csv`), A4-es nyomtatóíven
+(böngésző nyomtatás) vagy külön CSV-riporttal. A bemenet feldolgozása tiszta
+függvényekben él (`shared/bulk.ts`), a letöltés a
+`app/composables/useBulkDownload.ts`-ben; minden a böngészőben történik, a lista
+nem kerül szerverre. A megszűnt „Linkek” típus régi címe
+(`/linkek-qr-kod-generator`) 301-gyel ide irányít.
+
 ## API
 
 | Végpont | Leírás |

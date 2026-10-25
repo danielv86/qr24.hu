@@ -36,6 +36,7 @@ export default defineApiHandler(async (event) => {
   push('/qr-kod-generator', 0.9, 'weekly')
   push('/qr-kod-keszites', 0.8, 'monthly')
   push('/qr-kod-tipusok', 0.8, 'monthly')
+  push('/tomeges-qr-kod-generator', 0.7, 'monthly')
 
   for (const page of ALL_LANDING_PAGES) {
     push(page.slug, 0.7, 'monthly')

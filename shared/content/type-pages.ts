@@ -25,7 +25,6 @@ export const QR_TYPE_PATHS: Record<QrTypeId, string> = {
   paypal: '/paypal-qr-kod-generator',
   pdf: '/pdf-qr-kod-generator',
   app: '/app-qr-kod-generator',
-  links: '/linkek-qr-kod-generator',
   vcard: '/vcard-qr-kod-generator',
   'event-page': '/esemenyoldal-qr-kod-generator',
   menu: '/etlap-qr-kod-generator',
@@ -104,7 +103,7 @@ const SEEDS: TypePageSeed[] = [
       answer:
         'A QR-kód csak megnyitja a profilt. Ha a fiók privát, a látogató csak a profil fejlécét látja, a tartalmakat nem – a követéshez kattintania kell. Nyilvános márkáknál ez nem probléma.',
     },
-    related: ['links', 'url', 'video'],
+    related: ['url', 'video', 'app'],
   },
   {
     type: 'bank',
@@ -286,33 +285,7 @@ const SEEDS: TypePageSeed[] = [
       answer:
         'Mert a kód egy konkrét áruház linkjét tartalmazza. Androidon az App Store linkje nem nyílik meg, és fordítva. Ilyenkor univerzális linket vagy két külön kódot érdemes használni.',
     },
-    related: ['links', 'url', 'video'],
-  },
-  {
-    type: 'links',
-    slug: QR_TYPE_PATHS.links,
-    kicker: 'Linkgyűjtő',
-    description:
-      'Linkek QR-kód linkgyűjtő oldalhoz. Egy kóddal több linket is megoszthatsz, ha azokat egy link-in-bio oldalon gyűjtöd össze.',
-    summary:
-      'A linkek QR-kód egyetlen címre mutat: a linkgyűjtő oldaladra. Onnan a látogató választhat, melyik linket nyitja meg – így egyetlen kóddal több tartalmat is elérhetővé tehetsz.',
-    detail:
-      'Ez a gyakorlatban a legjobban skálázható megoldás: a QR-kód sosem avul el, mert a mögötte lévő linkgyűjtő oldalon bármikor cserélheted a linkeket.',
-    payload:
-      'A kód a linkgyűjtő oldal https-címét tartalmazza (például Linktree, Taplink vagy saját oldal). A QR-kód csak egy címet tud tárolni, ezért a több linket a gyűjtőoldal kezeli.',
-    useCases: [
-      'Közösségi profilok egy helyen',
-      'Kampányoldalak és akciók',
-      'Bolt, weboldal és hírlevél egy kódon',
-      'Rendezvény összes linkje',
-    ],
-    tip: 'A linkgyűjtő oldal első három linkje kapja a legtöbb kattintást – ezek legyenek a legfontosabb célok.',
-    faq: {
-      question: 'Miért nem tudok több linket közvetlenül a QR-kódba tenni?',
-      answer:
-        'A QR-szabvány egyetlen szöveges tartalmat tárol. Több linket csak egy köztes oldal tud kiszolgálni, ezért használunk linkgyűjtő oldalt. Ez egyben lehetővé teszi a linkek utólagos cseréjét is.',
-    },
-    related: ['social', 'url', 'files'],
+    related: ['url', 'video', 'app'],
   },
   {
     type: 'event-page',
@@ -442,7 +415,7 @@ const SEEDS: TypePageSeed[] = [
       answer:
         'Nem. Egy ingyenes Google Űrlap vagy Microsoft Forms is elegendő; a QR-kód egyszerűen annak nyilvános linkjére mutat.',
     },
-    related: ['feedback', 'event-page', 'links'],
+    related: ['feedback', 'event-page'],
   },
   {
     type: 'files',
@@ -494,7 +467,7 @@ const SEEDS: TypePageSeed[] = [
       answer:
         'A legszélesebb támogatás miatt MP3-at válassz. Ha streaming platformra mutatsz, a látogatónak lehet, hogy fiókja kell a teljes lejátszáshoz.',
     },
-    related: ['video', 'gallery', 'links'],
+    related: ['video', 'gallery', 'url'],
   },
   {
     type: 'gallery',
@@ -546,7 +519,7 @@ const SEEDS: TypePageSeed[] = [
       answer:
         'Nem. „Nem listázott” videó linkkel megnyitható, de privát videóhoz bejelentkezés kell. Nyilvános vagy nem listázott videót használj.',
     },
-    related: ['audio', 'gallery', 'links'],
+    related: ['audio', 'gallery', 'url'],
   },
 ]
 

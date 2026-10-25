@@ -18,8 +18,8 @@ function build(type: QrTypeId, values: QrFormValues) {
 describe('QR type registry', () => {
   it('contains the required unique QR types with fields', () => {
     const ids = QR_TYPES.map(type => type.id)
-    expect(ids).toHaveLength(28)
-    expect(new Set(ids).size).toBe(28)
+    expect(ids).toHaveLength(27)
+    expect(new Set(ids).size).toBe(27)
     for (const type of QR_TYPES) {
       expect(type.fields.length).toBeGreaterThan(0)
       const keys = type.fields.map(field => field.key)
@@ -334,7 +334,7 @@ describe('coupon QR codes', () => {
 })
 
 describe('link-based QR codes', () => {
-  const linkTypes = ['pdf', 'app', 'links', 'event-page', 'menu', 'feedback', 'form', 'files', 'audio', 'gallery', 'video'] as const
+  const linkTypes = ['pdf', 'app', 'event-page', 'menu', 'feedback', 'form', 'files', 'audio', 'gallery', 'video'] as const
 
   it('normalizes the URL for every link type', () => {
     for (const type of linkTypes) {

@@ -7,6 +7,7 @@ const localePath = useLocalePath()
 const links = computed(() => [
   { label: t('nav.generator'), to: localePath('/qr-kod-generator') },
   { label: t('nav.types'), to: localePath('/qr-kod-tipusok') },
+  { label: t('nav.bulk'), to: localePath('/tomeges-qr-kod-generator') },
   { label: t('nav.guides'), to: localePath('/qr-kod-keszites') },
   { label: t('nav.faq'), to: localePath('/qr-kod-generator') + '#gyik' },
 ])

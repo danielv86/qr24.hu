@@ -2,6 +2,7 @@
   "nav": {
     "generator": "QR kód generátor",
     "types": "Típusok",
+    "bulk": "Tömeges",
     "guides": "Útmutatók",
     "faq": "GYIK",
     "dynamic": "Dinamikus QR-kódok",
