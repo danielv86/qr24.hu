@@ -10,7 +10,7 @@ export default defineNitroConfig({
   srcDir: 'server',
   compatibilityDate: '2025-07-15',
   alias: {
-    '#shared': fileURLToPath(new URL('./shared', import.meta.url)),
+    '#shared': fileURLToPath(new URL('../shared', import.meta.url)),
   },
   runtimeConfig: {
     db: {

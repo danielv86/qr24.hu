@@ -1,4 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { fileURLToPath } from 'node:url'
+
+// A közös kód egyetlen példánya a repó gyökerében él; a backend ugyanezt a
+// mappát használja, így nincs másolandó másolat.
+const sharedDir = fileURLToPath(new URL('../shared', import.meta.url))
+
 // Éles buildben a termelési domain az alapértelmezett, hogy a kanonikus URL-ek,
 // a sitemap és a dinamikus rövid linkek ne essenek vissza localhostra.
 const siteUrl =
@@ -11,6 +17,19 @@ const backendUrl = (process.env.NUXT_BACKEND_URL || 'http://127.0.0.1:3001').rep
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+
+  // A Nuxt alapból a frontend/shared mappára köti a #shared aliast; itt a gyökér
+  // shared/ mappára irányítjuk (a típusok a tsConfig.paths alatt követik).
+  alias: {
+    '#shared': sharedDir,
+  },
+
+  vite: {
+    server: {
+      // Fejlesztésben a Vite-nak látnia kell a projektgyökéren kívüli shared/ mappát.
+      fs: { allow: [fileURLToPath(new URL('..', import.meta.url))] },
+    },
+  },
 
   modules: [
     '@nuxtjs/tailwindcss',
@@ -187,6 +206,14 @@ export default defineNuxtConfig({
   typescript: {
     strict: true,
     typeCheck: false,
+    tsConfig: {
+      compilerOptions: {
+        paths: {
+          '#shared': [sharedDir],
+          '#shared/*': [`${sharedDir}/*`],
+        },
+      },
+    },
   },
 
 })

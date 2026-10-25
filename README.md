@@ -5,8 +5,7 @@ A projekt két külön alkalmazásból áll:
 ```
 frontend/   Nuxt 4 (Vue 3, Tailwind, SSR) – a nyilvános oldalak, a generátor és a fiók felülete
 backend/    Nitro 2 (h3, Prisma, MySQL) – API, dinamikus QR-átirányítás, statisztika, admin
-shared/     a két app közös kódja (egy forrás, szinkronizált másolatok)
-scripts/    a monorepo kisegítő szkriptjei
+shared/     a két app közös kódja (egyetlen példány, mindkettő ezt importálja)
 ```
 
 A két app külön `package.json`-nal, külön `yarn.lock`-kal és külön `.output`-tal
@@ -135,17 +134,16 @@ is helyes az állapot.
 ## Megosztott kód
 
 A két alkalmazás közös kódja (QR-típusok, tartalmi szövegek, csomaglimitek,
-SEO-segédek) **egy helyen**, a gyökér [`shared/`](shared) mappában él. A Nuxt és a
-Nitro a saját gyökerén belüli `#shared` aliast használja, ezért a gyökér mappából
-másolat készül a két appba:
+státusz-nevek, API-típusok, SEO-segédek) **egyetlen példányban**, a gyökér
+[`shared/`](shared) mappában él. Mindkét app ugyanerre a mappára mutat, ezért nincs
+másolandó másolat és nem csúszhat el a két oldal:
 
-```bash
-node scripts/sync-shared.mjs          # másolás: shared/ → frontend/shared, backend/shared
-node scripts/sync-shared.mjs --check  # CI-ellenőrzés, eltérésre 1-es kilépés
-```
+- frontend: `#shared` → `../shared` (`nuxt.config.ts` alias, `tsconfig.paths`, vitest-alias)
+- backend: `#shared` → `../shared` (`nitro.config.ts` alias, `tsconfig.paths`, vitest-alias)
 
-Új közös fájlt mindig a gyökér `shared/` alatt hozz létre, majd futtasd a
-szinkronizálást – így nem csúszik el a két másolat.
+Új közös fájlt tehát a gyökér `shared/` alatt hozz létre, és mindkét oldalon
+`#shared/...` útvonallal importáld. A két app ettől még önállóan buildelhető, de a
+repót egyben kell checkoutolni.
 
 ## Csomagok
 

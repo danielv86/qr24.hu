@@ -12,12 +12,13 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "#shared/*": ["./shared/*"]
+      "#shared": ["../shared"],
+      "#shared/*": ["../shared/*"]
     }
   },
   "include": [
     "server/**/*.ts",
-    "shared/**/*.ts",
+    "../shared/**/*.ts",
     "tests/**/*.ts",
     "types/**/*.d.ts",
     "nitro.config.ts",
