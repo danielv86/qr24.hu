@@ -28,6 +28,28 @@ export interface SeoOverride {
   noindex: boolean
 }
 
+export type PlanId = 'free' | 'pro' | 'business'
+
+/**
+ * Egy csomag szabályai. A backend ebből kényszeríti ki a limiteket, a felület
+ * ugyanezt kapja meg a nyilvános beállításokkal, hogy a gombok állapota egyezzen.
+ */
+export interface PlanDefinition {
+  id: PlanId
+  label: string
+  /** Egyszerre használható dinamikus QR-kódok száma. */
+  maxDynamicQr: number
+  /** Hány napra visszamenőleg érhető el a részletes analitika. */
+  analyticsDays: number
+  campaigns: boolean
+  expiresAt: boolean
+  csvExport: boolean
+  apiAccess: boolean
+  customDomain: boolean
+}
+
+export type PlansConfig = Record<PlanId, PlanDefinition>
+
 export interface PublicSettings {
   brandName: string
   siteUrl: string
@@ -35,6 +57,8 @@ export interface PublicSettings {
   adsense: AdsenseSettings
   legal: LegalSettings
   seo: Record<string, SeoOverride>
+  /** Ha valamiért nem érhető el, a felület nem kínál prémium funkciót. */
+  plans?: PlansConfig
 }
 
 export interface ApiSuccess<T> {

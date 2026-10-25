@@ -2,12 +2,12 @@
 import type {
   ApiSuccess,
   DashboardSummary,
+  PlanId,
   UserDynamicQrItem,
   UserDynamicQrList,
 } from '#shared/types/api'
 import { DYNAMIC_QR_STATUS_LABELS, type DynamicQrStatus } from '#shared/qr/dynamic'
 import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
-import { getPlan } from '#shared/qr/plans'
 import { downloadDynamicQr } from '~/utils/qr-download'
 
 definePageMeta({ layout: 'fiok', middleware: 'auth' })
@@ -107,10 +107,13 @@ const form = reactive({
 })
 
 const plan = computed(() => summary.value?.plan || user.value?.plan || 'free')
-const planFeatures = computed(() => getPlan(plan.value))
-const canUseExpiry = computed(() => planFeatures.value.expiresAt)
-const canUseCampaign = computed(() => planFeatures.value.campaigns)
-const canExport = computed(() => planFeatures.value.csvExport)
+// A csomag szabályai a backend beállításaiból jönnek, hogy a felület és a
+// szerveroldali ellenőrzés ugyanazt a limitet lássa.
+const { settings: siteSettings } = useSiteSettings()
+const planFeatures = computed(() => siteSettings.value.plans?.[plan.value as PlanId] ?? null)
+const canUseExpiry = computed(() => planFeatures.value?.expiresAt === true)
+const canUseCampaign = computed(() => planFeatures.value?.campaigns === true)
+const canExport = computed(() => planFeatures.value?.csvExport === true)
 const quotaReached = computed(() => {
   const used = summary.value?.totalQrCodes ?? 0
   const limit = summary.value?.planLimit ?? 5

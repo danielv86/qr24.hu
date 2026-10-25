@@ -1,6 +1,5 @@
 import { getRouterParam, setResponseHeader } from 'h3'
 import { parseExpiry } from '#shared/qr/dynamic'
-import { getPlan } from '#shared/qr/plans'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
 import { getPublicSiteUrl } from '../../utils/config'
@@ -11,6 +10,7 @@ import {
   serializeDynamicQr,
   updateDynamicQr,
 } from '../../utils/dynamic-qr'
+import { getPlanConfig } from '../../utils/plans'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { validateRedirectTarget } from '../../utils/security'
 import { getUserSession } from '../../utils/user-auth'
@@ -42,7 +42,7 @@ export default defineApiHandler(async (event) => {
 
   const changes = await readJsonBody(event, dynamicQrUpdateSchema)
   const user = await getUserSession(event)
-  const plan = getPlan(user?.plan)
+  const plan = await getPlanConfig(user?.plan)
 
   const needsAccount = changes.expiresAt !== undefined || changes.campaign !== undefined
   if (needsAccount && !user) {

@@ -11,7 +11,7 @@ import type {
   UserDynamicQrList,
 } from '#shared/types/api'
 import { effectiveStatus, type DynamicQrStatus } from '#shared/qr/dynamic'
-import { getPlan } from '#shared/qr/plans'
+import { getPlanConfig } from './plans'
 import { AUDIT_LABELS, isAuditAction } from './audit'
 import { ApiProblem } from './api'
 import { getAdminSession } from './auth'
@@ -298,8 +298,9 @@ function getSiteUrl(): string {
   return String(useRuntimeConfig().public.siteUrl || 'http://localhost:3000').replace(/\/$/, '')
 }
 
-export async function assertPlanCapacity(userId: number | bigint, plan: string): Promise<void> {
-  const limit = getPlan(plan).maxDynamicQr
+export async function assertPlanCapacity(userId: number | bigint, planId: string): Promise<void> {
+  const plan = await getPlanConfig(planId)
+  const limit = plan.maxDynamicQr
   const used = await withDb(() =>
     getPrisma().dynamicQrCode.count({
       where: { ownerId: BigInt(userId), status: { not: 'archived' } },
@@ -309,7 +310,7 @@ export async function assertPlanCapacity(userId: number | bigint, plan: string):
     throw new ApiProblem(
       403,
       'plan_limit_reached',
-      `A(z) ${getPlan(plan).label} csomagban legfeljebb ${limit} aktív dinamikus QR-kód lehet.`,
+      `A(z) ${plan.label} csomagban legfeljebb ${limit} aktív dinamikus QR-kód lehet.`,
     )
   }
 }
@@ -318,7 +319,7 @@ export async function getUserAnalytics(
   row: DynamicQrRow,
   options: { days: number; plan: string },
 ): Promise<QrAnalytics> {
-  const plan = getPlan(options.plan)
+  const plan = await getPlanConfig(options.plan)
   const days = Math.max(1, Math.min(options.days, plan.analyticsDays))
   const { from, to } = buildRange(days)
   const prisma = getPrisma()
@@ -381,6 +382,7 @@ export async function getUserAnalytics(
 }
 
 export async function getDashboardSummary(userId: number | bigint, plan: string): Promise<DashboardSummary> {
+  const planDefinition = await getPlanConfig(plan)
   const prisma = getPrisma()
   const ownerId = BigInt(userId)
   const now = new Date()
@@ -436,8 +438,8 @@ export async function getDashboardSummary(userId: number | bigint, plan: string)
     totalScans: Number(aggregate._sum.scans || 0),
     scansLast30Days: Number(recentScans._sum.scans || 0),
     plan,
-    planLabel: getPlan(plan).label,
-    planLimit: getPlan(plan).maxDynamicQr,
+    planLabel: planDefinition.label,
+    planLimit: planDefinition.maxDynamicQr,
     topQrCodes: top.map(item => ({
       shortCode: item.publicId,
       name: item.title || null,

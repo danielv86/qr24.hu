@@ -108,6 +108,12 @@ POST   /api/dynamic-qr/:id/pause|activate|archive
 GET    /api/dynamic-qr/:id/analytics?days=30
 
 GET    /api/dashboard/summary       statisztikai kártyák, top kódok, aktivitás
+GET    /api/settings/public         márka, AdSense, jogi adatok, SEO, csomagok
+
+GET    /api/admin/plans             csomagkonfiguráció (admin)
+PATCH  /api/admin/plans             csomaglimitek/funkciók módosítása (admin)
+POST   /api/admin/maintenance/scan-events  adatmegőrzési takarítás (admin)
+
 GET    /r/:code                     nyilvános átirányítás vagy állapotoldal
 ```
 
@@ -147,9 +153,31 @@ repót egyben kell checkoutolni.
 
 ## Csomagok
 
-A limitek egy helyen: [`shared/qr/plans.ts`](shared/qr/plans.ts). Ingyenes 5 kód,
-Pro 100, Business 5000; a Pro/Business lejáratot és kampánycímkét is enged.
-Fizetés nincs bekötve – a `users.plan` mező állítja a csomagot.
+A csomagok **adatbázisból** jönnek (`settings` tábla, `plans` kulcs), így a limitek
+és funkciókapcsolók build és újraindítás nélkül módosíthatók. Ha a kulcs hiányzik
+vagy hibás, a kódban lévő alapértelmezés él (`backend/server/utils/plans.ts`):
+Ingyenes 5 kód, Pro 100, Business 5000. A backend 30 másodperces cache-sel olvas,
+a felület pedig a `GET /api/settings/public` válaszából kapja ugyanezeket.
+
+Módosítás admin végponton (bejelentkezés után), részlegesen:
+
+```bash
+curl -X PATCH https://qr24.hu/api/admin/plans \
+  -H 'Content-Type: application/json' \
+  -b admin_cookie.txt \
+  -d '{"pro":{"maxDynamicQr":250,"csvExport":true},"free":{"maxDynamicQr":3}}'
+```
+
+vagy közvetlenül az adatbázisban:
+
+```sql
+INSERT INTO settings (setting_key, setting_value)
+VALUES ('plans', '{"pro":{"maxDynamicQr":250}}')
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+```
+
+A `GET /api/admin/plans` a teljes, érvényes konfigurációt adja vissza. Fizetés
+nincs bekötve – a `users.plan` mező állítja, melyik csomag érvényes a fiókra.
 
 ## Éles telepítés
 

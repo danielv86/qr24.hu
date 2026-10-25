@@ -12,6 +12,7 @@ export type AuditAction =
   | 'user.login'
   | 'user.oauth_login'
   | 'user.logout'
+  | 'plans.updated'
 
 export const AUDIT_LABELS: Record<AuditAction, string> = {
   'qr.created': 'QR-kód létrehozva',
@@ -24,6 +25,7 @@ export const AUDIT_LABELS: Record<AuditAction, string> = {
   'user.login': 'Bejelentkezés',
   'user.oauth_login': 'Bejelentkezés külső szolgáltatóval',
   'user.logout': 'Kijelentkezés',
+  'plans.updated': 'Csomagbeállítás módosítva',
 }
 
 /**

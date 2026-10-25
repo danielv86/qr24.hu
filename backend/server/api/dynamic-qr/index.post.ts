@@ -1,9 +1,9 @@
 import { setResponseHeader } from 'h3'
-import { getPlan } from '#shared/qr/plans'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
 import { getPublicSiteUrl, requireDynamicQrEnabled } from '../../utils/config'
 import { assertPlanCapacity, createDynamicQr } from '../../utils/dynamic-qr'
+import { getPlanConfig } from '../../utils/plans'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { parseExpiry } from '#shared/qr/dynamic'
 import { validateRedirectTarget } from '../../utils/security'
@@ -23,7 +23,7 @@ export default defineApiHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
 
   const input = await readJsonBody(event, dynamicQrCreateSchema)
-  const plan = getPlan(user?.plan)
+  const plan = await getPlanConfig(user?.plan)
   const wantsExtras = Boolean(input.description || input.category || input.campaign || input.expiresAt)
   if (!user && wantsExtras) {
     throw new ApiProblem(401, 'login_required', 'A leíráshoz, kategóriához és lejárathoz be kell jelentkezned.')
