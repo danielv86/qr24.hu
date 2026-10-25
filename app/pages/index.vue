@@ -85,6 +85,7 @@ const POPULAR_TYPES = [
   { label: 'SMS küldés', icon: 'lucide:message-square', to: '/sms-qr-kod-generator', color: 'bg-yellow-50 text-yellow-700' },
   { label: 'Közösségi oldalak', icon: 'lucide:share-2', to: '/qr-kod-generator', color: 'bg-pink-50 text-pink-600' },
   { label: 'Szöveg QR-kód', icon: 'lucide:type', to: '/szoveg-qr-kod-generator', color: 'bg-teal-50 text-teal-600' },
+  { label: 'Tömeges QR kód generátor', icon: 'lucide:layers', to: '/tomeges-qr-kod-generator', color: 'bg-indigo-50 text-indigo-600' },
 ]
 
 const INTERNAL_LINKS = [
@@ -101,6 +102,7 @@ const INTERNAL_LINKS = [
   { label: 'Nyomtatásra', to: '/qr-kod-nyomtatasra', text: 'Méret, felbontás, anyag.' },
   { label: 'URL QR-kód', to: '/url-qr-kod-generator', text: 'Webcímek megosztása.' },
   { label: 'Szöveg QR-kód', to: '/szoveg-qr-kod-generator', text: 'Egyszerű szöveges tartalom.' },
+  { label: 'Tömeges QR kód generátor', to: '/tomeges-qr-kod-generator', text: 'Akár 100 kód egyszerre, ZIP-ben.' },
 ]
 
 useContentSeo({
@@ -176,13 +178,13 @@ useContentSeo({
             <div class="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <span class="eyebrow">Népszerű megoldások</span>
-                <h2 id="popular-heading" class="mt-2 text-2xl sm:text-3xl">Népszerű QR-kód típusok</h2>
+                <h2 id="popular-heading" class="mt-2 text-2xl sm:text-3xl">Népszerű QR-kód típusok és eszközök</h2>
               </div>
               <NuxtLink to="/qr-kod-generator" class="text-sm font-medium text-brand-700 hover:text-brand-800">
                 Összes típus a generátorban →
               </NuxtLink>
             </div>
-            <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <NuxtLink
                 v-for="type in POPULAR_TYPES"
                 :key="type.to + type.label"
