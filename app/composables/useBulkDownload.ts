@@ -56,11 +56,12 @@ export function useBulkDownload() {
     customization: QrCustomization,
     format: BulkZipFormat,
     size = 512,
+    typeLabel = '',
   ): Promise<boolean> {
     if (typeof window === 'undefined') return false
     error.value = ''
     if (!rows.length) {
-      error.value = 'Előbb adj meg legalább egy érvényes webcímet.'
+      error.value = 'Előbb adj meg legalább egy érvényes sort.'
       return false
     }
 
@@ -69,7 +70,7 @@ export function useBulkDownload() {
     try {
       const files: Record<string, Uint8Array> = {}
       for (const [index, row] of rows.entries()) {
-        const svg = await renderQrSvg(row.url, customization, size)
+        const svg = await renderQrSvg(row.payload, customization, size)
         const name = bulkFileName(row, index)
         if (format === 'svg') {
           files[`${name}.svg`] = strToU8(svg)
@@ -83,7 +84,7 @@ export function useBulkDownload() {
       }
 
       // A CSV riport a ZIP-be is bekerül, hogy a fájlnevek visszakövethetők legyenek.
-      files['riport.csv'] = strToU8(`\uFEFF${buildBulkCsv(rows)}`)
+      files['riport.csv'] = strToU8(`\uFEFF${buildBulkCsv(rows, typeLabel)}`)
       const zipped = zipSync(files, { level: 0 })
       triggerBlobDownload(
         new Blob([zipped as unknown as BlobPart], { type: 'application/zip' }),
@@ -101,13 +102,13 @@ export function useBulkDownload() {
     }
   }
 
-  function downloadCsv(rows: BulkRow[]): boolean {
+  function downloadCsv(rows: BulkRow[], typeLabel = ''): boolean {
     if (!rows.length) {
-      error.value = 'Előbb adj meg legalább egy érvényes webcímet.'
+      error.value = 'Előbb adj meg legalább egy érvényes sort.'
       return false
     }
     triggerBlobDownload(
-      new Blob([`\uFEFF${buildBulkCsv(rows)}`], { type: 'text/csv;charset=utf-8' }),
+      new Blob([`\uFEFF${buildBulkCsv(rows, typeLabel)}`], { type: 'text/csv;charset=utf-8' }),
       `qr24-tomeges-riport-${dateStamp()}.csv`,
     )
     return true
@@ -122,7 +123,7 @@ export function useBulkDownload() {
     if (typeof window === 'undefined') return false
     error.value = ''
     if (!rows.length) {
-      error.value = 'Előbb adj meg legalább egy érvényes webcímet.'
+      error.value = 'Előbb adj meg legalább egy érvényes sort.'
       return false
     }
 
@@ -131,13 +132,13 @@ export function useBulkDownload() {
     try {
       const cards: string[] = []
       for (const [index, row] of rows.entries()) {
-        const svg = await renderQrSvg(row.url, customization, 512)
+        const svg = await renderQrSvg(row.payload, customization, 512)
         cards.push(`
           <figure class="card">
             <div class="code">${svg}</div>
             <figcaption>
               <strong>${escapeHtml(row.label || `QR-kód ${index + 1}`)}</strong>
-              <span>${escapeHtml(row.url)}</span>
+              <span>${escapeHtml(row.summary)}</span>
             </figcaption>
           </figure>`)
         progress.value = (index + 1) / rows.length

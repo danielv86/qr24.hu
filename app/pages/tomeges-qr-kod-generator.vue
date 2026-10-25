@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { BULK_LIMIT, parseBulkInput } from '#shared/bulk'
+import { BULK_LIMIT, buildSequence, bulkColumns, bulkSample, parseBulkInput } from '#shared/bulk'
+import { QR_MENU_ORDER, getQrType } from '#shared/qr/content'
+import type { QrTypeId } from '#shared/qr/types'
 import type { ContentFaq } from '#shared/content/types'
 
-const SAMPLE = [
-  'Nyitólap;https://qr24.hu',
-  'QR-kód generátor;https://qr24.hu/qr-kod-generator',
-  'Dinamikus QR-kódok;https://qr24.hu/dinamikus-qr-kod',
-  'Árlista;https://qr24.hu/qr-kod-tipusok',
-].join('\n')
+const typeOptions = QR_MENU_ORDER.map(id => getQrType(id))
+const type = ref<QrTypeId>('url')
+const definition = computed(() => getQrType(type.value))
 
-const raw = ref(SAMPLE)
-const result = computed(() => parseBulkInput(raw.value, BULK_LIMIT))
+const raw = ref(bulkSample('url'))
+const result = computed(() => parseBulkInput(raw.value, { type: type.value, limit: BULK_LIMIT }))
 const { customization } = useQrCustomization()
 const { isWorking, progress, error, downloadZip, downloadCsv, printSheet } = useBulkDownload()
 
@@ -18,34 +17,67 @@ const pngSize = ref(512)
 // A többi generátorhoz hasonlóan egyetlen kód látszik előnézetben.
 const previewRow = computed(() => result.value.valid[0] ?? null)
 
+const columns = computed(() => bulkColumns(type.value))
+const placeholder = computed(() => bulkSample(type.value))
+const hint = computed(() => {
+  const keys = definition.value.fields.map(field => field.key)
+  const required = definition.value.fields.filter(field => field.required).map(field => field.key)
+  return `Oszlopok: ${columns.value.join('; ')} – a név (name) elhagyható, és fejlécsor is használható.`
+    + (required.length ? ` Kötelező: ${required.join(', ')}.` : '')
+})
+
+function selectType(next: QrTypeId) {
+  if (type.value === next) return
+  const previousSample = bulkSample(type.value)
+  type.value = next
+  // A mintát csak akkor cseréljük, ha a felhasználó még nem írt saját adatot.
+  if (!raw.value.trim() || raw.value === previousSample) raw.value = bulkSample(next)
+}
+
+const sequence = reactive({ start: 1, end: 10, step: 1, pad: 2, prefix: '', suffix: '', append: false })
+const sequenceValues = computed(() => buildSequence({ ...sequence, limit: BULK_LIMIT }))
+
+function createSequence() {
+  const values = sequenceValues.value
+  if (!values.length) return
+  raw.value = sequence.append && raw.value.trim()
+    ? `${raw.value.replace(/\n+$/, '')}\n${values.join('\n')}`
+    : values.join('\n')
+}
+
 const faqs: ContentFaq[] = [
+  {
+    question: 'Milyen QR-típusokat tud tömegesen generálni?',
+    answer:
+      'A generátor összes típusát: webcím, szöveg, Wi-Fi, vCard névjegy, telefonszám, e-mail, SMS, WhatsApp, banki átutalás, PayPal, kupon, esemény, étlap, PDF, alkalmazás, közösségi profil, helyszín és a többi. A típust felül választod ki, az oszlopok pedig a típus mezőihez igazodnak.',
+  },
+  {
+    question: 'Hogyan adom meg a több mezős típusokat, például a Wi-Fi-t?',
+    answer:
+      'Oszloponként, pontosvesszővel vagy tabulátorral elválasztva: például name;ssid;security;password;hidden. Fejlécsort is írhatsz, akkor a sorrend nem számít, csak az oszlopnevek egyezzenek a mezőkkel. A minta gomb mindig az adott típus helyes oszlopait tölti be.',
+  },
+  {
+    question: 'Mire jó a sorszám-sorozat?',
+    answer:
+      'Egyedi kódok gyors előállítására: megadod a kezdő és végértéket, a lépést, a számjegyek számát, valamint egy elő- és utótagot, és a lista máris készül (például kupon-001 … kupon-100). A sorozatot hozzá is fűzheted a meglévő adatokhoz.',
+  },
   {
     question: 'Hány QR-kódot tudok egyszerre legenerálni?',
     answer:
-      'Egy tételben legfeljebb 100 kód készül el. Ha ennél több kell, bontsd több listára: a beállítások és a formák ugyanazok maradnak, csak a fájlnevek sorszámozása indul újra.',
-  },
-  {
-    question: 'Milyen formátumban kapom meg a kódokat?',
-    answer:
-      'ZIP csomagban PNG (512 vagy 1024 pixel) vagy SVG formátumban, fájlonként egy kóddal, valamint egy CSV-riporttal, amelyben benne van a név, a cím és a fájlnév. Kérhetsz A4-es nyomtatóívet is, ahol a kódok felirattal, vágásvonallal jelennek meg.',
+      'Egy tételben legfeljebb 100 kód készül el. Ha ennél több kell, bontsd több listára: a beállítások ugyanazok maradnak, csak a fájlnevek sorszámozása indul újra.',
   },
   {
     question: 'Feltöltődik a lista valahova?',
     answer:
       'Nem. A kódok a böngésződben készülnek, ugyanazzal a motorral, mint az egyedi generátoré, a lista nem kerül szerverre és nem tároljuk. Fiók nélkül is használható.',
   },
-  {
-    question: 'Mi a különbség a tömeges és a dinamikus QR-kód között?',
-    answer:
-      'A tömeges generátor statikus kódokat készít: a cím bele van égetve a képbe, utólag nem módosítható. Ha a célcím később változhat, dinamikus QR-kódot érdemes használni, mert ott a kód ugyanaz marad, csak a mögötte lévő cím változik.',
-  },
 ]
 
 useContentSeo({
   slug: '/tomeges-qr-kod-generator',
-  title: 'Tömeges QR-kód generálás – akár 100 kód egyszerre',
+  title: 'Tömeges QR-kód generálás – akár 100 kód, minden típusból',
   description:
-    'Készíts egyszerre akár 100 QR-kódot: illessz be egy listát vagy tölts fel CSV-t, válaszd ki a megjelenést, és töltsd le ZIP-ben (PNG, SVG), A4-es nyomtatóíven vagy CSV-riporttal. Fiók nélkül, a böngésződben.',
+    'Készíts egyszerre akár 100 QR-kódot bármelyik típusból: webcím, szöveg, Wi-Fi, vCard, kupon és a többi. Illessz be listát vagy tölts fel CSV-t, használj sorszám-sorozatot, majd töltsd le ZIP-ben (PNG, SVG), A4-es nyomtatóíven vagy CSV-riporttal – fiók nélkül, a böngésződben.',
   h1: 'Tömeges QR-kód generálás',
   faqs,
   isWebApp: true,
@@ -54,18 +86,18 @@ useContentSeo({
 const steps = [
   {
     icon: 'lucide:list-checks',
-    title: 'Illeszd be a listát',
-    text: 'Soronként egy cím, opcionális névvel. CSV-fájlt is behúzhatsz – a vesszőt, a pontosvesszőt és a tabulátort is felismeri.',
+    title: 'Válassz típust',
+    text: 'Webcím, szöveg, Wi-Fi, névjegy, kupon – az oszlopok és a minta a választott típushoz igazodnak.',
   },
   {
     icon: 'lucide:palette',
-    title: 'Válaszd ki a megjelenést',
-    text: 'A színek, formák és keret minden kódra egyszerre érvényesek, a jobb oldali előnézet azonnal frissül.',
+    title: 'Adj meg adatokat',
+    text: 'Beillesztés, CSV, vagy sorszám-sorozat. A hibás és ismétlődő sorokat generálás előtt jelzi.',
   },
   {
     icon: 'lucide:package',
     title: 'Töltsd le egyben',
-    text: 'ZIP PNG-vel vagy SVG-vel, plusz CSV-riport a fájlnevekkel, vagy A4-es nyomtatóív a kiosztáshoz.',
+    text: 'ZIP PNG-vel vagy SVG-vel, CSV-riport a fájlnevekkel, vagy A4-es nyomtatóív a kiosztáshoz.',
   },
 ]
 </script>
@@ -79,12 +111,13 @@ const steps = [
           <span class="eyebrow">Eszköz</span>
           <h1 class="mt-3 text-3xl leading-tight sm:text-4xl">Tömeges QR-kód generálás</h1>
           <p class="mt-4 text-[1.02rem] leading-relaxed text-ink-soft">
-            Készíts egyszerre akár {{ BULK_LIMIT }} QR-kódot: illessz be egy listát vagy tölts fel CSV-t,
-            válaszd ki a megjelenést, majd vidd el ZIP-ben, nyomtatóíven vagy riporttal.
-            A kódok a böngésződben készülnek, a lista nem kerül szerverre.
+            Készíts egyszerre akár {{ BULK_LIMIT }} QR-kódot bármelyik típusból: webcím, szöveg, Wi-Fi,
+            névjegy, kupon és a többi. Illessz be egy listát, tölts fel CSV-t vagy generálj sorszám-sorozatot,
+            majd vidd el ZIP-ben, nyomtatóíven vagy riporttal. A kódok a böngésződben készülnek.
           </p>
 
           <ul class="mt-5 flex flex-wrap gap-2 text-xs font-medium">
+            <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">{{ typeOptions.length }} QR-típus</li>
             <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">{{ BULK_LIMIT }} kód / tétel</li>
             <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">ZIP: PNG vagy SVG</li>
             <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">A4-es nyomtatóív</li>
@@ -97,9 +130,51 @@ const steps = [
     <div class="container-page py-8">
       <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
         <div class="space-y-6">
-          <BulkInput v-model="raw" :result="result" :limit="BULK_LIMIT">
+          <section class="card p-5 sm:p-6" aria-labelledby="bulk-type-heading">
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">1. lépés</p>
+            <h2 id="bulk-type-heading" class="mt-1 text-xl">QR-típus</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-soft">
+              A választott típus dönti el, milyen oszlopokat vár a lista.
+            </p>
+            <div class="mt-4 flex max-h-64 flex-wrap gap-2 overflow-y-auto pr-1">
+              <button
+                v-for="option in typeOptions"
+                :key="option.id"
+                type="button"
+                :aria-pressed="type === option.id"
+                :class="[
+                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                  type === option.id
+                    ? 'border-brand-600 bg-brand-600 text-white'
+                    : 'border-slate-200 bg-surface text-ink-soft hover:border-brand-300 hover:text-brand-800',
+                ]"
+                @click="selectType(option.id)"
+              >
+                <Icon :name="option.icon" class="h-4 w-4" aria-hidden="true" />
+                {{ option.shortLabel }}
+              </button>
+            </div>
+
+            <div class="mt-4 rounded-lg bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-ink-muted">
+              <span class="font-semibold text-ink">Oszlopok:</span>
+              <span class="ml-1 font-mono">{{ columns.join('; ') }}</span>
+              <span class="mt-1 block">
+                {{ definition.description }}
+              </span>
+            </div>
+          </section>
+
+          <BulkInput
+            v-model="raw"
+            :result="result"
+            :limit="BULK_LIMIT"
+            :hint="hint"
+            :placeholder="placeholder"
+            step-label="2. lépés"
+            title="Adatok"
+          >
             <template #actions>
-              <button type="button" class="btn-ghost h-9 px-3 text-sm" @click="raw = SAMPLE">
+              <button type="button" class="btn-ghost h-9 px-3 text-sm" @click="raw = placeholder">
                 <Icon name="lucide:sparkles" class="h-4 w-4" aria-hidden="true" />
                 Minta
               </button>
@@ -110,8 +185,54 @@ const steps = [
             </template>
           </BulkInput>
 
+          <details class="card p-5 sm:p-6">
+            <summary class="cursor-pointer text-sm font-semibold text-ink">
+              Sorszám-sorozat létrehozása
+              <span class="ml-1 font-normal text-ink-muted">(pl. kupon-001 … kupon-100)</span>
+            </summary>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <label class="text-sm">
+                <span class="mb-1 block font-medium text-ink">Kezdő érték</span>
+                <input v-model.number="sequence.start" type="number" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block font-medium text-ink">Végérték</span>
+                <input v-model.number="sequence.end" type="number" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block font-medium text-ink">Lépés</span>
+                <input v-model.number="sequence.step" type="number" min="1" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block font-medium text-ink">Számjegyek (nullázás)</span>
+                <input v-model.number="sequence.pad" type="number" min="0" max="12" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block font-medium text-ink">Előtag</span>
+                <input v-model="sequence.prefix" type="text" placeholder="kupon-" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              </label>
+              <label class="text-sm">
+                <span class="mb-1 block font-medium text-ink">Utótag</span>
+                <input v-model="sequence.suffix" type="text" placeholder="-2026" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              </label>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <div class="text-sm text-ink-soft">
+                <p>{{ sequenceValues.length }} sor készül: <strong>{{ sequenceValues[0] || '–' }}</strong> … <strong>{{ sequenceValues[sequenceValues.length - 1] || '–' }}</strong></p>
+                <label class="mt-2 flex items-center gap-2 text-xs text-ink-muted">
+                  <input v-model="sequence.append" type="checkbox" class="h-4 w-4 rounded border-slate-300">
+                  Hozzáfűzés a meglévő adatokhoz
+                </label>
+              </div>
+              <button type="button" class="btn-secondary h-10 px-4" :disabled="!sequenceValues.length" @click="createSequence">
+                <Icon name="lucide:list-plus" class="h-4 w-4" aria-hidden="true" />
+                Sorozat beszúrása
+              </button>
+            </div>
+          </details>
+
           <section class="card p-5 sm:p-6" aria-labelledby="bulk-design-heading">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">2. lépés</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">3. lépés</p>
             <h2 id="bulk-design-heading" class="mt-1 text-xl">Megjelenés</h2>
             <p class="mt-2 text-sm leading-relaxed text-ink-soft">
               Ezek a beállítások minden kódra érvényesek. A jobb oldali előnézet azonnal követi a változtatásokat.
@@ -122,10 +243,10 @@ const steps = [
           </section>
 
           <section class="card p-5 sm:p-6" aria-labelledby="bulk-download-heading">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">3. lépés</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">4. lépés</p>
             <h2 id="bulk-download-heading" class="mt-1 text-xl">Letöltés</h2>
             <p class="mt-2 text-sm leading-relaxed text-ink-soft">
-              {{ result.valid.length }} kód áll készen. A ZIP-ben fájlonként egy kép és egy
+              {{ result.valid.length }} {{ definition.shortLabel }} kód áll készen. A ZIP-ben fájlonként egy kép és egy
               <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[0.8em]">riport.csv</code> lesz.
             </p>
 
@@ -144,7 +265,7 @@ const steps = [
                 type="button"
                 class="btn-primary h-11 justify-center"
                 :disabled="!result.valid.length || isWorking"
-                @click="downloadZip(result.valid, customization, 'png', pngSize)"
+                @click="downloadZip(result.valid, customization, 'png', pngSize, definition.shortLabel)"
               >
                 <Icon name="lucide:download" class="h-4 w-4" aria-hidden="true" />
                 ZIP – PNG kódok
@@ -153,7 +274,7 @@ const steps = [
                 type="button"
                 class="btn-secondary h-11 justify-center"
                 :disabled="!result.valid.length || isWorking"
-                @click="downloadZip(result.valid, customization, 'svg', pngSize)"
+                @click="downloadZip(result.valid, customization, 'svg', pngSize, definition.shortLabel)"
               >
                 <Icon name="lucide:file-code-2" class="h-4 w-4" aria-hidden="true" />
                 ZIP – SVG kódok
@@ -171,7 +292,7 @@ const steps = [
                 type="button"
                 class="btn-secondary h-11 justify-center"
                 :disabled="!result.valid.length || isWorking"
-                @click="downloadCsv(result.valid)"
+                @click="downloadCsv(result.valid, definition.shortLabel)"
               >
                 <Icon name="lucide:file-spreadsheet" class="h-4 w-4" aria-hidden="true" />
                 CSV riport
@@ -202,14 +323,14 @@ const steps = [
 
             <div v-if="previewRow" class="mt-3">
               <BulkCode
-                :data="previewRow.url"
+                :data="previewRow.payload"
                 :customization="customization"
                 :label="previewRow.label"
                 :size="512"
               />
             </div>
             <p v-else class="mt-3 rounded-lg bg-slate-50 px-3 py-6 text-center text-sm text-ink-muted">
-              Adj meg legalább egy érvényes webcímet a bal oldalon.
+              Adj meg legalább egy érvényes sort a bal oldalon.
             </p>
 
             <p v-if="previewRow && result.valid.length > 1" class="mt-2 text-xs text-ink-muted">

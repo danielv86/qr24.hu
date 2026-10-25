@@ -5,6 +5,10 @@ const props = defineProps<{
   modelValue: string
   result: BulkParseResult
   limit: number
+  hint: string
+  placeholder: string
+  stepLabel?: string
+  title?: string
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -47,8 +51,8 @@ const shownProblems = computed(() => problems.value.slice(0, 8))
   <section class="card p-5 sm:p-6" aria-labelledby="bulk-input-heading">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">1. lépés</p>
-        <h2 id="bulk-input-heading" class="mt-1 text-xl">Címek megadása</h2>
+        <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">{{ stepLabel || '1. lépés' }}</p>
+        <h2 id="bulk-input-heading" class="mt-1 text-xl">{{ title || 'Címek megadása' }}</h2>
       </div>
       <div class="flex flex-wrap gap-2">
         <button type="button" class="btn-ghost h-9 px-3 text-sm" @click="fileInput?.click()">
@@ -67,19 +71,17 @@ const shownProblems = computed(() => problems.value.slice(0, 8))
     </div>
 
     <p class="mt-3 text-sm leading-relaxed text-ink-soft">
-      Soronként egy kód. A formátum <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[0.8em]">Név;Cím</code>
-      vagy csak a cím – a pontosvessző, a vessző és a tabulátor is elválasztó. A <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[0.8em]">https://</code>
-      hiányát automatikusan pótoljuk, más protokollt (pl. <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[0.8em]">javascript:</code>) nem fogadunk el.
+      Soronként egy kód. {{ hint }}
     </p>
 
     <label class="mt-4 block">
-      <span class="sr-only">Címek listája</span>
+      <span class="sr-only">Kódok adatai</span>
       <textarea
         :value="modelValue"
         rows="10"
         spellcheck="false"
         class="w-full resize-y rounded-xl border border-slate-300 bg-white px-3.5 py-3 font-mono text-sm leading-relaxed text-ink shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-        placeholder="Nyitólap;https://pelda.hu&#10;Árlista;https://pelda.hu/arlista&#10;https://pelda.hu/kapcsolat"
+        :placeholder="placeholder"
         @input="update"
       />
     </label>
@@ -121,12 +123,12 @@ const shownProblems = computed(() => problems.value.slice(0, 8))
       <ul class="mt-2 space-y-1.5">
         <li
           v-for="problem in shownProblems"
-          :key="`${problem.line}-${problem.url}`"
+          :key="`${problem.line}-${problem.summary}`"
           class="flex gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm"
         >
           <span class="shrink-0 font-mono text-xs text-ink-muted">{{ problem.line }}.</span>
           <span class="min-w-0">
-            <span class="font-medium text-ink">{{ problem.url || '(üres)' }}</span>
+            <span class="font-medium text-ink">{{ problem.summary || '(üres)' }}</span>
             <span class="block text-xs text-rose-600">{{ problem.message }}</span>
           </span>
         </li>

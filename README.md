@@ -121,11 +121,16 @@ A migrációk futtatása: `yarn db:deploy` (éles) vagy `yarn db:migrate` (fejle
 
 ## Tömeges QR-kód generátor
 
-`/tomeges-qr-kod-generator` – kliensoldali eszköz: listából vagy CSV-ből
-(soronként `Név;Cím`) akár 100 statikus kód, egyetlen megjelenéssel. Letöltés
-ZIP-ben (PNG 512/1024 vagy SVG, benne `riport.csv`), A4-es nyomtatóíven
-(böngésző nyomtatás) vagy külön CSV-riporttal. A bemenet feldolgozása tiszta
-függvényekben él (`shared/bulk.ts`), a letöltés a
+`/tomeges-qr-kod-generator` – kliensoldali eszköz, amely a statikus generátor
+összes QR-típusát (webcím, szöveg, Wi-Fi, vCard, kupon, esemény stb.) tudja
+tömegesen: a típus kiválasztása után a lista oszlopai és a minta ahhoz a
+mezőfelépítéshez igazodnak (`name` + a típus mezői, pontosvesszővel,
+fejlécsorral is). Bemenet beillesztéssel, `.csv`/`.txt` feltöltéssel vagy
+sorszám-sorozattal (kezdő/végérték, lépés, nullázás, előtag, utótag,
+hozzáfűzés) készül, legfeljebb 100 kód tételenként, egyetlen
+megjelenéssel. Letöltés ZIP-ben (PNG 512/1024 vagy SVG, benne `riport.csv`),
+A4-es nyomtatóíven (böngésző nyomtatás) vagy külön CSV-riporttal. A bemenet
+feldolgozása tiszta függvényekben él (`shared/bulk.ts`), a letöltés a
 `app/composables/useBulkDownload.ts`-ben; minden a böngészőben történik, a lista
 nem kerül szerverre. A megszűnt „Linkek” típus régi címe
 (`/linkek-qr-kod-generator`) 301-gyel ide irányít.
