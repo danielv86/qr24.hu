@@ -1,25 +1,42 @@
-node_modules/
-.env
-.env.local
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Prisma kliens (generált)
+server/generated/
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
 *.log
 
-# Nuxt
-.nuxt/
-.output/
-.nitro/
-.cache/
-dist/
-screenshots/
+# Misc
+.DS_Store
+.fleet
+.idea
 
-# Prisma / adatbázis
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Adatbázis-fájlok
 *.db
 *.sqlite
 
+# Képernyőképek
+screenshots/
+
 # Fejlesztői melléktermékek
-.dev-server.pid
-.dev-server.log
 .dev.pid
 .dev.log
+.smoke/
 .u1.jar
 .u2.jar
 .created.json
