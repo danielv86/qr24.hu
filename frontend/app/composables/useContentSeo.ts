@@ -1,5 +1,5 @@
-import type { ContentFaq } from '#shared/content/types'
-import { absoluteUrl, buildStructuredData, serializeJsonLd } from '#shared/seo'
+import type { ContentFaq } from '~/lib/content/types'
+import { absoluteUrl, buildStructuredData, serializeJsonLd } from '~/lib/seo'
 
 interface ContentSeoInput {
   slug: string

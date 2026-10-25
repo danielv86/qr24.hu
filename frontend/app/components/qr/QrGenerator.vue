@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { isQrTypeId } from '#shared/qr/content'
-import type { QrTypeId } from '#shared/qr/types'
+import { isQrTypeId } from '~/lib/qr/content'
+import type { QrTypeId } from '~/lib/qr/types'
 
 const props = withDefaults(
   defineProps<{

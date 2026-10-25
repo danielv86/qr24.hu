@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ApiSuccess, DynamicQrCreated, DynamicQrListItem } from '#shared/types/api'
-import type { ContentFaq } from '#shared/content/types'
-import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
-import { parseHttpUrl } from '#shared/qr/content'
+import type { ApiSuccess, DynamicQrCreated, DynamicQrListItem } from '~/types/api'
+import type { ContentFaq } from '~/lib/content/types'
+import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
+import { parseHttpUrl } from '~/lib/qr/content'
 
 const { dynamicQrEnabled } = useSiteSettings()
 const { downloadQr, isDownloading, downloadError } = useQrDownload()

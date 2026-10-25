@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isValidHexColor } from '#shared/qr/customization'
+import { isValidHexColor } from '~/lib/qr/customization'
 import { renderQrSvg } from '~/utils/qr-render'
 import { QR_DOWNLOAD_FORMATS } from '~/composables/useQrDownload'
 import type { QrDownloadFormat } from '~/composables/useQrDownload'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QrFieldDefinition } from '#shared/qr/types'
+import type { QrFieldDefinition } from '~/lib/qr/types'
 
 const props = defineProps<{
   field: QrFieldDefinition

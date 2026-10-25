@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { getLandingPage } from '#shared/content/landing-pages'
-import { getLegalPage } from '#shared/content/legal-pages'
+import { getLandingPage } from '~/lib/content/landing-pages'
+import { getLegalPage } from '~/lib/content/legal-pages'
 import { contentAnchor } from '~/utils/content'
 
 const route = useRoute()

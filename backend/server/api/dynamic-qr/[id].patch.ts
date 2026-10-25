@@ -1,5 +1,5 @@
 import { getRouterParam, setResponseHeader } from 'h3'
-import { parseExpiry } from '#shared/qr/dynamic'
+import { parseExpiry } from '../../utils/qr-status'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
 import { getPublicSiteUrl } from '../../utils/config'

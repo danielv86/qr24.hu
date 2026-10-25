@@ -5,7 +5,7 @@ import {
   setResponseStatus,
   type H3Event,
 } from 'h3'
-import type { ApiErrorBody, ApiSuccess } from '#shared/types/api'
+import type { ApiErrorBody, ApiSuccess } from '../types/api'
 import { logger } from './logger'
 
 export class ApiProblem extends Error {

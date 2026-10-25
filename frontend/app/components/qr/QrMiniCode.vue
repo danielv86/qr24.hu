@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
-import type { CornerDotStyle, CornerSquareStyle, DotStyle } from '#shared/qr/types'
+import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
+import type { CornerDotStyle, CornerSquareStyle, DotStyle } from '~/lib/qr/types'
 import { buildQrContents } from '~/utils/qr-render'
 
 const props = defineProps<{

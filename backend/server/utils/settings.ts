@@ -1,4 +1,4 @@
-import type { PublicSettings, SeoOverride } from '#shared/types/api'
+import type { PublicSettings, SeoOverride } from '../types/api'
 import { getPrisma, isDbConfigured, withDb } from './db'
 import { logger } from './logger'
 

@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import type { QrCustomization } from '#shared/qr/types'
+import type { QrCustomization } from '~/lib/qr/types'
 import { rasterizeSvg, renderQrSvg } from '../utils/qr-render'
 
 export type QrDownloadFormat = 'png' | 'jpg' | 'webp' | 'svg' | 'pdf'

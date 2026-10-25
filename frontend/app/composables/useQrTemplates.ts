@@ -1,10 +1,10 @@
-import { POPULAR_QR_TYPES, QR_MENU_TYPES, getQrType } from '#shared/qr/content'
+import { POPULAR_QR_TYPES, QR_MENU_TYPES, getQrType } from '~/lib/qr/content'
 import {
   COLOR_PRESETS,
   DOT_STYLE_OPTIONS,
   ERROR_LEVEL_OPTIONS,
   FRAME_OPTIONS,
-} from '#shared/qr/customization'
+} from '~/lib/qr/customization'
 
 export function useQrTemplates() {
   return {

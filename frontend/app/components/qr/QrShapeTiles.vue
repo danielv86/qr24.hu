@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '#shared/qr/shapes'
-import type { CornerDotStyle, CornerSquareStyle, DotStyle } from '#shared/qr/types'
+import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import type { CornerDotStyle, CornerSquareStyle, DotStyle } from '~/lib/qr/types'
 
 interface ShapeOption {
   value: string

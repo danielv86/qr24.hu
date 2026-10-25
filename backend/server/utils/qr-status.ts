@@ -1,13 +1,10 @@
+/**
+ * A dinamikus QR-kód tényleges állapota. A címkéket a felület ismeri
+ * (`frontend/app/lib/qr/dynamic.ts`), itt csak a szerveroldali döntés van.
+ */
 export type DynamicQrStatus = 'active' | 'paused' | 'expired' | 'archived'
 
 export const DYNAMIC_QR_STATUSES: DynamicQrStatus[] = ['active', 'paused', 'expired', 'archived']
-
-export const DYNAMIC_QR_STATUS_LABELS: Record<DynamicQrStatus, string> = {
-  active: 'Aktív',
-  paused: 'Szüneteltetett',
-  expired: 'Lejárt',
-  archived: 'Archivált',
-}
 
 export interface DynamicQrStateLike {
   status?: string | null

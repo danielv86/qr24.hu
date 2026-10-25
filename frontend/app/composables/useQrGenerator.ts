@@ -5,8 +5,8 @@ import {
   createSampleValues,
   getQrType,
   isQrTypeId,
-} from '#shared/qr/content'
-import type { QrFormValues, QrTypeId } from '#shared/qr/types'
+} from '~/lib/qr/content'
+import type { QrFormValues, QrTypeId } from '~/lib/qr/types'
 
 export function useQrGenerator() {
   const activeType = useState<QrTypeId>('qr-active-type', () => 'url')

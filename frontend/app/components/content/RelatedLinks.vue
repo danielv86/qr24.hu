@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RelatedLink } from '#shared/content/types'
+import type { RelatedLink } from '~/lib/content/types'
 
 defineProps<{ links: RelatedLink[] }>()
 </script>

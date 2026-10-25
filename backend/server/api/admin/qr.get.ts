@@ -1,5 +1,5 @@
 import { setResponseHeader } from 'h3'
-import type { AdminQrListItem } from '#shared/types/api'
+import type { AdminQrListItem } from '../../types/api'
 import { apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { requireAdmin } from '../../utils/auth'
 import { getPrisma, withDb } from '../../utils/db'

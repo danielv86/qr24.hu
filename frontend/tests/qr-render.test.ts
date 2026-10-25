@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { BODY_SHAPES, EYE_BALL_SHAPES, EYE_FRAME_SHAPES, bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '#shared/qr/shapes'
+import { BODY_SHAPES, EYE_BALL_SHAPES, EYE_FRAME_SHAPES, bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
 import { buildQrContents, buildQrMatrix } from '../app/utils/qr-render'
-import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
-import type { QrCustomization } from '#shared/qr/types'
+import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
+import type { QrCustomization } from '~/lib/qr/types'
 
 function customization(overrides: Partial<QrCustomization> = {}): QrCustomization {
   return { ...DEFAULT_CUSTOMIZATION, ...overrides }

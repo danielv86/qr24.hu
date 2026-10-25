@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ApiSuccess, DashboardSummary } from '#shared/types/api'
+import type { ApiSuccess, DashboardSummary } from '~/types/api'
 
 const { user, logout } = useUserSession()
 const request = useRequestFetch()

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { QR_MENU_ORDER, getQrType } from '#shared/qr/content'
-import type { QrTypeId } from '#shared/qr/types'
-import { QR_TYPE_PATHS } from '#shared/content/type-pages'
+import { QR_MENU_ORDER, getQrType } from '~/lib/qr/content'
+import type { QrTypeId } from '~/lib/qr/types'
+import { QR_TYPE_PATHS } from '~/lib/content/type-pages'
 
 const types = QR_MENU_ORDER.map((id) => {
   const definition = getQrType(id)

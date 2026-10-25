@@ -12,7 +12,8 @@
     "db:setup": "node --env-file-if-exists=.env scripts/setup-db.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy"
+    "db:deploy": "prisma migrate deploy",
+    "admin:create": "node --env-file-if-exists=.env scripts/create-admin.mjs"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "7.10.1",

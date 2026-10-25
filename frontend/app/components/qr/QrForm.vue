@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { QR_TYPE_PATHS } from '#shared/content/type-pages'
+import { QR_TYPE_PATHS } from '~/lib/content/type-pages'
 
 const {
   activeType,

@@ -1,5 +1,5 @@
-import { isGradientFill, isValidHexColor } from '#shared/qr/customization'
-import type { FramePreset, QrCustomization, QrFill } from '#shared/qr/types'
+import { isGradientFill, isValidHexColor } from '~/lib/qr/customization'
+import type { FramePreset, QrCustomization, QrFill } from '~/lib/qr/types'
 
 export interface FrameLayout {
   totalWidth: number

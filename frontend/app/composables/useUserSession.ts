@@ -1,4 +1,4 @@
-import type { OAuthProviderAvailability, UserProfile, UserSessionPayload } from '#shared/types/api'
+import type { OAuthProviderAvailability, UserProfile, UserSessionPayload } from '~/types/api'
 
 interface SessionState {
   user: UserProfile | null

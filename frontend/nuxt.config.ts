@@ -1,9 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { fileURLToPath } from 'node:url'
 
-// A közös kód egyetlen példánya a repó gyökerében él; a backend ugyanezt a
-// mappát használja, így nincs másolandó másolat.
-const sharedDir = fileURLToPath(new URL('../shared', import.meta.url))
 
 // Éles buildben a termelési domain az alapértelmezett, hogy a kanonikus URL-ek,
 // a sitemap és a dinamikus rövid linkek ne essenek vissza localhostra.
@@ -18,18 +14,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  // A Nuxt alapból a frontend/shared mappára köti a #shared aliast; itt a gyökér
-  // shared/ mappára irányítjuk (a típusok a tsConfig.paths alatt követik).
-  alias: {
-    '#shared': sharedDir,
-  },
-
-  vite: {
-    server: {
-      // Fejlesztésben a Vite-nak látnia kell a projektgyökéren kívüli shared/ mappát.
-      fs: { allow: [fileURLToPath(new URL('..', import.meta.url))] },
-    },
-  },
 
   modules: [
     '@nuxtjs/tailwindcss',
@@ -120,6 +104,11 @@ export default defineNuxtConfig({
       icons: [
         'lucide:qr-code',
         'lucide:chart-no-axes-column',
+        'lucide:package',
+        'lucide:link-2',
+        'lucide:search-check',
+        'lucide:save',
+        'lucide:log-in',
         'lucide:globe',
         'lucide:code-xml',
         'lucide:credit-card',
@@ -182,7 +171,6 @@ export default defineNuxtConfig({
     '/api/dashboard/**': { proxy: `${backendUrl}/api/dashboard/**` },
     '/api/admin/**': { proxy: `${backendUrl}/api/admin/**` },
     '/api/settings/**': { proxy: `${backendUrl}/api/settings/**` },
-    '/api/__sitemap__/**': { proxy: `${backendUrl}/api/__sitemap__/**` },
     '/api/health': { proxy: `${backendUrl}/api/health` },
     '/api/**': { headers: { 'Cache-Control': 'no-store' } },
     '/admin/**': { robots: false, headers: { 'Cache-Control': 'no-store' } },
@@ -205,14 +193,6 @@ export default defineNuxtConfig({
   typescript: {
     strict: true,
     typeCheck: false,
-    tsConfig: {
-      compilerOptions: {
-        paths: {
-          '#shared': [sharedDir],
-          '#shared/*': [`${sharedDir}/*`],
-        },
-      },
-    },
   },
 
 })

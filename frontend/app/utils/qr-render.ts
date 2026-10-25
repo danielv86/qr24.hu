@@ -1,7 +1,7 @@
 import qrcode from 'qrcode-generator'
-import { fillColor, isGradientFill } from '#shared/qr/customization'
-import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '#shared/qr/shapes'
-import type { ErrorCorrectionLevel, QrCustomization, QrFill } from '#shared/qr/types'
+import { fillColor, isGradientFill } from '~/lib/qr/customization'
+import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import type { ErrorCorrectionLevel, QrCustomization, QrFill } from '~/lib/qr/types'
 import { buildFramedSvg, escapeXml } from './qr-frame'
 
 // A magyar ékezetek és az emojik UTF-8 kódolással kerülnek a QR-kódba.

@@ -8,7 +8,7 @@ import {
   setResponseStatus,
   type H3Event,
 } from 'h3'
-import { effectiveStatus, type DynamicQrStatus } from '#shared/qr/dynamic'
+import { effectiveStatus, type DynamicQrStatus } from '../../utils/qr-status'
 import { ApiProblem, getClientIp } from '../../utils/api'
 import { getPrisma, isDbConfigured } from '../../utils/db'
 import { findDynamicQrByPublicId, isValidPublicId } from '../../utils/dynamic-qr'

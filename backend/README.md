@@ -18,11 +18,10 @@ yarn build       # .output/server/index.mjs
 
 Fő könyvtárak:
 
-- `server/api` – REST végpontok (auth, dynamic-qr, dashboard, admin, sitemap)
+- `server/api` – REST végpontok (auth, dynamic-qr, dashboard, admin, settings)
 - `server/routes/r` – nyilvános átirányítás és állapotoldalak
 - `server/utils` – Prisma, auth, rate limit, validáció, OAuth, audit, statisztika
-- `shared` – a szerveroldalon használt közös típusok és segédek (a frontenddel
-  szinkronban tartva)
+- `server/types` – az API válaszainak típusai (a frontend saját másolatot tart)
 - `prisma` – séma és migrációk
 
 Részletes leírás: [a projekt gyökér README-je](../README.md).

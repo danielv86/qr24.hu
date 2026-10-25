@@ -3,9 +3,9 @@ import type {
   ApiSuccess,
   QrAnalytics,
   UserDynamicQrItem,
-} from '#shared/types/api'
-import { DYNAMIC_QR_STATUS_LABELS } from '#shared/qr/dynamic'
-import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
+} from '~/types/api'
+import { DYNAMIC_QR_STATUS_LABELS } from '~/lib/qr/dynamic'
+import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
 import { downloadDynamicQr } from '~/utils/qr-download'
 
 definePageMeta({ layout: 'fiok', middleware: 'auth' })

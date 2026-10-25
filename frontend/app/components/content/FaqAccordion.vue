@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContentFaq } from '#shared/content/types'
+import type { ContentFaq } from '~/lib/content/types'
 
 withDefaults(
   defineProps<{

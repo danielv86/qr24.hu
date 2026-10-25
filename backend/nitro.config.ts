@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url'
 import { defineNitroConfig } from 'nitropack/config'
 
 const siteUrl =
@@ -9,9 +8,6 @@ const brandName = process.env.NUXT_PUBLIC_BRAND_NAME || 'QR24.hu'
 export default defineNitroConfig({
   srcDir: 'server',
   compatibilityDate: '2025-07-15',
-  alias: {
-    '#shared': fileURLToPath(new URL('../shared', import.meta.url)),
-  },
   runtimeConfig: {
     db: {
       host: process.env.NUXT_DB_HOST || '127.0.0.1',

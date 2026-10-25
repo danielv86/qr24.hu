@@ -5,7 +5,6 @@ A projekt két külön alkalmazásból áll:
 ```
 frontend/   Nuxt 4 (Vue 3, Tailwind, SSR) – a nyilvános oldalak, a generátor és a fiók felülete
 backend/    Nitro 2 (h3, Prisma, MySQL) – API, dinamikus QR-átirányítás, statisztika, admin
-shared/     a két app közös kódja (egyetlen példány, mindkettő ezt importálja)
 ```
 
 A két app külön `package.json`-nal, külön `yarn.lock`-kal és külön `.output`-tal
@@ -14,7 +13,7 @@ adatbázis-hozzáférést vagy Prismát – minden adatot a backend API-n keresz
 
 A böngésző továbbra is **ugyanazon az originon** ér mindent el: a Nuxt a backend
 saját API-útvonalait (`/api/auth`, `/api/dynamic-qr`, `/api/dashboard`,
-`/api/admin`, `/api/settings`, `/api/health`, `/api/__sitemap__`) proxyzza, a
+`/api/admin`, `/api/settings`, `/api/health`) proxyzza, a
 `/r/<kód>` rövid címeket pedig egy vékony átjáró továbbítja. Minden más `/api/*`
 útvonal (például a `@nuxt/icon` `/api/_nuxt_icon` végpontja) a frontendnél marad. Így a httpOnly süti és a CSRF-védelem változatlanul működik, nincs
 szükség CORS-ra.
@@ -40,8 +39,9 @@ yarn install
 yarn dev                    # http://127.0.0.1:3000
 ```
 
-Fontos: a sitemap a backend `/api/__sitemap__/urls` végpontjából dolgozik, ezért a
-frontend build/indítás előtt a backendnek futnia kell.
+Fontos: a sitemap forrása a frontend saját `/api/__sitemap__/urls` végpontja
+(`frontend/server/api/__sitemap__/urls.get.ts`), amely a beállításokat a backendtől
+kéri – a buildhez tehát nem kell futó backend, a generáláskor viszont igen.
 
 ## Környezeti változók
 
@@ -137,19 +137,22 @@ is helyes az állapot.
 - A statisztika nem tárol IP-címet vagy teljes user-agentet; a botokat kiszűri,
   egyedi látogatót szándékosan nem becsül
 
-## Megosztott kód
+## Két önálló alkalmazás
 
-A két alkalmazás közös kódja (QR-típusok, tartalmi szövegek, csomaglimitek,
-státusz-nevek, API-típusok, SEO-segédek) **egyetlen példányban**, a gyökér
-[`shared/`](shared) mappában él. Mindkét app ugyanerre a mappára mutat, ezért nincs
-másolandó másolat és nem csúszhat el a két oldal:
+Nincs közös `shared/` mappa: minden fájl abban az appban él, ahol fut. A frontend a
+saját kódját a `frontend/app/` alatt (`lib/content`, `lib/qr`, `types`), a backend a
+sajátját a `backend/server/` alatt tartja. Így a két mappa külön is checkoutolható,
+külön buildelhető és külön telepíthető – nincs köztük relatív import.
 
-- frontend: `#shared` → `../shared` (`nuxt.config.ts` alias, `tsconfig.paths`, vitest-alias)
-- backend: `#shared` → `../shared` (`nitro.config.ts` alias, `tsconfig.paths`, vitest-alias)
+Két helyen él ugyanaz a tartalom, szándékosan:
 
-Új közös fájlt tehát a gyökér `shared/` alatt hozz létre, és mindkét oldalon
-`#shared/...` útvonallal importáld. A két app ettől még önállóan buildelhető, de a
-repót egyben kell checkoutolni.
+- `backend/server/types/api.ts` és `frontend/app/types/api.ts` – az API válasz- és
+  kérésalakjai. Csak típus, futásidőben semmi; a backend a saját válaszait írja le
+  vele, a frontend a saját olvasását. Ha az API alakja változik, mindkettőt át kell
+  írni – ezt a `yarn typecheck` nem jelzi, ezért a végpontokat tesztelni kell.
+- Apró állandók ott, ahol használjuk: a státusznevek a backend státuszkezelésében és
+  a frontend megjelenítésében, a csomaglimitek alapértelmezése a backendben (a
+  tényleges limitek amúgy is az adatbázisból jönnek).
 
 ## Csomagok
 

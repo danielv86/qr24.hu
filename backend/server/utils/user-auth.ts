@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from 'node:crypto'
 import { deleteCookie, getCookie, setCookie, type H3Event } from 'h3'
-import type { UserProfile } from '#shared/types/api'
+import type { UserProfile } from '../types/api'
 import { ApiProblem } from './api'
 import { hashPassword, verifyPassword } from './auth'
 import { getPublicSiteUrl, getSessionSecret } from './config'

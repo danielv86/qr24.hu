@@ -1,5 +1,5 @@
 import { setResponseHeader } from 'h3'
-import type { UserSessionPayload } from '#shared/types/api'
+import type { UserSessionPayload } from '../../types/api'
 import { apiSuccess, defineApiHandler } from '../../utils/api'
 import { providerAvailability } from '../../utils/oauth'
 import { getUserSession, serializeUser } from '../../utils/user-auth'

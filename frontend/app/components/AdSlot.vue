@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AdsenseSlots } from '#shared/types/api'
+import type { AdsenseSlots } from '~/types/api'
 
 const props = withDefaults(
   defineProps<{

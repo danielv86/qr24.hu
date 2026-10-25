@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { PlanDefinition, PlanId, PlansConfig } from '#shared/types/api'
+import type { PlanDefinition, PlanId, PlansConfig } from '../types/api'
 import { ApiProblem } from './api'
 import { getPrisma, isDbConfigured, withDb } from './db'
 import { logger } from './logger'

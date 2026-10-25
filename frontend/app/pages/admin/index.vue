@@ -4,10 +4,12 @@ import type {
   AdminSession,
   AdminStats,
   ApiSuccess,
+  PlanId,
+  PlansConfig,
   PublicSettings,
-} from '#shared/types/api'
-import { LANDING_PAGES } from '#shared/content/landing-pages'
-import { LEGAL_PAGES } from '#shared/content/legal-pages'
+} from '~/types/api'
+import { LANDING_PAGES } from '~/lib/content/landing-pages'
+import { LEGAL_PAGES } from '~/lib/content/legal-pages'
 
 definePageMeta({ layout: 'admin' })
 
@@ -52,10 +54,11 @@ const logout = async () => {
   qrItems.value = []
 }
 
-const activeTab = ref<'qr' | 'stats' | 'settings' | 'seo'>('qr')
+const activeTab = ref<'qr' | 'stats' | 'plans' | 'settings' | 'seo'>('qr')
 const adminTabs = [
   { id: 'qr', label: 'Dinamikus QR-kódok', icon: 'lucide:link-2' },
   { id: 'stats', label: 'Statisztika', icon: 'lucide:chart-no-axes-column' },
+  { id: 'plans', label: 'Csomagok', icon: 'lucide:package' },
   { id: 'settings', label: 'Beállítások', icon: 'lucide:settings' },
   { id: 'seo', label: 'SEO metaadatok', icon: 'lucide:search-check' },
 ] as const
@@ -108,6 +111,99 @@ const seoError = ref('')
 const seoMessage = ref('')
 const seoSavingPath = ref('')
 
+/* ── Csomagok ───────────────────────────────────────────────────────── */
+interface PlanForm {
+  label: string
+  maxDynamicQr: number
+  analyticsDays: number
+  campaigns: boolean
+  expiresAt: boolean
+  csvExport: boolean
+  apiAccess: boolean
+  customDomain: boolean
+}
+
+type PlanFeatureKey = 'campaigns' | 'expiresAt' | 'csvExport' | 'apiAccess' | 'customDomain'
+
+const PLAN_ORDER: PlanId[] = ['free', 'pro', 'business']
+const PLAN_FEATURES: { key: PlanFeatureKey; label: string }[] = [
+  { key: 'campaigns', label: 'Kampánycímkék' },
+  { key: 'expiresAt', label: 'Lejárati dátum' },
+  { key: 'csvExport', label: 'CSV-export' },
+  { key: 'apiAccess', label: 'API-hozzáférés' },
+  { key: 'customDomain', label: 'Saját domain' },
+]
+
+const plansLoading = ref(false)
+const plansSaving = ref(false)
+const plansError = ref('')
+const plansMessage = ref('')
+const plansForm = reactive<Record<PlanId, PlanForm>>({
+  free: { label: 'Ingyenes', maxDynamicQr: 5, analyticsDays: 30, campaigns: false, expiresAt: false, csvExport: false, apiAccess: false, customDomain: false },
+  pro: { label: 'Pro', maxDynamicQr: 100, analyticsDays: 365, campaigns: true, expiresAt: true, csvExport: true, apiAccess: false, customDomain: false },
+  business: { label: 'Business', maxDynamicQr: 5000, analyticsDays: 1095, campaigns: true, expiresAt: true, csvExport: true, apiAccess: true, customDomain: true },
+})
+
+function applyPlans(data: PlansConfig) {
+  for (const id of PLAN_ORDER) {
+    const plan = data[id]
+    if (!plan) continue
+    const target = plansForm[id]
+    target.label = plan.label
+    target.maxDynamicQr = plan.maxDynamicQr
+    target.analyticsDays = plan.analyticsDays
+    target.campaigns = plan.campaigns
+    target.expiresAt = plan.expiresAt
+    target.csvExport = plan.csvExport
+    target.apiAccess = plan.apiAccess
+    target.customDomain = plan.customDomain
+  }
+}
+
+async function loadPlans() {
+  plansLoading.value = true
+  plansError.value = ''
+  try {
+    const response = await $fetch<ApiSuccess<PlansConfig>>('/api/admin/plans')
+    applyPlans(response.data)
+  } catch (error) {
+    plansError.value = apiErrorMessage(error, 'A csomagok betöltése nem sikerült.')
+  } finally {
+    plansLoading.value = false
+  }
+}
+
+async function savePlans() {
+  plansSaving.value = true
+  plansError.value = ''
+  plansMessage.value = ''
+  try {
+    const body = Object.fromEntries(
+      PLAN_ORDER.map((id) => {
+        const plan = plansForm[id]
+        return [id, {
+          label: plan.label.trim(),
+          maxDynamicQr: Math.max(0, Math.trunc(Number(plan.maxDynamicQr) || 0)),
+          analyticsDays: Math.max(1, Math.trunc(Number(plan.analyticsDays) || 30)),
+          campaigns: plan.campaigns,
+          expiresAt: plan.expiresAt,
+          csvExport: plan.csvExport,
+          apiAccess: plan.apiAccess,
+          customDomain: plan.customDomain,
+        }]
+      }),
+    )
+    const response = await $fetch<ApiSuccess<PlansConfig>>('/api/admin/plans', { method: 'PATCH', body })
+    applyPlans(response.data)
+    plansMessage.value = 'A csomagok mentve. A változás legkésőbb 30 másodperc múlva mindenhol érvényes, build nem kell hozzá.'
+    await refreshNuxtData('public-settings')
+  } catch (error) {
+    plansError.value = apiErrorMessage(error, 'A csomagok mentése nem sikerült.')
+  } finally {
+    plansSaving.value = false
+  }
+}
+
 function applySettings(data: PublicSettings) {
   settingsForm.brandName = data.brandName
   settingsForm.adsense.client = data.adsense.client
@@ -125,7 +221,7 @@ function applySettings(data: PublicSettings) {
 }
 
 async function loadAll() {
-  await Promise.all([loadQr(1), loadStats(), loadSettings()])
+  await Promise.all([loadQr(1), loadStats(), loadPlans(), loadSettings()])
 }
 
 async function loadQr(page = qrQuery.page) {
@@ -523,6 +619,104 @@ onMounted(async () => {
             számokat torzíthatják, ezért az adat tájékoztató jellegű.
           </p>
         </div>
+      </section>
+
+      <section v-else-if="activeTab === 'plans'" class="mt-5" aria-labelledby="admin-plans-heading">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="admin-plans-heading" class="text-lg">Csomagok</h2>
+            <p class="mt-1 text-xs text-ink-muted">
+              A limitek és funkciókapcsolók a <code class="rounded bg-slate-100 px-1 py-0.5">settings</code> táblába kerülnek,
+              ezért build és újraindítás nélkül érvényesek. A backend és a fiókfelület ugyanezt az értéket használja.
+            </p>
+          </div>
+        </div>
+
+        <p v-if="plansError" class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ plansError }}</p>
+        <p v-if="plansMessage" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{{ plansMessage }}</p>
+
+        <p v-if="plansLoading" class="mt-4 text-sm text-ink-muted">Betöltés…</p>
+
+        <form v-else class="mt-4 space-y-4" novalidate @submit.prevent="savePlans">
+          <div class="grid gap-4 lg:grid-cols-3">
+            <fieldset v-for="id in PLAN_ORDER" :key="id" class="card p-4">
+              <legend class="sr-only">{{ plansForm[id].label }}</legend>
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="text-sm font-semibold text-ink">{{ plansForm[id].label }}</h3>
+                <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  {{ id }}
+                </span>
+              </div>
+
+              <div class="mt-3 space-y-3">
+                <div>
+                  <label :for="`plan-label-${id}`" class="field-label">Megjelenő név</label>
+                  <input
+                    :id="`plan-label-${id}`"
+                    v-model="plansForm[id].label"
+                    type="text"
+                    maxlength="40"
+                    class="field-input py-2 text-sm"
+                    required
+                  >
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label :for="`plan-max-${id}`" class="field-label">Kódlimit</label>
+                    <input
+                      :id="`plan-max-${id}`"
+                      v-model.number="plansForm[id].maxDynamicQr"
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="field-input py-2 text-sm"
+                    >
+                    <p class="field-help">Aktív kódokra</p>
+                  </div>
+                  <div>
+                    <label :for="`plan-days-${id}`" class="field-label">Analitika (nap)</label>
+                    <input
+                      :id="`plan-days-${id}`"
+                      v-model.number="plansForm[id].analyticsDays"
+                      type="number"
+                      min="1"
+                      max="3650"
+                      step="1"
+                      class="field-input py-2 text-sm"
+                    >
+                    <p class="field-help">Visszamenőleg</p>
+                  </div>
+                </div>
+
+                <div class="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50/60 p-2.5">
+                  <label
+                    v-for="feature in PLAN_FEATURES"
+                    :key="feature.key"
+                    class="flex items-center gap-2 text-xs text-ink-soft"
+                  >
+                    <input
+                      v-model="plansForm[id][feature.key]"
+                      type="checkbox"
+                      class="h-4 w-4 accent-brand-600"
+                    >
+                    {{ feature.label }}
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="submit" class="btn-primary" :disabled="plansSaving">
+              <Icon :name="plansSaving ? 'lucide:loader-circle' : 'lucide:save'" :class="['h-4 w-4', { 'animate-spin': plansSaving }]" aria-hidden="true" />
+              {{ plansSaving ? 'Mentés…' : 'Csomagok mentése' }}
+            </button>
+            <p class="text-xs text-ink-muted">
+              A módosítás a következő 30 másodpercben mindenhol érvényes; a felület a nyilvános beállításokból kapja.
+            </p>
+          </div>
+        </form>
       </section>
 
       <section v-else-if="activeTab === 'settings'" class="mt-5" aria-labelledby="admin-settings-heading">

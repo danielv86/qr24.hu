@@ -10,7 +10,7 @@ import {
   type KeyObject,
 } from 'node:crypto'
 import type { H3Event } from 'h3'
-import type { OAuthProviderAvailability } from '#shared/types/api'
+import type { OAuthProviderAvailability } from '../types/api'
 import { ApiProblem } from './api'
 import { getPublicSiteUrl, getSessionSecret } from './config'
 import { logger } from './logger'

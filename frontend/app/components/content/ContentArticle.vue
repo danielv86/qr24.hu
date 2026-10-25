@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContentSection } from '#shared/content/types'
+import type { ContentSection } from '~/lib/content/types'
 import { contentAnchor } from '~/utils/content'
 
 withDefaults(

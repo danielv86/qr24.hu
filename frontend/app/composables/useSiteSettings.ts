@@ -1,4 +1,4 @@
-import type { ApiResponse, PublicSettings } from '#shared/types/api'
+import type { ApiResponse, PublicSettings } from '~/types/api'
 
 export function useSiteSettings() {
   const config = useRuntimeConfig()

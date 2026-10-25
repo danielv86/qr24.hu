@@ -5,9 +5,9 @@ import {
   getCustomizationWarnings,
   isValidHexColor,
   normalizeHexColor,
-} from '#shared/qr/customization'
-import { DESIGN_TEMPLATES, applyDesignTemplate } from '#shared/qr/design-templates'
-import type { QrColorPreset, QrCustomization, QrDesignTemplate, QrFill } from '#shared/qr/types'
+} from '~/lib/qr/customization'
+import { DESIGN_TEMPLATES, applyDesignTemplate } from '~/lib/qr/design-templates'
+import type { QrColorPreset, QrCustomization, QrDesignTemplate, QrFill } from '~/lib/qr/types'
 
 const MAX_LOGO_BYTES = 1_500_000
 const ALLOWED_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/gif']

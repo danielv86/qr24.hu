@@ -9,8 +9,8 @@ import {
   QUICK_COLORS,
   contrastRatio,
   isValidHexColor,
-} from '#shared/qr/customization'
-import type { DotStyle, ErrorCorrectionLevel, FramePreset, QrFill } from '#shared/qr/types'
+} from '~/lib/qr/customization'
+import type { DotStyle, ErrorCorrectionLevel, FramePreset, QrFill } from '~/lib/qr/types'
 
 const {
   customization,

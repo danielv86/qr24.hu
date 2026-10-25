@@ -1,4 +1,4 @@
-import { DEFAULT_CUSTOMIZATION } from '#shared/qr/customization'
+import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
 import { rasterizeSvg, renderQrSvg } from './qr-render'
 
 function triggerDownload(blob: Blob, filename: string) {

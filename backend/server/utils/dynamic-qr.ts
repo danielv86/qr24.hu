@@ -9,8 +9,8 @@ import type {
   QrAnalyticsBreakdown,
   UserDynamicQrItem,
   UserDynamicQrList,
-} from '#shared/types/api'
-import { effectiveStatus, type DynamicQrStatus } from '#shared/qr/dynamic'
+} from '../types/api'
+import { effectiveStatus, type DynamicQrStatus } from './qr-status'
 import { getPlanConfig } from './plans'
 import { AUDIT_LABELS, isAuditAction } from './audit'
 import { ApiProblem } from './api'
