@@ -1,0 +1,33 @@
+{
+  "name": "qr24-backend",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nitro dev --port 3001 --host 127.0.0.1",
+    "build": "nitro build",
+    "preview": "nitro preview",
+    "postinstall": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:setup": "node --env-file-if-exists=.env scripts/setup-db.mjs",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@prisma/adapter-mariadb": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "dotenv": "16.6.1",
+    "h3": "1.15.11",
+    "nitropack": "2.13.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "mariadb": "3.5.4",
+    "prisma": "7.10.1",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5",
+    "vite": "7.1.12"
+  }
+}

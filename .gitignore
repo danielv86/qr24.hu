@@ -1,0 +1,25 @@
+node_modules/
+.env
+.env.local
+*.log
+
+# Nuxt
+.nuxt/
+.output/
+.nitro/
+.cache/
+dist/
+screenshots/
+
+# Prisma / adatbázis
+*.db
+*.sqlite
+
+# Fejlesztői melléktermékek
+.dev-server.pid
+.dev-server.log
+.dev.pid
+.dev.log
+.u1.jar
+.u2.jar
+.created.json
