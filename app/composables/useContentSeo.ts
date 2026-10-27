@@ -1,6 +1,10 @@
 import type { ContentFaq } from '#shared/content/types'
 import { absoluteUrl, buildStructuredData, serializeJsonLd } from '#shared/seo'
 
+/** A public/og-image.png valódi mérete – a közösségi előnézethez kötelező. */
+const OG_IMAGE_WIDTH = 1983
+const OG_IMAGE_HEIGHT = 793
+
 interface ContentSeoInput {
   slug: string
   title: string
@@ -39,10 +43,8 @@ export function useContentSeo(input: ContentSeoInput) {
     ogLocale: 'hu_HU',
     ogImage: () => ogImage.value,
     ogImageAlt: () => `${brandName.value} – ${input.h1}`,
-    twitterCard: 'summary_large_image',
-    twitterTitle: () => fullTitle.value,
-    twitterDescription: () => description.value,
-    twitterImage: () => ogImage.value,
+    ogImageWidth: OG_IMAGE_WIDTH,
+    ogImageHeight: OG_IMAGE_HEIGHT,
     robots: () => robots.value,
   })
 

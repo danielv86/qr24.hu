@@ -30,6 +30,13 @@ export default defineApiHandler(async (event) => {
   if (!user) {
     throw new ApiProblem(401, 'invalid_credentials', 'A megadott e-mail-cím vagy jelszó nem megfelelő.')
   }
+  if (!user.emailVerified) {
+    throw new ApiProblem(
+      403,
+      'email_not_verified',
+      'Az e-mail-címed még nincs megerősítve. Írd be a regisztrációkor kapott 6 jegyű kódot.',
+    )
+  }
   await createUserSession(event, user.id)
   await writeAudit({ action: 'user.login', userId: user.id })
   return apiSuccess(event, { user: serializeUser(user) })

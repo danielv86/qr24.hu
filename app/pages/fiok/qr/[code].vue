@@ -11,7 +11,7 @@ import { downloadDynamicQr } from '~/utils/qr-download'
 definePageMeta({ layout: 'fiok', middleware: 'auth' })
 
 useSeoMeta({
-  title: 'QR-kód részletei | QR24.hu',
+  title: 'QR-kód részletei | QRKOD24.hu',
   description: 'Dinamikus QR-kód szerkesztése és beolvasási statisztikái.',
   robots: 'noindex, nofollow',
 })

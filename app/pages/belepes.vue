@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
-const { user, providers, login, register, refresh } = useUserSession()
+const { user, providers, login, refresh } = useUserSession()
 
 const mode = ref<'login' | 'register'>(route.query.mode === 'register' ? 'register' : 'login')
 const email = ref('')
@@ -10,6 +10,94 @@ const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
+
+/* ── E-mail megerősítés 6 jegyű kóddal ─────────────────────────────── */
+const step = ref<'auth' | 'verify'>('auth')
+const verifyEmail = ref('')
+const verifyCode = ref('')
+const devCode = ref('')
+const resendSeconds = ref(0)
+let resendTimer: ReturnType<typeof setInterval> | undefined
+
+function startResendCooldown(seconds = 60) {
+  if (resendTimer) clearInterval(resendTimer)
+  resendSeconds.value = seconds
+  resendTimer = setInterval(() => {
+    resendSeconds.value = Math.max(0, resendSeconds.value - 1)
+    if (resendSeconds.value === 0 && resendTimer) {
+      clearInterval(resendTimer)
+      resendTimer = undefined
+    }
+  }, 1000)
+}
+
+function openVerify(email: string, options: { cooldown?: number; message?: string } = {}) {
+  verifyEmail.value = email
+  verifyCode.value = ''
+  step.value = 'verify'
+  error.value = ''
+  success.value = options.message || ''
+  startResendCooldown(options.cooldown ?? 0)
+}
+
+function backToAuth() {
+  step.value = 'auth'
+  verifyCode.value = ''
+  devCode.value = ''
+  error.value = ''
+  success.value = ''
+  if (resendTimer) clearInterval(resendTimer)
+  resendSeconds.value = 0
+}
+
+async function submitCode() {
+  if (loading.value) return
+  error.value = ''
+  success.value = ''
+  if (!/^\d{6}$/.test(verifyCode.value.trim())) {
+    error.value = 'Írd be a 6 jegyű kódot.'
+    return
+  }
+  loading.value = true
+  try {
+    await $fetch('/api/auth/verify-email', {
+      method: 'POST',
+      body: { email: verifyEmail.value, code: verifyCode.value.trim() },
+    })
+    await refresh()
+    await navigateTo(redirectTo.value)
+  } catch (err) {
+    const data = (err as { data?: { error?: { message?: string } } }).data
+    error.value = data?.error?.message || 'A kód ellenőrzése nem sikerült. Próbáld újra.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function resendCode() {
+  if (loading.value || resendSeconds.value > 0) return
+  error.value = ''
+  success.value = ''
+  loading.value = true
+  try {
+    const response = await $fetch<{ success: true; data: { sent: boolean; devCode?: string } }>(
+      '/api/auth/resend-verification',
+      { method: 'POST', body: { email: verifyEmail.value } },
+    )
+    devCode.value = response.data.devCode || ''
+    success.value = 'Elküldtük az új kódot. Nézd meg a postaládádat (a spam mappát is).'
+    startResendCooldown(60)
+  } catch (err) {
+    const data = (err as { data?: { error?: { message?: string } } }).data
+    error.value = data?.error?.message || 'Az új kód kérése nem sikerült.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onBeforeUnmount(() => {
+  if (resendTimer) clearInterval(resendTimer)
+})
 
 const deniedMessage = computed(() => {
   const code = route.query.error
@@ -25,8 +113,8 @@ const redirectTo = computed(() => {
 })
 
 useSeoMeta({
-  title: 'Bejelentkezés és regisztráció | QR24.hu',
-  description: 'Jelentkezz be a QR24.hu fiókodba, és kezeld a dinamikus QR-kódjaidat.',
+  title: 'Bejelentkezés és regisztráció | QRKOD24.hu',
+  description: 'Jelentkezz be a QRKOD24.hu fiókodba, és kezeld a dinamikus QR-kódjaidat.',
   robots: 'noindex, nofollow',
 })
 
@@ -48,13 +136,32 @@ async function submit() {
   loading.value = true
   try {
     if (mode.value === 'login') {
-      await login(email.value.trim(), password.value)
+      try {
+        await login(email.value.trim(), password.value)
+        await navigateTo(redirectTo.value)
+      } catch (err) {
+        const errorCode = (err as { data?: { error?: { code?: string } } }).data?.error?.code
+        if (errorCode === 'email_not_verified') {
+          openVerify(email.value.trim(), {
+            message: 'Az e-mail-címed megerősítésre vár. Írd be a 6 jegyű kódot, vagy kérj újat.',
+          })
+          return
+        }
+        throw err
+      }
     } else {
-      await register(email.value.trim(), password.value, name.value.trim())
+      const response = await $fetch<{
+        success: true
+        data: { email: string; verificationRequired: boolean; devCode?: string }
+      }>('/api/auth/register', {
+        method: 'POST',
+        body: { email: email.value.trim(), password: password.value, name: name.value.trim() },
+      })
+      devCode.value = response.data.devCode || ''
+      openVerify(response.data.email, { cooldown: 60 })
     }
-    await navigateTo(redirectTo.value)
   } catch (err) {
-    const data = (err as { data?: { error?: { message?: string, details?: Record<string, string> } }, statusCode?: number }).data
+    const data = (err as { data?: { error?: { message?: string, details?: Record<string, string> } } }).data
     const details = data?.error?.details
     error.value = (details && Object.values(details)[0]) || data?.error?.message || 'A művelet nem sikerült. Próbáld újra.'
   } finally {
@@ -67,7 +174,7 @@ async function submit() {
   <div class="bg-slate-50">
     <div class="container-page grid min-h-[calc(100vh-9rem)] items-center gap-10 py-10 lg:grid-cols-2 lg:gap-16">
       <section class="order-2 lg:order-1">
-        <p class="eyebrow">QR24.hu fiók</p>
+        <p class="eyebrow">QRKOD24.hu fiók</p>
         <h1 class="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">Üdv újra!</h1>
         <p class="mt-3 max-w-md text-[1.02rem] leading-relaxed text-ink-soft">
           Kezeld egy helyen a dinamikus QR-kódjaidat, és nézd meg, honnan és mennyien olvassák be őket.
@@ -78,7 +185,7 @@ async function submit() {
             <span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
               <Icon name="lucide:check" class="h-3.5 w-3.5" aria-hidden="true" />
             </span>
-            5 dinamikus QR-kód ingyen, bankkártya nélkül
+            10 dinamikus QR-kód ingyen, bankkártya nélkül
           </li>
           <li class="flex items-start gap-2.5">
             <span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
@@ -108,6 +215,7 @@ async function submit() {
 
       <section class="order-1 w-full lg:order-2">
         <div class="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-card sm:p-7">
+          <template v-if="step === 'auth'">
           <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Bejelentkezés vagy regisztráció">
             <button
               type="button"
@@ -234,6 +342,69 @@ async function submit() {
             és az
             <NuxtLink to="/adatvedelmi-tajekoztato" class="underline underline-offset-2">adatvédelmi tájékoztatót</NuxtLink>.
           </p>
+          </template>
+
+          <template v-else>
+            <div class="text-center">
+              <span class="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-700">
+                <Icon name="lucide:mail-check" class="h-6 w-6" aria-hidden="true" />
+              </span>
+              <h2 class="mt-3 text-lg font-semibold text-ink">Erősítsd meg az e-mail-címedet</h2>
+              <p class="mt-1 text-sm leading-relaxed text-ink-soft">
+                Elküldtük a 6 jegyű kódot ide: <strong class="text-ink">{{ verifyEmail }}</strong>.
+                A kód 15 percig érvényes.
+              </p>
+            </div>
+
+            <p v-if="devCode" class="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900" role="status">
+              Fejlesztői mód: e-mail-küldés nincs beállítva, ezért a kód itt látszik –
+              <strong class="tracking-[0.2em]">{{ devCode }}</strong>
+            </p>
+
+            <form class="mt-4 space-y-3.5" @submit.prevent="submitCode">
+              <div>
+                <label for="verify-code" class="field-label">6 jegyű kód</label>
+                <input
+                  id="verify-code"
+                  v-model="verifyCode"
+                  class="field-input text-center text-xl font-semibold tracking-[0.45em]"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxlength="6"
+                  placeholder="000000"
+                  required
+                  autofocus
+                >
+              </div>
+
+              <p v-if="error" class="field-error" role="alert">{{ error }}</p>
+              <p v-if="success" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{{ success }}</p>
+
+              <button type="submit" class="btn-primary w-full py-2.5" :disabled="loading || verifyCode.trim().length !== 6">
+                <Icon :name="loading ? 'lucide:loader-circle' : 'lucide:shield-check'" :class="['h-4 w-4', { 'animate-spin': loading }]" aria-hidden="true" />
+                {{ loading ? 'Ellenőrzés…' : 'E-mail megerősítése' }}
+              </button>
+            </form>
+
+            <div class="mt-3 flex flex-col items-center gap-2 text-xs">
+              <button
+                type="button"
+                class="font-semibold text-brand-700 hover:underline disabled:text-ink-muted disabled:no-underline"
+                :disabled="loading || resendSeconds > 0"
+                @click="resendCode"
+              >
+                {{ resendSeconds > 0 ? `Új kód kérése (${resendSeconds} mp)` : 'Nem kaptad meg? Új kód kérése' }}
+              </button>
+              <button type="button" class="text-ink-muted hover:text-ink" @click="backToAuth">
+                Vissza a bejelentkezéshez
+              </button>
+            </div>
+
+            <p class="mt-4 text-center text-[11px] leading-relaxed text-ink-muted">
+              Ha nem találod a levelet, nézd meg a spam vagy promóciós mappát is. A feladó: QRKOD24.hu.
+            </p>
+          </template>
         </div>
 
         <p class="mt-4 text-center text-xs text-ink-muted">

@@ -4,7 +4,7 @@
 // a sitemap és a dinamikus rövid linkek ne essenek vissza localhostra.
 const siteUrl =
   process.env.NUXT_PUBLIC_SITE_URL
-  || (process.env.NODE_ENV === 'production' ? 'https://qr24.hu' : 'http://localhost:3000')
+  || (process.env.NODE_ENV === 'production' ? 'https://qrkod24.hu' : 'http://localhost:3000')
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -40,7 +40,7 @@ export default defineNuxtConfig({
 
   site: {
     url: siteUrl,
-    name: 'QR24.hu',
+    name: 'QRKOD24.hu',
     description:
       'Ingyenes QR-kód generátor magyarul. Készíts testreszabható QR-kódot weboldalhoz, Wi-Fi-hez, névjegyhez, e-mailhez és még sok máshoz, regisztráció nélkül.',
     defaultLocale: 'hu',
@@ -52,7 +52,7 @@ export default defineNuxtConfig({
       // A useContentSeo már hozzáfűzi a márkanevet, ezért nem duplázzuk.
       titleTemplate: '%s',
       meta: [
-        { name: 'theme-color', content: '#2563eb' },
+        { name: 'theme-color', content: '#6d28d9' },
         { name: 'format-detection', content: 'telephone=no' },
       ],
       link: [
@@ -75,7 +75,7 @@ export default defineNuxtConfig({
     // futásidőben, hogy ne kerüljenek bele az éles build artifactbe.
     public: {
       siteUrl,
-      brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'QR24.hu',
+      brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'QRKOD24.hu',
       dynamicQrEnabled: process.env.NUXT_PUBLIC_DYNAMIC_QR_ENABLED !== 'false',
       adsense: {
         client: process.env.NUXT_PUBLIC_ADSENSE_CLIENT || '',
@@ -131,12 +131,12 @@ export default defineNuxtConfig({
   sitemap: {
     // A lista a saját szervervégpontról jön (server/api/__sitemap__/urls.get.ts).
     sources: ['/api/__sitemap__/urls'],
-    exclude: ['/admin/**', '/api/**', '/r/**', '/koszonjuk'],
+    exclude: ['/admin/**', '/api/**', '/go/**', '/koszonjuk'],
     defaults: { changefreq: 'monthly', priority: 0.6 },
   },
 
   robots: {
-    disallow: ['/admin', '/admin/', '/api/', '/r/'],
+    disallow: ['/admin', '/admin/', '/api/', '/go/'],
     allow: ['/', '/api/__sitemap__/urls'],
   },
 
@@ -165,7 +165,7 @@ export default defineNuxtConfig({
     // Az API és a rövid linkek nem cache-elhetők; a sitemap forrása igen.
     '/api/__sitemap__/**': { headers: { 'Cache-Control': 'public, max-age=3600' } },
     '/api/**': { headers: { 'Cache-Control': 'no-store' } },
-    '/r/**': { headers: { 'Cache-Control': 'no-store' } },
+    '/go/**': { headers: { 'Cache-Control': 'no-store' } },
     '/admin/**': { robots: false, headers: { 'Cache-Control': 'no-store' } },
     '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
     '/**': {

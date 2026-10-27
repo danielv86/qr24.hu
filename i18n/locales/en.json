@@ -1,9 +1,14 @@
 {
   "nav": {
     "generator": "QR code generator",
-    "types": "Types",
+    "types": "QR code types",
     "bulk": "Bulk QR code generator",
-    "guides": "Guides",
+    "pricing": "Plans",
+    "app": "App",
+    "scanner": "QR code reader",
+    "sizeCalculator": "QR code size calculator",
+    "info": "Information",
+    "guides": "QR code guide",
     "faq": "FAQ",
     "dynamic": "Dynamic QR codes",
     "mainLabel": "Main navigation",
@@ -11,6 +16,7 @@
   },
   "actions": {
     "signIn": "Sign in",
+    "myAccount": "Go to my account",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },

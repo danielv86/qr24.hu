@@ -56,7 +56,7 @@ useContentSeo({
   slug: '/qr-kod-tipusok',
   title: 'QR-kód típusok – minden formátum egy helyen',
   description:
-    'A QR24.hu összes QR-kód típusa: weboldal, kapcsolat, Wi-Fi, bank, PayPal, PDF, étlap, kupon és további formátumok. Válaszd ki a célodnak megfelelőt.',
+    'A QRKOD24.hu összes QR-kód típusa: weboldal, kapcsolat, Wi-Fi, bank, PayPal, PDF, étlap, kupon és további formátumok. Válaszd ki a célodnak megfelelőt.',
   h1: 'QR-kód típusok',
 })
 </script>

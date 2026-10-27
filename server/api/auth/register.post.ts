@@ -1,8 +1,10 @@
 import { setResponseHeader } from 'h3'
 import { apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
+import { getPrisma, withDb } from '../../utils/db'
+import { issueVerificationCode } from '../../utils/email-verification'
 import { enforceRateLimit } from '../../utils/rate-limit'
-import { createUserSession, registerUser, serializeUser } from '../../utils/user-auth'
+import { registerUser } from '../../utils/user-auth'
 import { assertSameOrigin, readJsonBody, userRegisterSchema } from '../../utils/validation'
 
 export default defineApiHandler(async (event) => {
@@ -22,7 +24,23 @@ export default defineApiHandler(async (event) => {
     password: input.password,
     name: input.name,
   })
-  await createUserSession(event, user.id)
-  await writeAudit({ action: 'user.registered', userId: user.id })
-  return apiSuccess(event, { user: serializeUser(user) }, 201)
+
+  try {
+    const issued = await issueVerificationCode(user.id, user.email, user.name)
+    await writeAudit({ action: 'user.registered', userId: user.id })
+    return apiSuccess(
+      event,
+      {
+        email: user.email,
+        verificationRequired: true,
+        /** Csak fejlesztői módban, ha nincs beállítva e-mail-küldés. */
+        ...issued,
+      },
+      201,
+    )
+  } catch (error) {
+    // Ha a levél nem megy ki, ne maradjon olyan fiók, amit nem lehet megerősíteni.
+    await withDb(() => getPrisma().user.delete({ where: { id: BigInt(user.id) } })).catch(() => {})
+    throw error
+  }
 })

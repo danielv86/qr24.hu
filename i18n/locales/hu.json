@@ -1,9 +1,14 @@
 {
   "nav": {
     "generator": "QR kód generátor",
-    "types": "Típusok",
-    "bulk": "Tömeges QR kód generátor",
-    "guides": "Útmutatók",
+    "types": "QR-kód típusok",
+    "bulk": "Tömeges QR kód",
+    "pricing": "Csomagok",
+    "app": "App",
+    "scanner": "QR-kód olvasó",
+    "sizeCalculator": "QR-kód méretkalkulátor",
+    "info": "Információk",
+    "guides": "QR-kód útmutató",
     "faq": "GYIK",
     "dynamic": "Dinamikus QR-kódok",
     "mainLabel": "Fő navigáció",
@@ -11,6 +16,7 @@
   },
   "actions": {
     "signIn": "Bejelentkezés",
+    "myAccount": "Irány a fiókom",
     "openMenu": "Menü megnyitása",
     "closeMenu": "Menü bezárása"
   },

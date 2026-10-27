@@ -149,7 +149,7 @@ export function useBulkDownload() {
 <html lang="hu">
 <head>
   <meta charset="utf-8">
-  <title>QR24.hu – tömeges QR-kódok</title>
+  <title>QRKOD24.hu – tömeges QR-kódok</title>
   <style>
     @page { size: A4; margin: 10mm; }
     * { box-sizing: border-box; }

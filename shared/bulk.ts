@@ -60,7 +60,7 @@ function cleanCell(value: string): string {
 /**
  * Az elválasztó kiválasztása. A vesszőt csak akkor vesszük elválasztónak, ha a
  * típusnak egynél több mezője van – különben a címben szereplő vesszőt is
- * szétdobná (pl. `https://pelda.hu/kereses?q=alma,korte`).
+ * szétdobná (pl. `https://qrkod24.hu/kereses?q=alma,korte`).
  */
 function detectDelimiter(lines: string[], multiField: boolean): string | null {
   const test = lines.slice(0, 5)
@@ -80,8 +80,17 @@ function parseBoolean(value: string): boolean {
 }
 
 /** A típus mezőihez tartozó oszlopnevek (a felületi súgóhoz). */
+/**
+ * A weboldal típusnál az előtag-választó nem kötelező oszlop: a beírt címből
+ * is kitaláljuk, ezért a pozíció szerinti oszlopok csak a címet tartalmazzák.
+ */
+function positionalFields(type: QrTypeId): QrFieldDefinition[] {
+  const fields = getQrType(type).fields
+  return type === 'url' ? fields.filter(field => field.key === 'url') : fields
+}
+
 export function bulkColumns(type: QrTypeId): string[] {
-  return ['name', ...getQrType(type).fields.map(field => field.key)]
+  return ['name', ...positionalFields(type).map(field => field.key)]
 }
 
 /** Egy mező példaértéke a mintához (placeholder, alapérték, majd típus szerinti tartalék). */
@@ -89,8 +98,8 @@ function sampleValue(field: QrFieldDefinition, fallback: unknown): string {
   const candidate = field.placeholder || (typeof fallback === 'string' ? fallback : '')
   if (candidate) return candidate.replace(/[;\t\n]+/g, ' ')
   switch (field.type) {
-    case 'url': return 'https://pelda.hu'
-    case 'email': return 'pelda@pelda.hu'
+    case 'url': return 'https://qrkod24.hu'
+    case 'email': return 'pelda@qrkod24.hu'
     case 'tel': return '+36301234567'
     case 'checkbox': return '0'
     case 'number': return '1'
@@ -105,7 +114,7 @@ function sampleValue(field: QrFieldDefinition, fallback: unknown): string {
 export function bulkSample(type: QrTypeId): string {
   const definition = getQrType(type)
   const values = createDefaultValues(type)
-  const cells = definition.fields.map((field) => {
+  const cells = positionalFields(type).map((field) => {
     // Az esemény mintájában a befejezésnek később kell lennie a kezdésnél.
     if (field.key === 'endDate') return '2026-06-02'
     if (field.key === 'endTime') return '20:00'
@@ -142,7 +151,8 @@ export function parseBulkInput(raw: string, options: BulkParseOptions = {}): Bul
   const limit = options.limit ?? BULK_LIMIT
   const definition = getQrType(type)
   const fields = definition.fields
-  const multiField = fields.length > 1
+  const positional = positionalFields(type)
+  const multiField = positional.length > 1
 
   const lines = raw
     .replace(/\r\n?/g, '\n')
@@ -174,8 +184,8 @@ export function parseBulkInput(raw: string, options: BulkParseOptions = {}): Bul
     })
     lines.shift()
   } else {
-    columns = ['name', ...fields.map(field => field.key)]
-    mapping = fields.map(field => ({ kind: 'field' as const, key: field.key }))
+    columns = ['name', ...positional.map(field => field.key)]
+    mapping = positional.map(field => ({ kind: 'field' as const, key: field.key }))
   }
 
   for (const entry of lines) {
@@ -200,10 +210,10 @@ export function parseBulkInput(raw: string, options: BulkParseOptions = {}): Bul
         const target = mapping[index]
         if (target) assign(target, cell)
       })
-    } else if (cells.length > fields.length) {
+    } else if (cells.length > positional.length) {
       // Név + a mezők pozíció szerint (a többlet oszlop a végén név).
       label = cells[0] ?? ''
-      cells.slice(1, fields.length + 1).forEach((cell, index) => {
+      cells.slice(1, positional.length + 1).forEach((cell, index) => {
         assign(mapping[index]!, cell)
       })
     } else {

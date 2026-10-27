@@ -36,17 +36,37 @@ describe('QR type registry', () => {
 
 describe('URL QR codes', () => {
   it('adds https:// and normalizes a valid URL', () => {
-    const result = build('url', { url: 'pelda.hu/ajanlat' })
+    const result = build('url', { url: 'qrkod24.hu/ajanlat' })
     expect(result.ok).toBe(true)
-    if (result.ok) expect(result.data).toBe('https://pelda.hu/ajanlat')
+    if (result.ok) expect(result.data).toBe('https://qrkod24.hu/ajanlat')
   })
 
   it('rejects invalid and unsafe URL schemes', () => {
     expect(build('url', { url: '' }).ok).toBe(false)
     expect(build('url', { url: 'nem url' }).ok).toBe(false)
     expect(parseHttpUrl('javascript:alert(1)')).toBeNull()
-    expect(parseHttpUrl('https://user:pass@pelda.hu')).toBeNull()
+    expect(parseHttpUrl('https://user:pass@qrkod24.hu')).toBeNull()
     expect(parseHttpUrl('http://localhost:3000')).toBeNull()
+  })
+
+  it('az előtag-választó dönt a cím elejéről', () => {
+    const address = { url: 'qrkod24.hu/ajanlat' }
+    const https = build('url', { ...address, protocol: 'https://' })
+    const http = build('url', { ...address, protocol: 'http://' })
+    const www = build('url', { ...address, protocol: 'www.' })
+    expect(https.ok && https.data).toBe('https://qrkod24.hu/ajanlat')
+    expect(http.ok && http.data).toBe('http://qrkod24.hu/ajanlat')
+    expect(www.ok && www.data).toBe('www.qrkod24.hu/ajanlat')
+  })
+
+  it('a teljes címről lecseréli az előtagot', () => {
+    const result = build('url', { protocol: 'http://', url: 'https://www.qrkod24.hu' })
+    expect(result.ok && result.data).toBe('http://qrkod24.hu/')
+  })
+
+  it('csak http(s) protokollt fogad el', () => {
+    const result = build('url', { url: 'ftp://qrkod24.hu' })
+    expect(result.ok).toBe(false)
   })
 })
 
@@ -85,13 +105,13 @@ describe('phone QR codes', () => {
 describe('email QR codes', () => {
   it('builds a mailto URI with encoded subject and body', () => {
     const result = build('email', {
-      email: 'info@pelda.hu',
+      email: 'info@qrkod24.hu',
       subject: 'Ajánlatkérés',
       body: 'Kedves Csapat!\nÉrdeklődöm.',
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.data.startsWith('mailto:info@pelda.hu?')).toBe(true)
+    expect(result.data.startsWith('mailto:info@qrkod24.hu?')).toBe(true)
     const params = new URLSearchParams(result.data.split('?')[1])
     expect(params.get('subject')).toBe('Ajánlatkérés')
     expect(params.get('body')).toBe('Kedves Csapat!\nÉrdeklődöm.')
@@ -152,8 +172,8 @@ describe('vCard QR codes', () => {
       organization: 'Példa Kft.',
       title: 'Ügyvezető',
       phone: '06 30 123 4567',
-      email: 'anna@pelda.hu',
-      website: 'pelda.hu',
+      email: 'anna@qrkod24.hu',
+      website: 'qrkod24.hu',
       street: 'Fő utca 1.',
       city: 'Budapest',
       zip: '1011',
@@ -169,8 +189,8 @@ describe('vCard QR codes', () => {
     expect(result.data).toContain('FN:Anna Nagy')
     expect(result.data).toContain('ORG:Példa Kft.')
     expect(result.data).toContain('TEL;TYPE=CELL:+36301234567')
-    expect(result.data).toContain('EMAIL;TYPE=INTERNET:anna@pelda.hu')
-    expect(result.data).toContain('URL:https://pelda.hu/')
+    expect(result.data).toContain('EMAIL;TYPE=INTERNET:anna@qrkod24.hu')
+    expect(result.data).toContain('URL:https://qrkod24.hu/')
     expect(result.data).toContain('ADR;TYPE=WORK:;;Fő utca 1.;Budapest;;1011;Magyarország')
     expect(result.data).toContain('NOTE:Első sor\\nMásodik sor')
     expect(result.data.endsWith('END:VCARD')).toBe(true)
@@ -202,7 +222,7 @@ describe('WhatsApp and social QR codes', () => {
 describe('Google review QR codes', () => {
   it('accepts Google review links and rejects unrelated domains', () => {
     expect(build('google-review', { url: 'https://g.page/r/abc/review' }).ok).toBe(true)
-    expect(build('google-review', { url: 'https://pelda.hu/ertekeles' }).ok).toBe(false)
+    expect(build('google-review', { url: 'https://qrkod24.hu/ertekeles' }).ok).toBe(false)
     expect(build('google-review', { url: '' }).ok).toBe(false)
   })
 })
@@ -213,7 +233,7 @@ describe('contact and business QR codes', () => {
       firstName: 'Anna',
       lastName: 'Nagy',
       phone: '06 30 123 4567',
-      email: 'anna@pelda.hu',
+      email: 'anna@qrkod24.hu',
       organization: 'Példa Kft.',
       title: 'Ügyvezető',
     })
@@ -235,8 +255,8 @@ describe('contact and business QR codes', () => {
     const result = build('business', {
       company: 'Példa Kft.',
       phone: '+36 1 234 5678',
-      email: 'info@pelda.hu',
-      website: 'pelda.hu',
+      email: 'info@qrkod24.hu',
+      website: 'qrkod24.hu',
       street: 'Fő utca 1.',
       city: 'Budapest',
       zip: '1011',
@@ -317,12 +337,12 @@ describe('coupon QR codes', () => {
   it('builds a readable coupon payload with link and note', () => {
     const result = build('coupon', {
       code: 'NYAR2026',
-      url: 'pelda.hu/akcio',
+      url: 'qrkod24.hu/akcio',
       note: 'December 31-ig',
     })
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data).toBe('KUPON: NYAR2026\nhttps://pelda.hu/akcio\nDecember 31-ig')
+      expect(result.data).toBe('KUPON: NYAR2026\nhttps://qrkod24.hu/akcio\nDecember 31-ig')
     }
   })
 
@@ -338,9 +358,9 @@ describe('link-based QR codes', () => {
 
   it('normalizes the URL for every link type', () => {
     for (const type of linkTypes) {
-      const result = build(type, { url: 'pelda.hu/tartalom' })
+      const result = build(type, { url: 'qrkod24.hu/tartalom' })
       expect(result.ok, type).toBe(true)
-      if (result.ok) expect(result.data).toBe('https://pelda.hu/tartalom')
+      if (result.ok) expect(result.data).toBe('https://qrkod24.hu/tartalom')
     }
   })
 

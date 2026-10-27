@@ -9,9 +9,18 @@ export type AuditAction =
   | 'qr.archived'
   | 'qr.deleted'
   | 'user.registered'
+  | 'user.verified'
   | 'user.login'
   | 'user.oauth_login'
   | 'user.logout'
+  | 'user.updated'
+  | 'user.password_changed'
+  | 'user.deleted'
+  | 'api_key.created'
+  | 'api_key.revoked'
+  | 'domain.added'
+  | 'domain.verified'
+  | 'domain.removed'
   | 'plans.updated'
 
 export const AUDIT_LABELS: Record<AuditAction, string> = {
@@ -22,9 +31,18 @@ export const AUDIT_LABELS: Record<AuditAction, string> = {
   'qr.archived': 'QR-kód archiválva',
   'qr.deleted': 'QR-kód törölve',
   'user.registered': 'Fiók létrehozva',
+  'user.verified': 'E-mail-cím megerősítve',
   'user.login': 'Bejelentkezés',
   'user.oauth_login': 'Bejelentkezés külső szolgáltatóval',
   'user.logout': 'Kijelentkezés',
+  'user.updated': 'Fiókadatok módosítva',
+  'user.password_changed': 'Jelszó módosítva',
+  'user.deleted': 'Fiók törölve',
+  'api_key.created': 'API-kulcs létrehozva',
+  'api_key.revoked': 'API-kulcs visszavonva',
+  'domain.added': 'Saját domain hozzáadva',
+  'domain.verified': 'Saját domain hitelesítve',
+  'domain.removed': 'Saját domain eltávolítva',
   'plans.updated': 'Csomagbeállítás módosítva',
 }
 

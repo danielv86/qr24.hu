@@ -46,6 +46,12 @@ export interface PlanDefinition {
   csvExport: boolean
   apiAccess: boolean
   customDomain: boolean
+  /** Havi listaár forintban; 0 = ingyenes. */
+  priceMonthly: number
+  /** Éves előfizetés ára forintban (a havi ár 12 hónapjához képest kedvezmény). */
+  priceYearly: number
+  /** Hány saját domain rendelhető a csomagban (0 = nem elérhető). */
+  domainLimit: number
 }
 
 export type PlansConfig = Record<PlanId, PlanDefinition>
@@ -201,4 +207,62 @@ export interface QrAnalytics {
   daily: DailyScanPoint[]
   devices: QrAnalyticsBreakdown[]
   browsers: QrAnalyticsBreakdown[]
+}
+
+export interface AccountScanItem {
+  shortCode: string
+  name: string | null
+  createdAt: string
+  device: string
+  browser: string
+  country: string | null
+  isBot: boolean
+}
+
+/** Fiókszintű analitika: az összes saját dinamikus QR-kód együtt. */
+export interface AccountAnalytics {
+  from: string
+  to: string
+  days: number
+  planAnalyticsDays: number
+  total: number
+  humanTotal: number
+  botTotal: number
+  daily: DailyScanPoint[]
+  topQrCodes: { shortCode: string; name: string | null; scans: number }[]
+  devices: QrAnalyticsBreakdown[]
+  browsers: QrAnalyticsBreakdown[]
+  countries: QrAnalyticsBreakdown[]
+  referrers: QrAnalyticsBreakdown[]
+  recentScans: AccountScanItem[]
+}
+
+export type CustomDomainStatus = 'pending' | 'verified'
+
+export interface CustomDomainItem {
+  id: number
+  host: string
+  status: CustomDomainStatus
+  /** A TXT rekord neve és értéke, amivel a tulajdonjog igazolható. */
+  verificationName: string
+  verificationValue: string
+  /** A hitelesített domainen használható rövidlink-előtag. */
+  shortUrlBase: string
+  verifiedAt: string | null
+  lastCheckedAt: string | null
+  createdAt: string
+}
+
+export interface ApiKeyItem {
+  id: number
+  name: string
+  prefix: string
+  lastUsedAt: string | null
+  revokedAt: string | null
+  createdAt: string
+}
+
+export interface ApiKeyCreated extends ApiKeyItem {
+  /** A teljes kulcs csak létrehozáskor jelenik meg egyszer. */
+  token: string
 }

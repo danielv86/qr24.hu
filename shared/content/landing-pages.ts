@@ -12,7 +12,7 @@ export const LANDING_PAGES: LandingPageContent[] = [
     h1: 'Ingyenes QR-kód generátor',
     kicker: 'Online QR-eszköz',
     intro: [
-      'A QR24.hu generátorával néhány másodperc alatt készíthetsz működő QR-kódot weboldalhoz, Wi-Fi-hálózathoz, névjegyhez, e-mailhez vagy éppen egy eseményhez. Nincs regisztráció, nincs kötelező e-mail-cím, és a statikus kód előállítása a böngésződben történik.',
+      'A QRKOD24.hu generátorával néhány másodperc alatt készíthetsz működő QR-kódot weboldalhoz, Wi-Fi-hálózathoz, névjegyhez, e-mailhez vagy éppen egy eseményhez. Nincs regisztráció, nincs kötelező e-mail-cím, és a statikus kód előállítása a böngésződben történik.',
       'Válaszd ki a kívánt típust, töltsd ki az űrlapot, majd állítsd be a színeket, a formákat, a keretet és a logót. Az előnézet minden módosításnál azonnal frissül, a kész kódot pedig PNG, JPG, WebP, SVG vagy PDF formátumban töltheted le.',
     ],
     qrType: 'url',
@@ -98,7 +98,7 @@ export const LANDING_PAGES: LandingPageContent[] = [
     kicker: 'Gyakorlati útmutató',
     intro: [
       'Egy jól elkészített QR-kód nem csak négyzetes minta: mögötte tudatos döntés van arról, milyen tartalmat, milyen méretben és milyen helyzetben szeretnénk átadni. Ez az útmutató végigvezet a folyamaton a cél meghatározásától a nyomtatott kód ellenőrzéséig.',
-      'Az itt leírt lépések a QR24.hu generátorával azonnal kipróbálhatók. A statikus kódokhoz nem kell fiók, és a kész fájlt bármikor újragenerálhatod, ha változik a tartalom.',
+      'Az itt leírt lépések a QRKOD24.hu generátorával azonnal kipróbálhatók. A statikus kódokhoz nem kell fiók, és a kész fájlt bármikor újragenerálhatod, ha változik a tartalom.',
     ],
     sections: [
       {

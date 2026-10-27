@@ -50,7 +50,7 @@ describe('tervezési sablonok', () => {
     }
   })
 
-  it('a sablon csak a megjelenést írja felül', () => {
+  it('a márkás sablon a saját logóját viszi a kódba, H hibajavítással', () => {
     const template = getDesignTemplate('instagram')!
     const result = applyDesignTemplate(customization, template)
     expect(result.frame).toBe('card')
@@ -59,11 +59,25 @@ describe('tervezési sablonok', () => {
     expect(result.frameColor).toBe('#833AB4')
     expect(result.designTemplate).toBe('instagram')
     expect(result.bodyFill.color).toBe(template.fgColor)
-    // A tartalom, a logó és az exportméret változatlan.
-    expect(result.logo).toBe(customization.logo)
-    expect(result.logoName).toBe('logo.png')
+    expect(template.logo).toBe('instagram')
+    expect(result.logo).toContain('data:image/svg+xml')
+    expect(result.logoName).toBe('Instagram')
+    expect(result.errorCorrection).toBe('H')
+    // Az exportméret nem változik a sablonnal.
     expect(result.size).toBe(customization.size)
+  })
+
+  it('a logó nélküli sablon leveszi a korábbi logót', () => {
+    const result = applyDesignTemplate(customization, getDesignTemplate('restaurant-menu')!)
+    expect(result.logo).toBe('')
+    expect(result.logoName).toBe('')
     expect(result.errorCorrection).toBe(customization.errorCorrection)
+  })
+
+  it('a Klasszikus sablon leveszi a márkalogót is', () => {
+    const result = applyDesignTemplate(customization, getDesignTemplate('classic')!)
+    expect(result.logo).toBe('')
+    expect(result.logoName).toBe('')
   })
 
   it('a keret nélküli sablon törli a keret szövegét', () => {

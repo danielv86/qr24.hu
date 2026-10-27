@@ -128,16 +128,30 @@ export const QR_TYPES: QrTypeDefinition[] = [
     shortLabel: 'Weboldal',
     icon: 'lucide:link',
     description: 'Weboldal, webshop vagy bármilyen webcím megnyitása egyetlen beolvasással.',
-    examples: 'https://pelda.hu',
+    examples: 'https://qrkod24.hu',
     seoPath: '/url-qr-kod-generator',
     fields: [
       {
-        key: 'url',
-        label: 'Weboldal URL-címe',
-        type: 'url',
-        placeholder: 'https://pelda.hu',
-        help: 'Ha nem írsz protokollt, automatikusan https:// kerül elé.',
+        key: 'protocol',
+        label: 'Előtag',
+        type: 'select',
         required: true,
+        defaultValue: 'https://',
+        half: true,
+        options: [
+          { value: 'https://', label: 'https://' },
+          { value: 'http://', label: 'http://' },
+          { value: 'www.', label: 'www.' },
+        ],
+      },
+      {
+        key: 'url',
+        label: 'Weboldal címe',
+        type: 'text',
+        placeholder: 'qrkod24.hu',
+        help: 'A kód a kiválasztott előtaggal készül. Ha teljes címet másolsz be, a protokollt lecseréljük.',
+        required: true,
+        half: true,
         inputmode: 'url',
         autocomplete: 'url',
       },
@@ -190,14 +204,14 @@ export const QR_TYPES: QrTypeDefinition[] = [
     shortLabel: 'E-mail',
     icon: 'lucide:mail',
     description: 'E-mail írása előre kitöltött címmel, tárggyal és szöveggel.',
-    examples: 'info@pelda.hu',
+    examples: 'info@qrkod24.hu',
     seoPath: '/email-qr-kod-generator',
     fields: [
       {
         key: 'email',
         label: 'E-mail-cím',
         type: 'email',
-        placeholder: 'info@pelda.hu',
+        placeholder: 'info@qrkod24.hu',
         required: true,
         inputmode: 'email',
         autocomplete: 'email',
@@ -348,7 +362,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'email',
         label: 'E-mail-cím (opcionális)',
         type: 'email',
-        placeholder: 'anna@pelda.hu',
+        placeholder: 'anna@qrkod24.hu',
         inputmode: 'email',
         autocomplete: 'email',
         half: true,
@@ -357,7 +371,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'website',
         label: 'Weboldal (opcionális)',
         type: 'url',
-        placeholder: 'https://pelda.hu',
+        placeholder: 'https://qrkod24.hu',
         inputmode: 'url',
         autocomplete: 'url',
       },
@@ -583,7 +597,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'url',
         label: 'Esemény weboldala (opcionális)',
         type: 'url',
-        placeholder: 'https://pelda.hu/esemeny',
+        placeholder: 'https://qrkod24.hu/esemeny',
         inputmode: 'url',
       },
     ],
@@ -627,7 +641,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'email',
         label: 'E-mail-cím',
         type: 'email',
-        placeholder: 'anna@pelda.hu',
+        placeholder: 'anna@qrkod24.hu',
         half: true,
         inputmode: 'email',
         autocomplete: 'email',
@@ -772,7 +786,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'url',
         label: 'Beváltási link (opcionális)',
         type: 'url',
-        placeholder: 'https://pelda.hu/akcio',
+        placeholder: 'https://qrkod24.hu/akcio',
         inputmode: 'url',
       },
       {
@@ -813,7 +827,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'email',
         label: 'E-mail-cím',
         type: 'email',
-        placeholder: 'info@pelda.hu',
+        placeholder: 'info@qrkod24.hu',
         half: true,
         inputmode: 'email',
         autocomplete: 'email',
@@ -822,7 +836,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
         key: 'website',
         label: 'Weboldal',
         type: 'url',
-        placeholder: 'https://pelda.hu',
+        placeholder: 'https://qrkod24.hu',
         inputmode: 'url',
         autocomplete: 'url',
       },
@@ -874,13 +888,13 @@ export const QR_TYPES: QrTypeDefinition[] = [
     shortLabel: 'PDF',
     icon: 'lucide:file-text',
     description: 'PDF dokumentum, árlista vagy tájékoztató megnyitása egyetlen beolvasással.',
-    examples: 'https://pelda.hu/arlista.pdf',
+    examples: 'https://qrkod24.hu/arlista.pdf',
     fields: [
       {
         key: 'url',
         label: 'PDF hivatkozása',
         type: 'url',
-        placeholder: 'https://pelda.hu/arlista.pdf',
+        placeholder: 'https://qrkod24.hu/arlista.pdf',
         required: true,
         inputmode: 'url',
         help: 'A fájlnak nyilvánosan elérhető címen kell lennie. A QR-kód a meglévő PDF-et nyitja meg.',
@@ -912,13 +926,13 @@ export const QR_TYPES: QrTypeDefinition[] = [
     shortLabel: 'Eseményoldal',
     icon: 'lucide:calendar-check',
     description: 'Esemény részletei, jelentkezés vagy jegyvásárlás a saját eseményoldaladon.',
-    examples: 'https://pelda.hu/esemeny',
+    examples: 'https://qrkod24.hu/esemeny',
     fields: [
       {
         key: 'url',
         label: 'Eseményoldal címe',
         type: 'url',
-        placeholder: 'https://pelda.hu/esemeny',
+        placeholder: 'https://qrkod24.hu/esemeny',
         required: true,
         inputmode: 'url',
       },
@@ -930,13 +944,13 @@ export const QR_TYPES: QrTypeDefinition[] = [
     shortLabel: 'Étlap',
     icon: 'lucide:utensils',
     description: 'Étlap megnyitása az asztalnál: PDF vagy webes étlap, frissíthető tartalommal.',
-    examples: 'https://pelda.hu/etlap',
+    examples: 'https://qrkod24.hu/etlap',
     fields: [
       {
         key: 'url',
         label: 'Étlap címe',
         type: 'url',
-        placeholder: 'https://pelda.hu/etlap',
+        placeholder: 'https://qrkod24.hu/etlap',
         required: true,
         inputmode: 'url',
         help: 'Ha az étlap PDF, akkor a PDF közvetlen linkjét add meg.',
@@ -967,13 +981,13 @@ export const QR_TYPES: QrTypeDefinition[] = [
     shortLabel: 'Űrlap',
     icon: 'lucide:clipboard-list',
     description: 'Online űrlap, jelentkezés vagy ajánlatkérés megnyitása.',
-    examples: 'https://pelda.hu/urlap',
+    examples: 'https://qrkod24.hu/urlap',
     fields: [
       {
         key: 'url',
         label: 'Űrlap címe',
         type: 'url',
-        placeholder: 'https://pelda.hu/urlap',
+        placeholder: 'https://qrkod24.hu/urlap',
         required: true,
         inputmode: 'url',
         help: 'Google Űrlap, Microsoft Forms vagy a saját űrlapod linkje.',
@@ -1057,33 +1071,33 @@ export const QR_TYPES: QrTypeDefinition[] = [
 
 /** A főoldali típusválasztó és a generátor fülei ebben a sorrendben jelennek meg. */
 export const QR_MENU_ORDER: QrTypeId[] = [
-  'url',
-  'contact',
-  'social',
-  'wifi',
-  'bank',
   'text',
+  'url',
+  'vcard',
+  'contact',
+  'wifi',
+  'social',
+  'pdf',
+  'whatsapp',
+  'google-review',
+  'menu',
   'email',
   'phone',
-  'sms',
   'map',
-  'whatsapp',
   'event',
-  'google-review',
-  'paypal',
-  'pdf',
+  'form',
+  'feedback',
   'app',
-  'vcard',
+  'video',
+  'gallery',
+  'files',
   'event-page',
-  'menu',
   'coupon',
   'business',
-  'feedback',
-  'form',
-  'files',
+  'sms',
+  'bank',
+  'paypal',
   'audio',
-  'gallery',
-  'video',
 ]
 
 export const QR_MENU_TYPES: QrTypeDefinition[] = QR_MENU_ORDER.map(id => getQrType(id))
@@ -1109,11 +1123,16 @@ export function createDefaultValues(typeId: QrTypeId): QrFormValues {
  * Bemutató adatok: a generátor már az első betöltéskor mutat egy minta
  * QR-kódot, a felhasználó pedig bármikor felülírhatja a mezőket.
  */
+export type UrlProtocol = 'https://' | 'http://' | 'www.'
+
+/** A weboldal QR-kód előtag-választója. */
+export const URL_PROTOCOLS: UrlProtocol[] = ['https://', 'http://', 'www.']
+
 export const SAMPLE_VALUES: Partial<Record<QrTypeId, QrFormValues>> = {
-  url: { url: 'https://pelda.hu' },
+  url: { protocol: 'https://', url: 'qrkod24.hu' },
   text: { text: 'Írd ide a szöveget, amelyet beolvasás után látni szeretnél.' },
   phone: { phone: '+36 30 123 4567' },
-  email: { email: 'info@pelda.hu', subject: 'Ajánlatkérés', body: 'Kedves Csapat!\nÉrdeklődni szeretnék.' },
+  email: { email: 'info@qrkod24.hu', subject: 'Ajánlatkérés', body: 'Kedves Csapat!\nÉrdeklődni szeretnék.' },
   sms: { phone: '+36 30 123 4567', message: 'Szia! Érdeklődni szeretnék.' },
   wifi: { ssid: 'VendegWiFi', security: 'WPA', password: 'vendeg-2026' },
   vcard: {
@@ -1122,21 +1141,21 @@ export const SAMPLE_VALUES: Partial<Record<QrTypeId, QrFormValues>> = {
     organization: 'Példa Kft.',
     title: 'Ügyvezető',
     phone: '+36 30 123 4567',
-    email: 'anna@pelda.hu',
-    website: 'https://pelda.hu',
+    email: 'anna@qrkod24.hu',
+    website: 'https://qrkod24.hu',
   },
   contact: {
     firstName: 'Anna',
     lastName: 'Nagy',
     phone: '+36 30 123 4567',
-    email: 'anna@pelda.hu',
+    email: 'anna@qrkod24.hu',
     organization: 'Példa Kft.',
   },
   business: {
     company: 'Példa Kft.',
     phone: '+36 1 234 5678',
-    email: 'info@pelda.hu',
-    website: 'https://pelda.hu',
+    email: 'info@qrkod24.hu',
+    website: 'https://qrkod24.hu',
     street: 'Fő utca 1.',
     city: 'Budapest',
     zip: '1011',
@@ -1156,12 +1175,12 @@ export const SAMPLE_VALUES: Partial<Record<QrTypeId, QrFormValues>> = {
   paypal: { handle: 'pelda', currency: 'EUR' },
   bank: { beneficiary: 'Példa Kft.', iban: 'HU42 1177 3016 1111 1018 0000 0000', currency: 'EUR' },
   coupon: { code: 'NYAR2026' },
-  pdf: { url: 'https://pelda.hu/arlista.pdf' },
+  pdf: { url: 'https://qrkod24.hu/arlista.pdf' },
   app: { url: 'https://play.google.com/store/apps' },
-  'event-page': { url: 'https://pelda.hu/esemeny' },
-  menu: { url: 'https://pelda.hu/etlap' },
+  'event-page': { url: 'https://qrkod24.hu/esemeny' },
+  menu: { url: 'https://qrkod24.hu/etlap' },
   feedback: { url: 'https://forms.gle/pelda' },
-  form: { url: 'https://pelda.hu/urlap' },
+  form: { url: 'https://qrkod24.hu/urlap' },
   files: { url: 'https://drive.google.com/' },
   audio: { url: 'https://open.spotify.com/' },
   gallery: { url: 'https://photos.app.goo.gl/' },
@@ -1182,11 +1201,21 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
   const get = (key: string) => asString(values[key])
 
   if (typeId === 'url') {
-    const url = get('url')
-    if (!url) errors.url = 'Add meg a weboldal címét.'
-    else if (!parseHttpUrl(url)) errors.url = 'Érvénytelen webcím. Példa: https://pelda.hu'
+    const protocol = URL_PROTOCOLS.includes(get('protocol') as UrlProtocol) ? (get('protocol') as UrlProtocol) : 'https://'
+    const raw = get('url').trim()
+    // A beírt címről levesszük a protokollt és a www. előtagot, hogy az
+    // előtag-választó döntsön: https://, http:// vagy www.
+    const scheme = raw.match(/^([a-z][a-z0-9+.-]*):\/\//i)
+    const address = raw.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/^www\./i, '').replace(/^\/+/, '')
+    if (!raw) errors.url = 'Add meg a weboldal címét.'
+    else if (scheme && !/^https?$/i.test(scheme[1]!)) errors.url = 'Csak http:// vagy https:// cím használható.'
+    else if (!address) errors.url = 'Érvénytelen webcím. Példa: qrkod24.hu'
+    else if (!parseHttpUrl(`https://${address}`)) {
+      errors.url = 'Érvénytelen webcím. Példa: qrkod24.hu vagy https://qrkod24.hu/ajanlat'
+    }
     if (Object.keys(errors).length) return fail(errors)
-    return { ok: true, data: parseHttpUrl(url)!.toString(), warnings }
+    if (protocol === 'www.') return { ok: true, data: `www.${address}`, warnings }
+    return { ok: true, data: parseHttpUrl(`${protocol}${address}`)!.toString(), warnings }
   }
 
   if (typeId === 'text') {
@@ -1263,7 +1292,7 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
     }
     if (phoneRaw && !normalizePhone(phoneRaw)) errors.phone = 'Érvénytelen telefonszám. Példa: +36 30 123 4567'
     if (email && !isValidEmail(email)) errors.email = 'Érvénytelen e-mail-cím.'
-    if (website && !parseHttpUrl(website)) errors.website = 'Érvénytelen webcím. Példa: https://pelda.hu'
+    if (website && !parseHttpUrl(website)) errors.website = 'Érvénytelen webcím. Példa: https://qrkod24.hu'
     if (Object.keys(errors).length) return fail(errors)
 
     const esc = escapeVCardValue
@@ -1415,7 +1444,7 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
       'VERSION:2.0',
       'PRODID:-//QR Varazs//QR Kod Generator//HU',
       'BEGIN:VEVENT',
-      `UID:${toICalStamp(startDate, startTime)}-event@qr24.hu`,
+      `UID:${toICalStamp(startDate, startTime)}-event@qrkod24.hu`,
       `DTSTAMP:${toICalStamp(startDate, startTime)}`,
       `DTSTART:${toICalStamp(startDate, startTime)}`,
     ]
@@ -1463,7 +1492,7 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
     if (!company) errors.company = 'Add meg a cégnév nevét.'
     if (phoneRaw && !normalizePhone(phoneRaw)) errors.phone = 'Érvénytelen telefonszám. Példa: +36 1 234 5678'
     if (email && !isValidEmail(email)) errors.email = 'Érvénytelen e-mail-cím.'
-    if (website && !parseHttpUrl(website)) errors.website = 'Érvénytelen webcím. Példa: https://pelda.hu'
+    if (website && !parseHttpUrl(website)) errors.website = 'Érvénytelen webcím. Példa: https://qrkod24.hu'
     if (get('hours').length > 300) errors.hours = 'A nyitvatartás legfeljebb 300 karakter lehet.'
     if (Object.keys(errors).length) return fail(errors)
 
@@ -1574,7 +1603,7 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
     const note = get('note')
     if (!code) errors.code = 'Add meg a kuponkódot.'
     else if (code.length > 40) errors.code = 'A kuponkód legfeljebb 40 karakter lehet.'
-    if (urlRaw && !url) errors.url = 'Érvénytelen webcím. Példa: https://pelda.hu/akcio'
+    if (urlRaw && !url) errors.url = 'Érvénytelen webcím. Példa: https://qrkod24.hu/akcio'
     if (note.length > 120) errors.note = 'A megjegyzés legfeljebb 120 karakter lehet.'
     if (Object.keys(errors).length) return fail(errors)
 
@@ -1599,7 +1628,7 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
     const raw = get('url')
     const url = raw ? parseHttpUrl(raw) : null
     if (!raw) errors.url = 'Add meg a hivatkozott oldal címét.'
-    else if (!url) errors.url = 'Érvénytelen webcím. Példa: https://pelda.hu'
+    else if (!url) errors.url = 'Érvénytelen webcím. Példa: https://qrkod24.hu'
     if (Object.keys(errors).length || !url) return fail(errors)
     return { ok: true, data: url.toString(), warnings }
   }

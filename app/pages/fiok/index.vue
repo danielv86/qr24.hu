@@ -13,7 +13,7 @@ import { downloadDynamicQr } from '~/utils/qr-download'
 definePageMeta({ layout: 'fiok', middleware: 'auth' })
 
 useSeoMeta({
-  title: 'QR-kódjaim | QR24.hu',
+  title: 'QR-kódjaim | QRKOD24.hu',
   description: 'Dinamikus QR-kódok kezelése, cél-URL módosítása és beolvasási statisztikák.',
   robots: 'noindex, nofollow',
 })
@@ -428,62 +428,68 @@ function statusClass(value: DynamicQrStatus): string {
       <article
         v-for="item in items"
         :key="item.id"
-        class="rounded-xl border border-slate-200 bg-white p-4"
+        class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
       >
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div class="shrink-0 self-start rounded-lg bg-slate-50 p-2">
+        <div class="flex flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-6">
+          <div class="shrink-0 rounded-xl bg-slate-50 p-2">
             <QrMiniCode
               :dot-style="previewStyles.dotStyle"
               :corner-square-style="previewStyles.cornerSquareStyle"
               :corner-dot-style="previewStyles.cornerDotStyle"
               :color="previewStyles.color"
               :data="item.shortUrl"
-              class="h-20 w-20"
+              class="h-[72px] w-[72px] sm:h-[92px] sm:w-[92px]"
             />
           </div>
 
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <h2 class="truncate text-base font-semibold text-ink">{{ item.name || 'Névtelen QR-kód' }}</h2>
-              <span :class="['rounded-full px-2 py-0.5 text-[11px] font-semibold', statusClass(item.status)]">
+              <h2 class="truncate text-base font-semibold text-ink sm:text-lg">{{ item.name || 'Névtelen QR-kód' }}</h2>
+              <span :class="['inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold', statusClass(item.status)]">
+                <span class="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
                 {{ DYNAMIC_QR_STATUS_LABELS[item.status] }}
               </span>
-              <span v-if="item.category" class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{{ item.category }}</span>
             </div>
 
-            <p class="mt-1 flex items-center gap-1.5 text-xs text-ink-muted">
-              <Icon name="lucide:link" class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <a :href="item.targetUrl" target="_blank" rel="noopener noreferrer nofollow" class="truncate hover:text-brand-700">
-                {{ item.targetUrl }}
-              </a>
+            <p class="mt-1 truncate text-xs text-ink-muted sm:text-sm">
+              {{ item.category || 'Dinamikus QR-kód' }}
+              <span aria-hidden="true"> · </span>{{ item.scans }} beolvasás
             </p>
 
-            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-ink-muted">
-              <span>{{ item.scans }} beolvasás</span>
-              <span>Utolsó: {{ formatDate(item.lastScanAt) }}</span>
-              <span>Létrehozva: {{ formatDate(item.createdAt) }}</span>
-              <span v-if="item.expiresAt">Lejár: {{ formatDate(item.expiresAt) }}</span>
-            </div>
-
-            <p class="mt-2 flex items-center gap-1 text-[11px] text-ink-soft">
-              <code class="rounded bg-slate-100 px-1.5 py-0.5">{{ item.shortUrl }}</code>
-              <button type="button" class="btn-ghost px-1.5 py-1 text-[11px]" @click="copyShortUrl(item)">
+            <p class="mt-1.5 flex min-w-0 items-center gap-1.5 text-xs text-ink-muted">
+              <Icon name="lucide:link" class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <a
+                :href="item.shortUrl"
+                target="_blank"
+                rel="noopener"
+                class="truncate underline-offset-2 hover:text-brand-700 hover:underline"
+                :title="item.shortUrl"
+              >
+                {{ item.shortUrl }}
+              </a>
+              <button
+                type="button"
+                class="btn-ghost shrink-0 px-1.5 py-1 text-[11px]"
+                :aria-label="copiedCode === item.shortCode ? 'Másolva' : 'Rövid link másolása'"
+                :title="copiedCode === item.shortCode ? 'Másolva' : 'Rövid link másolása'"
+                @click="copyShortUrl(item)"
+              >
                 <Icon :name="copiedCode === item.shortCode ? 'lucide:check' : 'lucide:copy'" class="h-3.5 w-3.5" aria-hidden="true" />
-                {{ copiedCode === item.shortCode ? 'Másolva' : 'Másolás' }}
               </button>
             </p>
           </div>
 
-          <div class="flex shrink-0 flex-wrap items-center gap-1 self-start sm:self-center">
+          <div class="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
             <button
               v-if="item.status !== 'archived'"
               type="button"
               role="switch"
               :aria-checked="item.status === 'active'"
               :aria-label="item.status === 'active' ? 'Szüneteltetés' : 'Újraaktiválás'"
+              :title="item.status === 'active' ? 'Szüneteltetés' : 'Újraaktiválás'"
               :disabled="busyCode === item.shortCode"
               :class="[
-                'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
+                'relative mr-1 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50',
                 item.status === 'active' ? 'bg-brand-600' : 'bg-slate-300',
               ]"
               @click="toggleStatus(item)"
@@ -496,21 +502,44 @@ function statusClass(value: DynamicQrStatus): string {
                 style="height: 18px; width: 18px"
               />
             </button>
-            <NuxtLink :to="`/fiok/qr/${item.shortCode}`" class="btn-ghost px-2 py-1.5 text-xs" title="Részletek és statisztika">
-              <Icon name="lucide:chart-no-axes-column" class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only">Részletek</span>
+            <NuxtLink
+              :to="`/fiok/qr/${item.shortCode}#analytics-title`"
+              class="btn-ghost h-9 w-9 p-0 text-ink-soft"
+              title="Statisztikák"
+              aria-label="Statisztikák"
+            >
+              <Icon name="lucide:chart-no-axes-column" class="h-[18px] w-[18px]" aria-hidden="true" />
             </NuxtLink>
-            <button type="button" class="btn-ghost px-2 py-1.5 text-xs" title="PNG letöltés" :disabled="downloading === `${item.shortCode}:png`" @click="download(item, 'png')">
-              <Icon name="lucide:download" class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only">PNG letöltés</span>
+            <NuxtLink
+              :to="`/fiok/qr/${item.shortCode}`"
+              class="btn-ghost h-9 w-9 p-0 text-ink-soft"
+              title="Szerkesztés"
+              aria-label="Szerkesztés"
+            >
+              <Icon name="lucide:pencil" class="h-[18px] w-[18px]" aria-hidden="true" />
+            </NuxtLink>
+            <button
+              type="button"
+              class="btn-ghost h-9 w-9 p-0 text-ink-soft hover:text-red-600"
+              title="Törlés"
+              aria-label="Törlés"
+              @click="confirmDelete = item"
+            >
+              <Icon name="lucide:trash-2" class="h-[18px] w-[18px]" aria-hidden="true" />
             </button>
-            <button type="button" class="btn-ghost px-2 py-1.5 text-xs" title="Archiválás" :disabled="busyCode === item.shortCode" @click="runAction(item, 'archive')">
-              <Icon name="lucide:archive" class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only">Archiválás</span>
-            </button>
-            <button type="button" class="btn-ghost px-2 py-1.5 text-xs text-red-600" title="Törlés" @click="confirmDelete = item">
-              <Icon name="lucide:trash-2" class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only">Törlés</span>
+            <button
+              type="button"
+              class="btn-ghost h-9 w-9 p-0 text-ink-soft"
+              title="PNG letöltés"
+              aria-label="PNG letöltés"
+              :disabled="downloading === `${item.shortCode}:png`"
+              @click="download(item, 'png')"
+            >
+              <Icon
+                :name="downloading === `${item.shortCode}:png` ? 'lucide:loader-circle' : 'lucide:download'"
+                :class="['h-[18px] w-[18px]', { 'animate-spin': downloading === `${item.shortCode}:png` }]"
+                aria-hidden="true"
+              />
             </button>
           </div>
         </div>
@@ -571,7 +600,7 @@ function statusClass(value: DynamicQrStatus): string {
           </div>
           <div>
             <label for="qr-target" class="field-label">Cél-URL</label>
-            <input id="qr-target" v-model="form.targetUrl" class="field-input" type="url" inputmode="url" placeholder="https://pelda.hu/ajanlat" required>
+            <input id="qr-target" v-model="form.targetUrl" class="field-input" type="url" inputmode="url" placeholder="https://qrkod24.hu/ajanlat" required>
             <p class="field-help">Csak nyilvános http:// vagy https:// cím adható meg.</p>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">

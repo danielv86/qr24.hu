@@ -25,7 +25,7 @@ interface SeoRow {
 function runtimeDefaults(): PublicSettings {
   const config = useRuntimeConfig()
   return {
-    brandName: String(config.public.brandName || 'QR24.hu'),
+    brandName: String(config.public.brandName || 'QRKOD24.hu'),
     siteUrl: String(config.public.siteUrl || 'http://localhost:3000').replace(/\/$/, ''),
     dynamicQrEnabled: config.public.dynamicQrEnabled !== false,
     adsense: {

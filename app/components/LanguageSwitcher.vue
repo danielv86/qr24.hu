@@ -38,7 +38,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
   <div ref="root" class="relative">
     <button
       type="button"
-      class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-2.5 text-xs font-medium text-ink-soft transition-colors hover:border-brand-300 hover:text-ink"
+      class="inline-flex h-10 items-center gap-2 rounded-xl px-2.5 text-xs font-medium text-ink-soft transition-colors hover:bg-slate-100 hover:text-ink"
       :aria-label="`${t('language.label')}: ${current?.name}`"
       :title="t('language.choose')"
       aria-haspopup="menu"
@@ -47,7 +47,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
       @click="open = !open"
     >
       <FlagIcon v-if="current" :code="current.flag" />
-      <span class="hidden sm:inline">{{ current?.name }}</span>
+      <span class="uppercase tracking-wide">{{ current?.code }}</span>
       <Icon name="lucide:chevron-down" class="h-3.5 w-3.5" aria-hidden="true" />
     </button>
 

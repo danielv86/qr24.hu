@@ -5,7 +5,7 @@ useContentSeo({
   slug: '/kapcsolat',
   title: 'Kapcsolat',
   description:
-    'Kapcsolatfelvétel a QR24.hu üzemeltetőjével. Kérdések, hibabejelentés, adatvédelmi megkeresések és együttműködési lehetőségek.',
+    'Kapcsolatfelvétel a QRKOD24.hu üzemeltetőjével. Kérdések, hibabejelentés, adatvédelmi megkeresések és együttműködési lehetőségek.',
   h1: 'Kapcsolat',
 })
 </script>

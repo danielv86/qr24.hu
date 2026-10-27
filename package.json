@@ -1,5 +1,5 @@
 {
-  "name": "qr24.hu",
+  "name": "qrkod24.hu",
   "type": "module",
   "private": true,
   "scripts": {
@@ -27,10 +27,12 @@
     "@prisma/client": "7.10.1",
     "dotenv": "16.6.1",
     "fflate": "0.8.2",
+    "jsqr": "^1.4.0",
     "mariadb": "3.5.4",
     "nuxt": "4.6.2",
     "qr-code-styling": "1.9.2",
     "qrcode-generator": "1.5.2",
+    "simple-icons": "^16.36.0",
     "zod": "4.6.7"
   },
   "devDependencies": {

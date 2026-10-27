@@ -3,27 +3,29 @@ import {
   CORNER_DOT_OPTIONS,
   CORNER_SQUARE_OPTIONS,
   DOT_STYLE_OPTIONS,
-  ERROR_LEVEL_OPTIONS,
   FRAME_FONT_OPTIONS,
+  FRAME_LABEL_AS_PILL,
+  FRAME_LABEL_SUPPORTED,
   FRAME_OPTIONS,
   QUICK_COLORS,
   contrastRatio,
   isValidHexColor,
 } from '~/lib/qr/customization'
-import type { DotStyle, ErrorCorrectionLevel, FramePreset, QrFill } from '#shared/qr/types'
+import { BRAND_LOGO_RADIUS_PERCENT, SOCIAL_LOGOS, brandLogoDataUrl, getBrandLogoDataUrl } from '~/lib/qr/social-logos'
+import type { QrBrandLogo } from '~/lib/qr/social-logos'
+import type { DotStyle, FramePreset, QrFill } from '#shared/qr/types'
 
 const {
   customization,
   hasLogo,
   logoError,
-  presets,
   templates,
   update,
   setColor,
   setFill,
   setLogo,
+  setLogoData,
   removeLogo,
-  applyPreset,
   applyTemplate,
 } = useQrCustomization()
 
@@ -32,6 +34,9 @@ const quickColorSetsBackground = ref(false)
 const colorError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
+
+/** A kijelölő keret ugyanolyan ívű, mint a márkalogó négyzete. */
+const logoRadius = `${BRAND_LOGO_RADIUS_PERCENT.toFixed(2)}%`
 
 const tabs = [
   { id: 'shapes', label: 'Forma', icon: 'lucide:qr-code' },
@@ -64,9 +69,11 @@ const contrastLabel = computed(() => {
   if (contrast.value >= 3) return 'Gyenge kontraszt'
   return 'Túl alacsony kontraszt'
 })
-const needsLabel = computed(
-  () => customization.value.frame === 'card' || customization.value.frame === 'caption',
+const labelFrame = computed(() => FRAME_LABEL_SUPPORTED.includes(customization.value.frame))
+const pillFrame = computed(
+  () => FRAME_LABEL_AS_PILL.includes(customization.value.frame) || customization.value.frame === 'top-badge',
 )
+const needsLabel = computed(() => labelFrame.value)
 
 type HexTarget = 'body' | 'bg' | 'frame' | 'label' | 'labelText'
 
@@ -111,15 +118,14 @@ async function onLogoSelected(event: Event) {
   }
 }
 
-function isPresetActive(presetId: string): boolean {
-  const preset = presets.find(item => item.id === presetId)
-  if (!preset) return false
-  return (
-    preset.fgColor === customization.value.bodyFill.color
-    && preset.bgColor === customization.value.bgColor
-    && preset.dotStyle === customization.value.dotStyle
-  )
+function applySocialLogo(logo: QrBrandLogo) {
+  setLogoData(brandLogoDataUrl(logo), logo.label)
 }
+
+const bgFillLabel = computed(() => {
+  const kind = customization.value.bgFill.kind
+  return fillKinds.find(item => item.value === kind)?.label ?? 'Tömör'
+})
 
 function applyQuickColor(color: string) {
   setFill('bodyFill', { kind: 'solid', color })
@@ -132,6 +138,9 @@ function framePreviewClass(frame: FramePreset): string {
   if (frame === 'corners') return 'rounded-none'
   return 'rounded-[4px]'
 }
+
+/** Kész keretek a Keret fülön: klasszikus, Instagram, Facebook, Snapchat. */
+const framePresets = computed(() => templates.slice(0, 4))
 
 /** Alapból csak az első öt sablon látszik, egy sorban. */
 const TEMPLATE_PREVIEW_LIMIT = 5
@@ -161,9 +170,7 @@ const activeTemplate = computed(
       <p class="mt-1 text-xs leading-relaxed text-ink-muted">
         Kattints egy sablonra: a keret, a színek és a formák azonnal érvényesülnek, a tartalom megmarad.
       </p>
-      <div
-        class="mt-2 grid grid-cols-5 gap-1.5",
-      >
+      <div class="mt-2 grid grid-cols-5 gap-2">
         <button
           v-for="template in visibleTemplates"
           :key="`template-${template.id}`"
@@ -171,49 +178,49 @@ const activeTemplate = computed(
           :aria-pressed="customization.designTemplate === template.id"
           :title="`${template.name} – ${template.hint}`"
           :class="[
-            'min-w-0 rounded-lg border bg-surface p-1 text-center transition-colors',
+            'flex h-full min-w-0 flex-col rounded-xl border bg-surface p-1.5 text-center transition-colors',
             customization.designTemplate === template.id
-              ? 'border-brand-600 ring-2 ring-brand-600/25'
+              ? 'border-brand-600 ring-2 ring-brand-600/20'
               : 'border-slate-200 hover:border-brand-300',
           ]"
           @click="applyTemplate(template)"
         >
           <span
             :class="[
-              'flex aspect-square w-full flex-col items-center justify-center gap-[3px] overflow-hidden p-1',
+              'flex w-full flex-col items-center justify-center overflow-hidden p-1.5',
               framePreviewClass(template.frame),
             ]"
             :style="{
-              backgroundColor: template.frame === 'corners' || template.frame === 'none'
-                ? '#FFFFFF'
-                : template.frameColor,
-              border: template.frame === 'corners' ? `2px solid ${template.frameColor}` : '1px solid rgba(15, 23, 42, 0.08)',
+              backgroundColor: template.frame === 'card' || template.frame === 'circle'
+                ? template.frameColor
+                : '#F8FAFC',
               containerType: 'inline-size',
             }"
             aria-hidden="true"
           >
-            <span class="block min-h-0 w-full flex-1 rounded-[2px] bg-white p-[1px]">
+            <span class="block aspect-square w-full rounded-[4px] bg-white p-[3px]">
               <QrMiniCode
                 :dot-style="template.dotStyle"
                 :corner-square-style="template.cornerSquareStyle"
                 :corner-dot-style="template.cornerDotStyle"
                 :color="template.fgColor"
+                :logo="getBrandLogoDataUrl(template.logo)"
                 class="h-full w-full"
               />
             </span>
             <span
               v-if="template.frameText"
-              class="max-w-full shrink-0 truncate rounded-full px-1 font-bold leading-[1.6]"
+              class="mt-1 block max-w-full truncate rounded-full px-1.5 font-bold leading-[1.8]"
               :style="{
                 backgroundColor: template.labelColor,
                 color: template.labelTextColor,
-                fontSize: 'clamp(4px, 8cqw, 10px)',
+                fontSize: 'clamp(4px, 7cqw, 9px)',
               }"
             >
               {{ template.frameText }}
             </span>
           </span>
-          <span class="mt-1 block truncate text-[10px] font-semibold leading-tight text-ink-soft">{{ template.name }}</span>
+          <span class="mt-auto block w-full truncate pt-1.5 text-[11px] font-medium leading-tight text-ink">{{ template.name }}</span>
         </button>
       </div>
       <button
@@ -229,7 +236,7 @@ const activeTemplate = computed(
     </div>
 
     <div
-      class="mt-4 flex gap-1 overflow-x-auto border-b border-slate-200 pb-px"
+      class="mt-4 grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 sm:grid-cols-4"
       role="tablist"
       aria-label="Testreszabási kategóriák"
     >
@@ -243,10 +250,10 @@ const activeTemplate = computed(
         :aria-controls="`custom-panel-${tab.id}`"
         :tabindex="activeTab === tab.id ? 0 : -1"
         :class="[
-          'inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+          'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-semibold transition-colors',
           activeTab === tab.id
-            ? 'border-brand-600 text-brand-700'
-            : 'border-transparent text-ink-muted hover:border-slate-300 hover:text-ink',
+            ? 'bg-surface text-brand-700 shadow-sm ring-1 ring-brand-200'
+            : 'text-ink-muted hover:text-ink',
         ]"
         @click="activeTab = tab.id"
       >
@@ -285,38 +292,28 @@ const activeTemplate = computed(
         label="Sarokelem belseje"
         :options="shapeOptions.eyeBall"
         variant="ball"
+        :frame-style="customization.cornerSquareStyle"
         @update:model-value="update('cornerDotStyle', $event as typeof customization.cornerDotStyle)"
       />
 
       <div>
-        <label for="qr-margin" class="field-label">Csendes zóna (QR margin): {{ customization.margin }} px</label>
+        <label for="qr-margin" class="field-label">Csendes zóna: {{ customization.margin }} modul</label>
         <input
           id="qr-margin"
           type="range"
-          class="w-full"
-          min="0"
-          max="80"
-          step="4"
+          class="w-full accent-brand-600"
+          min="2"
+          max="10"
+          step="1"
           :value="customization.margin"
           @input="update('margin', Number(($event.target as HTMLInputElement).value))"
         >
-        <p class="field-help">A kód körüli üres sáv segít a beolvasásban. 32 px a biztonságos alapérték.</p>
+        <p class="field-help">
+          A kód körüli üres sáv. A QR-szabvány 4 modult ír elő – ennél kevesebbel a telefonok
+          nehezebben ismerik fel a kódot.
+        </p>
       </div>
 
-      <div>
-        <label for="qr-error-level" class="field-label">Hibajavítási szint</label>
-        <select
-          id="qr-error-level"
-          class="field-input"
-          :value="customization.errorCorrection"
-          @change="update('errorCorrection', ($event.target as HTMLSelectElement).value as ErrorCorrectionLevel)"
-        >
-          <option v-for="option in ERROR_LEVEL_OPTIONS" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <p class="field-help">Logóhoz a H szint ajánlott, mert a kép takarja a kód egy részét.</p>
-      </div>
     </div>
 
     <!-- SZÍNEK -->
@@ -395,6 +392,69 @@ const activeTemplate = computed(
               maxlength="7"
               spellcheck="false"
               @change="commitHex('bg', $event)"
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 rounded-xl border border-slate-200 bg-surface p-3">
+        <div class="flex items-center justify-between gap-2">
+          <p class="field-label mb-0">Háttér kitöltése</p>
+          <span class="text-[11px] font-medium text-ink-muted">{{ bgFillLabel }}</span>
+        </div>
+        <div class="mt-2 inline-flex rounded-xl border border-slate-200 bg-surface p-1">
+          <button
+            v-for="kind in fillKinds"
+            :key="`bg-fill-${kind.value}`"
+            type="button"
+            :aria-pressed="customization.bgFill.kind === kind.value"
+            :class="[
+              'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+              customization.bgFill.kind === kind.value
+                ? 'bg-brand-600 text-white'
+                : 'text-ink-soft hover:bg-slate-100',
+            ]"
+            @click="setFill('bgFill', { kind: kind.value })"
+          >
+            {{ kind.label }}
+          </button>
+        </div>
+        <div v-if="customization.bgFill.kind !== 'solid'" class="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="qr-bg-color2" class="field-label">Háttér második színe</label>
+            <div class="flex gap-2">
+              <input
+                id="qr-bg-color2-picker"
+                type="color"
+                :value="customization.bgFill.color2"
+                class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
+                aria-label="Háttér második színének kiválasztása"
+                @input="setFill('bgFill', { color2: ($event.target as HTMLInputElement).value.toUpperCase() })"
+              >
+              <input
+                id="qr-bg-color2"
+                type="text"
+                class="field-input font-mono uppercase"
+                :value="customization.bgFill.color2"
+                maxlength="7"
+                spellcheck="false"
+                @change="setFill('bgFill', { color2: ($event.target as HTMLInputElement).value.toUpperCase() })"
+              >
+            </div>
+          </div>
+          <div v-if="customization.bgFill.kind === 'linear'">
+            <label for="qr-bg-rotation" class="field-label">
+              Háttér szöge: {{ customization.bgFill.rotation }}°
+            </label>
+            <input
+              id="qr-bg-rotation"
+              type="range"
+              class="w-full"
+              min="0"
+              max="360"
+              step="15"
+              :value="customization.bgFill.rotation"
+              @input="setFill('bgFill', { rotation: Number(($event.target as HTMLInputElement).value) })"
             >
           </div>
         </div>
@@ -580,30 +640,6 @@ const activeTemplate = computed(
         <p class="field-help">Nyomtatáshoz 1024 px vagy nagyobb ajánlott.</p>
       </div>
 
-      <div class="mt-5">
-        <h4 class="text-sm font-semibold text-ink">Kész színpaletták</h4>
-        <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
-          <button
-            v-for="preset in presets"
-            :key="`preset-${preset.id}`"
-            type="button"
-            :aria-pressed="isPresetActive(preset.id)"
-            :class="[
-              'rounded-xl border p-2 text-left transition-colors',
-              isPresetActive(preset.id)
-                ? 'border-brand-600 bg-brand-50'
-                : 'border-slate-200 bg-surface hover:border-brand-300',
-            ]"
-            @click="applyPreset(preset)"
-          >
-            <span class="flex h-5 overflow-hidden rounded-md border border-slate-200" aria-hidden="true">
-              <span class="w-1/2" :style="{ backgroundColor: preset.fgColor }" />
-              <span class="w-1/2" :style="{ backgroundColor: preset.bgColor }" />
-            </span>
-            <span class="mt-1 block truncate text-[11px] font-medium text-ink-soft">{{ preset.name }}</span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- LOGÓ -->
@@ -614,17 +650,17 @@ const activeTemplate = computed(
       role="tabpanel"
       aria-labelledby="custom-tab-logo"
     >
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+        <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 sm:h-[5.5rem] sm:w-[5.5rem]">
           <img
             v-if="hasLogo"
             :src="customization.logo"
             alt="Feltöltött logó előnézete"
-            class="max-h-16 max-w-16 object-contain"
+            class="max-h-[86%] max-w-[86%] object-contain"
           >
           <Icon v-else name="lucide:image-plus" class="h-7 w-7 text-slate-400" aria-hidden="true" />
         </div>
-        <div>
+        <div class="min-w-0 sm:self-center">
           <div class="flex flex-wrap gap-2">
             <button type="button" class="btn-secondary" :disabled="uploading" @click="fileInput?.click()">
               <Icon name="lucide:upload" class="h-4 w-4" aria-hidden="true" />
@@ -645,8 +681,46 @@ const activeTemplate = computed(
           >
           <p class="mt-2 text-xs text-ink-muted">PNG, JPG, WebP, SVG vagy GIF, legfeljebb 1,5 MB.</p>
           <p v-if="logoError" class="field-error" role="alert">{{ logoError }}</p>
-          <p v-if="customization.logoName" class="mt-1 truncate text-xs text-ink-muted">{{ customization.logoName }}</p>
+          <p class="mt-1 min-h-4 truncate text-xs text-ink-muted">{{ customization.logoName || '\u00A0' }}</p>
         </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex items-baseline justify-between gap-2">
+          <p class="field-label mb-0">Kész logók</p>
+          <span class="text-[11px] text-ink-muted">Egy kattintás, feltöltés nélkül</span>
+        </div>
+        <div class="mt-2 grid grid-cols-6 gap-1.5 sm:grid-cols-[repeat(15,minmax(0,1fr))]">
+          <button
+            type="button"
+            class="grid aspect-square place-items-center border border-slate-200 bg-surface text-ink-muted transition-colors hover:border-brand-300"
+            :class="!hasLogo ? 'ring-2 ring-brand-600' : ''"
+            :style="{ borderRadius: logoRadius }"
+            title="Nincs logó"
+            aria-label="Nincs logó"
+            :aria-pressed="!hasLogo"
+            @click="removeLogo"
+          >
+            <Icon name="lucide:ban" class="h-[58%] w-[58%]" aria-hidden="true" />
+          </button>
+          <button
+            v-for="logo in SOCIAL_LOGOS"
+            :key="`social-${logo.id}`"
+            type="button"
+            class="grid aspect-square place-items-center overflow-hidden"
+            :class="customization.logoName === logo.label ? 'ring-2 ring-brand-600' : ''"
+            :style="{ borderRadius: logoRadius }"
+            :title="`${logo.label} – ${logo.description}`"
+            :aria-label="`${logo.label} logó használata`"
+            @click="applySocialLogo(logo)"
+          >
+            <img :src="brandLogoDataUrl(logo)" :alt="logo.label" class="h-full w-full">
+          </button>
+        </div>
+        <p class="field-help">
+          Válassz kész logót, vagy töltsd fel a sajátod – a feltöltött kép felülírja a kész logót.
+          A logó a kód közepére kerül, ezért a hibajavítási szint automatikusan H-ra áll.
+        </p>
       </div>
 
       <div v-if="hasLogo" class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -691,60 +765,81 @@ const activeTemplate = computed(
       role="tabpanel"
       aria-labelledby="custom-tab-frame"
     >
-      <fieldset>
+      <div>
+        <p class="field-label">Kész keretek</p>
+        <div class="grid grid-cols-4 gap-2">
+          <button
+            v-for="preset in framePresets"
+            :key="`frame-preset-${preset.id}`"
+            type="button"
+            :aria-pressed="customization.designTemplate === preset.id"
+            :class="[
+              'min-w-0 rounded-xl border bg-surface p-1.5 text-center transition-colors',
+              customization.designTemplate === preset.id
+                ? 'border-brand-600 ring-2 ring-brand-600/20'
+                : 'border-slate-200 hover:border-brand-300',
+            ]"
+            @click="applyTemplate(preset)"
+          >
+            <span
+              :class="[
+                'flex w-full flex-col items-center justify-center overflow-hidden p-1.5',
+                framePreviewClass(preset.frame),
+              ]"
+              :style="{
+                backgroundColor: preset.frame === 'card' || preset.frame === 'circle'
+                  ? preset.frameColor
+                  : '#F8FAFC',
+              }"
+              aria-hidden="true"
+            >
+              <span class="block aspect-square w-full rounded-[4px] bg-white p-[3px]">
+                <QrMiniCode
+                  :dot-style="preset.dotStyle"
+                  :corner-square-style="preset.cornerSquareStyle"
+                  :corner-dot-style="preset.cornerDotStyle"
+                  :color="preset.fgColor"
+                  :logo="getBrandLogoDataUrl(preset.logo)"
+                  class="h-full w-full"
+                />
+              </span>
+              <span
+                v-if="preset.frameText"
+                class="mt-1 block max-w-full truncate rounded-full px-1.5 text-[8px] font-bold leading-[1.8]"
+                :style="{ backgroundColor: preset.labelColor, color: preset.labelTextColor }"
+              >
+                {{ preset.frameText }}
+              </span>
+            </span>
+            <span class="mt-1.5 block truncate text-[11px] font-medium text-ink">{{ preset.name }}</span>
+          </button>
+        </div>
+        <p class="field-help">
+          Kattints egy kész keretre: a keret, a színek és a formák együtt érvényesülnek.
+        </p>
+      </div>
+
+      <fieldset class="mt-4">
         <legend class="field-label">Keret típusa</legend>
-        <div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <div class="grid grid-cols-4 gap-1.5 sm:grid-cols-8">
           <button
             v-for="frame in FRAME_OPTIONS"
             :key="frame.value"
             type="button"
             :aria-pressed="customization.frame === frame.value"
             :class="[
-              'rounded-xl border p-1.5 text-center transition-colors',
+              'rounded-lg border bg-surface p-1 text-center transition-colors',
               customization.frame === frame.value
-                ? 'border-brand-600 bg-brand-50'
-                : 'border-slate-200 bg-surface hover:border-brand-300',
+                ? 'border-brand-600 ring-1 ring-brand-600'
+                : 'border-slate-200 hover:border-brand-300',
             ]"
+            :title="frame.label"
             @click="update('frame', frame.value)"
           >
             <span class="mx-auto flex h-11 items-center justify-center" aria-hidden="true">
-              <span
-                v-if="frame.value === 'circle'"
-                class="grid h-9 w-9 place-items-center rounded-full bg-slate-700"
-              >
-                <span class="h-5 w-5 rounded-[3px] bg-white" />
-              </span>
-              <span
-                v-else-if="frame.value === 'corners'"
-                class="grid h-9 w-9 place-items-center border-2 border-brand-600"
-              >
-                <span class="h-4 w-4 bg-slate-700" />
-              </span>
-              <span
-                v-else-if="frame.value === 'card'"
-                class="flex h-9 w-9 flex-col items-center justify-center gap-[2px] rounded-[4px] bg-slate-700"
-              >
-                <span class="h-4 w-4 rounded-[2px] bg-white" />
-                <span class="h-1 w-4 rounded-full bg-white/80" />
-              </span>
-              <span
-                v-else-if="frame.value === 'caption'"
-                class="flex h-9 w-9 flex-col items-center justify-center gap-[2px] rounded-[3px] border border-slate-300"
-              >
-                <span class="h-4 w-4 bg-slate-700" />
-                <span class="h-1 w-4 rounded-full bg-slate-400" />
-              </span>
-              <span
-                v-else-if="frame.value === 'border'"
-                class="grid h-9 w-9 place-items-center border-2 border-slate-500"
-              >
-                <span class="h-4 w-4 bg-slate-700" />
-              </span>
-              <span v-else class="grid h-9 w-9 place-items-center">
-                <span class="h-5 w-5 bg-slate-700" />
-              </span>
+              <QrFrameTile :frame="frame.value" />
             </span>
-            <span class="block text-[10px] font-medium leading-tight text-ink-soft">{{ frame.label }}</span>
+            <span class="block truncate text-[10px] font-medium leading-tight text-ink-soft">{{ frame.label }}</span>
           </button>
         </div>
       </fieldset>
@@ -753,7 +848,7 @@ const activeTemplate = computed(
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
           <div>
             <label for="qr-frame-text" class="field-label">
-              {{ customization.frame === 'card' ? 'Gomb felirata' : 'Felirat a kód alatt' }}
+              {{ pillFrame ? 'Gomb felirata' : 'Felirat a kereten' }}
             </label>
             <input
               id="qr-frame-text"
@@ -831,7 +926,7 @@ const activeTemplate = computed(
             >
           </div>
         </div>
-        <div v-if="customization.frame === 'card'">
+        <div v-if="pillFrame">
           <label for="qr-label-color" class="field-label">Gomb színe</label>
           <div class="flex gap-2">
             <input
@@ -854,7 +949,7 @@ const activeTemplate = computed(
         </div>
       </div>
 
-      <div v-if="customization.frame === 'card' || customization.frame === 'caption'" class="mt-3">
+      <div v-if="labelFrame" class="mt-3">
         <label for="qr-label-text-color" class="field-label">Szöveg színe</label>
         <div class="flex gap-2">
           <input

@@ -5,7 +5,6 @@ import type {
   DotStyle,
   ErrorCorrectionLevel,
   FramePreset,
-  QrColorPreset,
   QrCustomization,
   QrFill,
 } from '#shared/qr/types'
@@ -21,6 +20,7 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   cornerSquareFill: { kind: 'solid', color: '', color2: '#2563EB', rotation: 45 },
   cornerDotFill: { kind: 'solid', color: '', color2: '#2563EB', rotation: 45 },
   bodyFill: { kind: 'solid', color: '#0F172A', color2: '#2563EB', rotation: 45 },
+  bgFill: { kind: 'solid', color: '#FFFFFF', color2: '#E2E8F0', rotation: 45 },
   transparentBackground: false,
   logo: '',
   logoName: '',
@@ -28,7 +28,7 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   logoMargin: 8,
   size: 1024,
   errorCorrection: 'Q',
-  margin: 32,
+  margin: 4,
   frame: 'none',
   frameText: '',
   frameSubtitle: '',
@@ -61,14 +61,42 @@ export const ERROR_LEVEL_OPTIONS: { value: ErrorCorrectionLevel; label: string }
   { value: 'H', label: 'H – 30% (logóhoz ajánlott)' },
 ]
 
+/** A keretek a referencia készletének sorrendjét követik. */
 export const FRAME_OPTIONS: { value: FramePreset; label: string }[] = [
   { value: 'none', label: 'Nincs keret' },
-  { value: 'border', label: 'Vékony keret' },
-  { value: 'card', label: 'Kártya' },
-  { value: 'caption', label: 'Alsó felirattal' },
-  { value: 'corners', label: 'Sarokjelölők' },
+  { value: 'card', label: 'Alsó címke' },
+  { value: 'label-above', label: 'Felső címke' },
+  { value: 'speech', label: 'Szövegbuborék' },
+  { value: 'corners', label: 'Sarkok' },
+  { value: 'rounded-corners', label: 'Kerek sarkok' },
+  { value: 'border', label: 'Doboz' },
+  { value: 'rounded-box', label: 'Kerek doboz' },
+  { value: 'polaroid', label: 'Polaroid' },
   { value: 'circle', label: 'Kör' },
+  { value: 'circle-label', label: 'Kör címkével' },
+  { value: 'hexagon', label: 'Hatszög' },
+  { value: 'phone', label: 'Telefon' },
+  { value: 'ticket', label: 'Jegy' },
+  { value: 'banners', label: 'Felső és alsó sáv' },
+  { value: 'top-badge', label: 'Felső jelvény' },
 ]
+
+/** Keretek, amelyeknél van felirat. */
+export const FRAME_LABEL_SUPPORTED: FramePreset[] = [
+  'card',
+  'label-above',
+  'speech',
+  'polaroid',
+  'circle-label',
+  'hexagon',
+  'phone',
+  'ticket',
+  'banners',
+  'top-badge',
+]
+
+/** Keretek, ahol a felirat gombban (pirulában) jelenik meg. */
+export const FRAME_LABEL_AS_PILL: FramePreset[] = ['card', 'label-above', 'circle-label']
 
 export const FRAME_FONT_OPTIONS = [
   'Arial',
@@ -93,63 +121,6 @@ export const QUICK_COLORS: { name: string; value: string }[] = [
   { name: 'Narancs', value: '#EA580C' },
   { name: 'Türkiz', value: '#0D9488' },
   { name: 'Rózsaszín', value: '#DB2777' },
-]
-
-export const COLOR_PRESETS: QrColorPreset[] = [
-  {
-    id: 'classic',
-    name: 'Klasszikus',
-    fgColor: '#0F172A',
-    bgColor: '#FFFFFF',
-    dotStyle: 'square',
-    cornerSquareStyle: 'square',
-    cornerDotStyle: 'square',
-  },
-  {
-    id: 'cobalt',
-    name: 'Kék',
-    fgColor: '#1D4ED8',
-    bgColor: '#FFFFFF',
-    dotStyle: 'rounded',
-    cornerSquareStyle: 'extra-rounded',
-    cornerDotStyle: 'dot',
-  },
-  {
-    id: 'navy',
-    name: 'Sötétkék',
-    fgColor: '#1E3A8A',
-    bgColor: '#EFF6FF',
-    dotStyle: 'extra-rounded',
-    cornerSquareStyle: 'extra-rounded',
-    cornerDotStyle: 'dot',
-  },
-  {
-    id: 'forest',
-    name: 'Zöld',
-    fgColor: '#047857',
-    bgColor: '#ECFDF5',
-    dotStyle: 'rounded',
-    cornerSquareStyle: 'square',
-    cornerDotStyle: 'square',
-  },
-  {
-    id: 'violet',
-    name: 'Lila',
-    fgColor: '#6D28D9',
-    bgColor: '#F5F3FF',
-    dotStyle: 'classy-rounded',
-    cornerSquareStyle: 'extra-rounded',
-    cornerDotStyle: 'dot',
-  },
-  {
-    id: 'amber',
-    name: 'Borostyán',
-    fgColor: '#92400E',
-    bgColor: '#FFFBEB',
-    dotStyle: 'dots',
-    cornerSquareStyle: 'extra-rounded',
-    cornerDotStyle: 'dot',
-  },
 ]
 
 export function isValidHexColor(value: string): boolean {
@@ -228,8 +199,8 @@ export function getCustomizationWarnings(customization: QrCustomization): string
   if (logo && logoSize > 0.3) {
     warnings.push('A logó a kód területének több mint 30%-át fedi. Csökkentsd a méretét a megbízható beolvasás érdekében.')
   }
-  if (margin < 16) {
-    warnings.push('A csendes zóna nagyon kicsi vagy hiányzik. Hagyj legalább 16 px margót a kód körül.')
+  if (margin < 4) {
+    warnings.push('A csendes zóna a szabvány szerinti 4 modul alatt van, ezért a telefonok nehezebben találják meg a kódot.')
   }
   return warnings
 }
@@ -238,6 +209,7 @@ export function cloneCustomization(customization: QrCustomization): QrCustomizat
   return {
     ...customization,
     bodyFill: { ...customization.bodyFill },
+    bgFill: { ...customization.bgFill },
     frameFill: { ...customization.frameFill },
     cornerSquareFill: { ...customization.cornerSquareFill },
     cornerDotFill: { ...customization.cornerDotFill },

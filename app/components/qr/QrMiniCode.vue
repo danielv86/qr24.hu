@@ -9,6 +9,8 @@ const props = defineProps<{
   cornerDotStyle: CornerDotStyle
   color: string
   data?: string
+  /** Kész márkalogó adat-URL-je, ha a kártyán is látszania kell. */
+  logo?: string
 }>()
 
 const SIZE = 160
@@ -19,7 +21,7 @@ const SIZE = 160
  */
 const svg = computed(() => {
   const contents = buildQrContents(
-    props.data || 'https://qr24.hu',
+    props.data || 'https://qrkod24.hu',
     {
       ...DEFAULT_CUSTOMIZATION,
       margin: 0,
@@ -41,5 +43,13 @@ const svg = computed(() => {
 </script>
 
 <template>
-  <span class="block" aria-hidden="true" v-html="svg" />
+  <span class="relative block h-full w-full" aria-hidden="true">
+    <span class="block h-full w-full" v-html="svg" />
+    <img
+      v-if="logo"
+      :src="logo"
+      alt=""
+      class="absolute left-1/2 top-1/2 w-[26%] -translate-x-1/2 -translate-y-1/2 rounded-[22%]"
+    >
+  </span>
 </template>

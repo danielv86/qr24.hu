@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildFramedSvg, escapeXml, getFrameLayout } from '../app/utils/qr-frame'
-import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
+import { DEFAULT_CUSTOMIZATION, FRAME_OPTIONS, FRAME_LABEL_SUPPORTED } from '~/lib/qr/customization'
 import type { QrCustomization } from '#shared/qr/types'
 
 function customization(overrides: Partial<QrCustomization> = {}): QrCustomization {
@@ -35,11 +35,31 @@ describe('keret elrendezés', () => {
     expect(withText.labelHeight).toBeGreaterThan(withText.pillHeight)
   })
 
-  it('az alsó felirat külön sávot kap', () => {
-    const layout = getFrameLayout({ frame: 'caption', size: 1024 })
+  it('a polaroid keret nagyobb alsó margót kap', () => {
+    const layout = getFrameLayout({ frame: 'polaroid', size: 1024 })
     expect(layout.captionHeight).toBeGreaterThan(0)
     expect(layout.totalHeight).toBeGreaterThan(layout.totalWidth)
-    expect(layout.padY + 1024 + layout.captionHeight).toBe(layout.totalHeight)
+    expect(layout.padY + 1024 + layout.captionHeight).toBeLessThan(layout.totalHeight)
+  })
+
+  it('mind a 16 keret érvényes vásznat ad', () => {
+    expect(FRAME_OPTIONS).toHaveLength(16)
+    for (const option of FRAME_OPTIONS) {
+      const layout = getFrameLayout({ frame: option.value, size: 1024, hasLabel: true, hasSubtitle: true })
+      expect(layout.totalWidth).toBeGreaterThanOrEqual(1024)
+      expect(layout.totalHeight).toBeGreaterThanOrEqual(1024)
+      // A QR vízszintesen mindig középen marad.
+      expect(layout.padX * 2 + 1024).toBe(layout.totalWidth)
+      expect(layout.padY + 1024).toBeLessThanOrEqual(layout.totalHeight)
+    }
+  })
+
+  it('csak a feliratos keretek kapnak szöveghelyet', () => {
+    for (const option of FRAME_OPTIONS) {
+      const layout = getFrameLayout({ frame: option.value, size: 1024, hasLabel: true })
+      const hasTextArea = layout.pillHeight > 0 || layout.captionHeight > 0 || layout.labelHeight > 0
+      expect(hasTextArea).toBe(FRAME_LABEL_SUPPORTED.includes(option.value))
+    }
   })
 
   it('a kör alakú keret nagyobb vásznat használ', () => {
@@ -111,10 +131,33 @@ describe('keretezett SVG', () => {
   })
 
   it('kimenti a speciális karaktereket', () => {
-    const svg = buildFramedSvg('<svg/>', customization({ frame: 'caption', frameText: '<Café & Társa>' }), 512)
+    const svg = buildFramedSvg('<svg/>', customization({ frame: 'polaroid', frameText: '<Café & Társa>' }), 512)
     expect(svg).toContain('&lt;Café &amp; Társa&gt;')
     expect(svg).not.toContain('<Café')
     expect(svg).toContain('<text')
+  })
+
+  it('mind a 16 keret a saját vásznára rajzol', () => {
+    for (const option of FRAME_OPTIONS) {
+      const options = customization({ frame: option.value, frameText: 'Kövess minket' })
+      const layout = getFrameLayout({ frame: option.value, size: 512, hasLabel: true })
+      const svg = buildFramedSvg('<rect/>', options, 512)
+      expect(svg).toContain(`viewBox="0 0 ${layout.totalWidth} ${layout.totalHeight}"`)
+      expect(svg).toContain('translate(')
+      expect(svg.length).toBeGreaterThan(200)
+    }
+  })
+
+  it('a jegy keret kivágást, a szalagos keret pedig feliratot rajzol', () => {
+    const ticket = buildFramedSvg('<rect/>', customization({ frame: 'ticket', frameText: 'Belépő' }), 1024)
+    expect(ticket).toContain('fill-rule="evenodd"')
+    expect(ticket).toContain('>Belépő<')
+
+    const banners = buildFramedSvg('<rect/>', customization({ frame: 'banners', frameText: 'Menü' }), 1024)
+    expect(banners).toContain('>Menü<')
+
+    const badge = buildFramedSvg('<rect/>', customization({ frame: 'top-badge' }), 1024)
+    expect(badge).toContain('>QRKOD24.hu<')
   })
 
   it('az XML speciális karaktereit escape-eli', () => {

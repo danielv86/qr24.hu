@@ -7,7 +7,7 @@ export const LEGAL_PAGES: LegalPageContent[] = [
     slug: '/adatvedelmi-tajekoztato',
     title: 'Adatvédelmi tájékoztató',
     description:
-      'Hogyan kezeli a QR24.hu a személyes adatokat? Statikus QR-kódok, dinamikus kódok, adminisztráció, hirdetések és az érintetti jogok áttekintése.',
+      'Hogyan kezeli a QRKOD24.hu a személyes adatokat? Statikus QR-kódok, dinamikus kódok, adminisztráció, hirdetések és az érintetti jogok áttekintése.',
     h1: 'Adatvédelmi tájékoztató',
     intro: [
       'Ez a tájékoztató leírja, milyen személyes adatokat kezel a {{brandName}} webhely, milyen célból, meddig, és milyen jogok illetik meg az érintetteket. A statikus QR-kódok generálásához nem szükséges fiók, és az űrlapok tartalmát nem küldjük el a szervernek.',
@@ -67,7 +67,7 @@ export const LEGAL_PAGES: LegalPageContent[] = [
     slug: '/cookie-tajekoztato',
     title: 'Cookie-tájékoztató',
     description:
-      'Milyen sütiket használ a QR24.hu, mennyi ideig, és hogyan módosíthatod a hozzájárulásodat? A szükséges és a hirdetési sütik áttekintése.',
+      'Milyen sütiket használ a QRKOD24.hu, mennyi ideig, és hogyan módosíthatod a hozzájárulásodat? A szükséges és a hirdetési sütik áttekintése.',
     h1: 'Cookie-tájékoztató',
     intro: [
       'A sütik kis szöveges fájlok, amelyeket a böngésző tárol a webhely működéséhez vagy méréshez. A {{brandName}} csak a szükséges sütiket használja alapból; a statisztikai és hirdetési kategóriák a hozzájárulásod után aktiválódnak.',
@@ -112,7 +112,7 @@ export const LEGAL_PAGES: LegalPageContent[] = [
     slug: '/felhasznalasi-feltetelek',
     title: 'Felhasználási feltételek',
     description:
-      'A QR24.hu használatának feltételei: a szolgáltatás célja, megengedett használat, dinamikus QR-kódok, felelősség és a szerzői jogok.',
+      'A QRKOD24.hu használatának feltételei: a szolgáltatás célja, megengedett használat, dinamikus QR-kódok, felelősség és a szerzői jogok.',
     h1: 'Felhasználási feltételek',
     intro: [
       'A {{brandName}} webhely használatával elfogadod az alábbi feltételeket. Ha nem értesz egyet, kérjük, ne használd a szolgáltatást. A feltételek a webhely mindenkori állapotára vonatkoznak.',
@@ -161,7 +161,7 @@ export const LEGAL_PAGES: LegalPageContent[] = [
     slug: '/impresszum',
     title: 'Impresszum',
     description:
-      'A QR24.hu webhely üzemeltetőjének, tárhelyszolgáltatójának és elérhetőségeinek adatai. A szolgáltatói adatok az admin felületen szerkeszthetők.',
+      'A QRKOD24.hu webhely üzemeltetőjének, tárhelyszolgáltatójának és elérhetőségeinek adatai. A szolgáltatói adatok az admin felületen szerkeszthetők.',
     h1: 'Impresszum',
     intro: [
       'Az impresszum a webhely üzemeltetőjének és a közzétételért felelős személynek a jogszabályban előírt adatait tartalmazza. A tényleges szolgáltatói adatokat az üzemeltetőnek kell kitöltenie az admin felületen; a hiányzó adatokat nem helyettesítjük kitalált értékekkel.',

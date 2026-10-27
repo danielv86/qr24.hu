@@ -1,6 +1,8 @@
 import type { H3Event } from 'h3'
 import { getHeader } from 'h3'
 import type {
+  AccountAnalytics,
+  AccountScanItem,
   DashboardActivity,
   DashboardSummary,
   DynamicQrCreated,
@@ -57,7 +59,7 @@ export function serializeDynamicQr(row: DynamicQrRow, siteUrl: string): DynamicQ
   return {
     id: Number(row.id),
     shortCode: row.publicId,
-    shortUrl: `${siteUrl.replace(/\/$/, '')}/r/${row.publicId}`,
+    shortUrl: `${siteUrl.replace(/\/$/, '')}/go/${row.publicId}`,
     targetUrl: row.targetUrl,
     title: row.title || null,
     status: effectiveStatus(row),
@@ -73,7 +75,7 @@ export function serializeUserQr(row: DynamicQrRow, siteUrl: string, now: Date = 
   return {
     id: Number(row.id),
     shortCode: row.publicId,
-    shortUrl: `${siteUrl.replace(/\/$/, '')}/r/${row.publicId}`,
+    shortUrl: `${siteUrl.replace(/\/$/, '')}/go/${row.publicId}`,
     name: row.title || null,
     targetUrl: row.targetUrl,
     status: effectiveStatus(row, now),
@@ -190,8 +192,20 @@ export async function setDynamicQrStatus(row: DynamicQrRow, status: DynamicQrSta
   return updateDynamicQr(row, { status })
 }
 
+/**
+ * A kódhoz tartozó eseményeket is töröljük, hogy ne maradjanak árva sorok ott,
+ * ahol az adatbázis nem érvényesíti a kaszkád törlést.
+ */
 export async function deleteDynamicQr(row: DynamicQrRow): Promise<void> {
-  await withDb(() => getPrisma().dynamicQrCode.deleteMany({ where: { id: row.id } }))
+  const prisma = getPrisma()
+  await withDb(() =>
+    prisma.$transaction([
+      prisma.scanEvent.deleteMany({ where: { qrId: row.id } }),
+      prisma.dynamicQrScan.deleteMany({ where: { qrId: row.id } }),
+      prisma.auditLog.deleteMany({ where: { qrId: row.id } }),
+      prisma.dynamicQrCode.deleteMany({ where: { id: row.id } }),
+    ]),
+  )
 }
 
 /**
@@ -378,6 +392,126 @@ export async function getUserAnalytics(
     daily,
     devices: mapBreakdown(byDevice, 'device'),
     browsers: mapBreakdown(byBrowser, 'browser'),
+  }
+}
+
+/**
+ * Fiókszintű analitika: a felhasználó összes dinamikus QR-kódjának
+ * beolvasásai egy idővonalon, eszköz- és országbontással.
+ */
+export async function getAccountAnalytics(
+  userId: number | bigint,
+  plan: string,
+  requestedDays: number,
+): Promise<AccountAnalytics> {
+  const planDefinition = await getPlanConfig(plan)
+  const days = Math.max(1, Math.min(requestedDays, planDefinition.analyticsDays))
+  const { from, to } = buildRange(days)
+  const prisma = getPrisma()
+  const ownerId = BigInt(userId)
+
+  const [events, byDevice, byBrowser, byCountry, byReferer, dailyRows, top, recent] = await withDb(() =>
+    prisma.$transaction([
+      prisma.scanEvent.findMany({
+        where: { qr: { ownerId }, createdAt: { gte: from, lte: to } },
+        select: { isBot: true },
+      }),
+      prisma.scanEvent.groupBy({
+        by: ['device'],
+        where: { qr: { ownerId }, createdAt: { gte: from, lte: to }, isBot: false },
+        _count: { _all: true },
+      }),
+      prisma.scanEvent.groupBy({
+        by: ['browser'],
+        where: { qr: { ownerId }, createdAt: { gte: from, lte: to }, isBot: false },
+        _count: { _all: true },
+      }),
+      prisma.scanEvent.groupBy({
+        by: ['country'],
+        where: { qr: { ownerId }, createdAt: { gte: from, lte: to }, isBot: false },
+        _count: { _all: true },
+      }),
+      prisma.scanEvent.groupBy({
+        by: ['refererHost'],
+        where: { qr: { ownerId }, createdAt: { gte: from, lte: to }, isBot: false },
+        _count: { _all: true },
+      }),
+      prisma.dynamicQrScan.findMany({
+        where: { qr: { ownerId }, day: { gte: from, lte: to } },
+        select: { day: true, scans: true },
+      }),
+      prisma.dynamicQrCode.findMany({
+        where: { ownerId, scans: { gt: 0 } },
+        orderBy: { scans: 'desc' },
+        take: 5,
+        select: { publicId: true, title: true, scans: true },
+      }),
+      prisma.scanEvent.findMany({
+        where: { qr: { ownerId }, createdAt: { gte: from, lte: to } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: {
+          createdAt: true,
+          device: true,
+          browser: true,
+          country: true,
+          isBot: true,
+          qr: { select: { publicId: true, title: true } },
+        },
+      }),
+    ]),
+  )
+
+  const breakdown = (rows: { _count: { _all: number } }[], key: string): QrAnalyticsBreakdown[] =>
+    rows
+      .map(row => ({
+        label: String((row as unknown as Record<string, string | null>)[key] || 'Ismeretlen'),
+        count: row._count._all,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+
+  const dailyMap = new Map<string, number>()
+  for (const item of dailyRows) {
+    const key = startOfUtcDay(item.day).toISOString().slice(0, 10)
+    dailyMap.set(key, (dailyMap.get(key) || 0) + item.scans)
+  }
+  const daily = Array.from({ length: days }, (_, index) => {
+    const key = new Date(from.getTime() + index * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    return { day: key, scans: dailyMap.get(key) || 0 }
+  })
+
+  const recentScans: AccountScanItem[] = recent.map(item => ({
+    shortCode: item.qr?.publicId || '',
+    name: item.qr?.title || null,
+    createdAt: item.createdAt.toISOString(),
+    device: item.device,
+    browser: item.browser,
+    country: item.country,
+    isBot: item.isBot,
+  }))
+
+  const botTotal = events.filter(event => event.isBot).length
+
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+    days,
+    planAnalyticsDays: planDefinition.analyticsDays,
+    total: events.length,
+    humanTotal: events.length - botTotal,
+    botTotal,
+    daily,
+    topQrCodes: top.map(item => ({
+      shortCode: item.publicId,
+      name: item.title || null,
+      scans: Number(item.scans),
+    })),
+    devices: breakdown(byDevice, 'device'),
+    browsers: breakdown(byBrowser, 'browser'),
+    countries: breakdown(byCountry, 'country'),
+    referrers: breakdown(byReferer, 'refererHost'),
+    recentScans,
   }
 }
 

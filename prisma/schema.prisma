@@ -38,19 +38,28 @@ model AdminSession {
 }
 
 model User {
-  id            BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
-  email         String        @unique @db.VarChar(190)
-  name          String?       @db.VarChar(120)
-  passwordHash  String?       @map("password_hash") @db.VarChar(255)
-  plan          String        @default("free") @db.VarChar(20)
-  emailVerified Boolean       @default(false) @map("email_verified") @db.TinyInt
-  lastLoginAt   DateTime?     @map("last_login_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
-  sessions      UserSession[]
-  oauthAccounts OAuthAccount[]
-  qrCodes       DynamicQrCode[]
-  auditLogs     AuditLog[]
+  id                         BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  email                      String          @unique @db.VarChar(190)
+  name                       String?         @db.VarChar(120)
+  passwordHash               String?         @map("password_hash") @db.VarChar(255)
+  plan                       String          @default("free") @db.VarChar(20)
+  emailVerified              Boolean         @default(false) @map("email_verified") @db.TinyInt
+  /**
+   * A regisztrációkor kiküldött 6 jegyű kód lenyomata (HMAC).
+   */
+  emailVerificationCodeHash  String?         @map("email_verification_code_hash") @db.Char(64)
+  emailVerificationExpiresAt DateTime?       @map("email_verification_expires_at")
+  emailVerificationSentAt    DateTime?       @map("email_verification_sent_at")
+  emailVerificationAttempts  Int             @default(0) @map("email_verification_attempts") @db.UnsignedInt
+  lastLoginAt                DateTime?       @map("last_login_at")
+  createdAt                  DateTime        @default(now()) @map("created_at")
+  updatedAt                  DateTime        @updatedAt @map("updated_at")
+  sessions                   UserSession[]
+  oauthAccounts              OAuthAccount[]
+  qrCodes                    DynamicQrCode[]
+  auditLogs                  AuditLog[]
+  customDomains              CustomDomain[]
+  apiKeys                    ApiKey[]
 
   @@map("users")
 }
@@ -83,26 +92,28 @@ model OAuthAccount {
 }
 
 model DynamicQrCode {
-  id            BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
-  publicId      String         @unique @map("public_id") @db.VarChar(16)
-  targetUrl     String         @map("target_url") @db.VarChar(2048)
-  title         String?        @db.VarChar(120)
-  description   String?        @db.VarChar(500)
-  category      String?        @db.VarChar(60)
-  campaign      String?        @db.VarChar(60)
-  status        String         @default("active") @db.VarChar(16)
-  expiresAt     DateTime?      @map("expires_at")
-  /** A QR-kód megjelenítési beállításai JSON-ban, hogy a kép újra előállítható legyen. */
-  style         String?        @db.Text
-  ownerId       BigInt?        @map("owner_id") @db.UnsignedBigInt
-  ownerRef      String?        @map("owner_ref") @db.VarChar(64)
-  editTokenHash String         @map("edit_token_hash") @db.Char(64)
-  isActive      Boolean        @default(true) @map("is_active") @db.TinyInt
-  scans         BigInt         @default(0) @db.UnsignedBigInt
-  lastScanAt    DateTime?      @map("last_scan_at")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  owner         User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  id            BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  publicId      String          @unique @map("public_id") @db.VarChar(16)
+  targetUrl     String          @map("target_url") @db.VarChar(2048)
+  title         String?         @db.VarChar(120)
+  description   String?         @db.VarChar(500)
+  category      String?         @db.VarChar(60)
+  campaign      String?         @db.VarChar(60)
+  status        String          @default("active") @db.VarChar(16)
+  expiresAt     DateTime?       @map("expires_at")
+  /**
+   * A QR-kód megjelenítési beállításai JSON-ban, hogy a kép újra előállítható legyen.
+   */
+  style         String?         @db.Text
+  ownerId       BigInt?         @map("owner_id") @db.UnsignedBigInt
+  ownerRef      String?         @map("owner_ref") @db.VarChar(64)
+  editTokenHash String          @map("edit_token_hash") @db.Char(64)
+  isActive      Boolean         @default(true) @map("is_active") @db.TinyInt
+  scans         BigInt          @default(0) @db.UnsignedBigInt
+  lastScanAt    DateTime?       @map("last_scan_at")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  owner         User?           @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   dailyScans    DynamicQrScan[]
   scanEvents    ScanEvent[]
   auditLogs     AuditLog[]
@@ -155,6 +166,41 @@ model AuditLog {
   @@index([qrId, createdAt])
   @@index([userId, createdAt])
   @@map("audit_logs")
+}
+
+model CustomDomain {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId            BigInt    @map("user_id") @db.UnsignedBigInt
+  host              String    @unique @db.VarChar(190)
+  /**
+   * A DNS TXT rekord értéke, amivel a tulajdonjog igazolható.
+   */
+  verificationToken String    @map("verification_token") @db.VarChar(64)
+  verifiedAt        DateTime? @map("verified_at")
+  lastCheckedAt     DateTime? @map("last_checked_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("custom_domains")
+}
+
+model ApiKey {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId     BigInt    @map("user_id") @db.UnsignedBigInt
+  name       String    @db.VarChar(80)
+  /**
+   * A kulcs első pár karaktere, hogy a listában felismerhető legyen.
+   */
+  prefix     String    @db.VarChar(16)
+  tokenHash  String    @unique @map("token_hash") @db.Char(64)
+  lastUsedAt DateTime? @map("last_used_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("api_keys")
 }
 
 model Setting {

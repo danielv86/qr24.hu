@@ -22,6 +22,7 @@ const infoLinks = [
   { label: 'QR-kód generátor', to: '/qr-kod-generator' },
   { label: 'QR-kód típusok', to: '/qr-kod-tipusok' },
   { label: 'Dinamikus QR-kódok', to: '/dinamikus-qr-kod' },
+  { label: 'Csomagok és árak', to: '/csomagok' },
   { label: 'Kapcsolat', to: '/kapcsolat' },
 ]
 

@@ -148,7 +148,23 @@ export type CornerDotStyle =
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 
 /** A keret fajtája: a design sablonok ezeket használják. */
-export type FramePreset = 'none' | 'border' | 'card' | 'caption' | 'corners' | 'circle'
+export type FramePreset =
+  | 'none'
+  | 'card'
+  | 'label-above'
+  | 'speech'
+  | 'corners'
+  | 'rounded-corners'
+  | 'border'
+  | 'rounded-box'
+  | 'polaroid'
+  | 'circle'
+  | 'circle-label'
+  | 'hexagon'
+  | 'phone'
+  | 'ticket'
+  | 'banners'
+  | 'top-badge'
 
 export type FillKind = 'solid' | 'linear' | 'radial'
 
@@ -172,6 +188,11 @@ export interface QrCustomization {
   cornerDotFill: QrFill
   /** A test kitöltése: tömör vagy színátmenetes. */
   bodyFill: QrFill
+  /**
+   * A háttér kitöltése. Az első színt a bgColor adja, ez csak a színátmenet
+   * fajtáját, második színét és szögét tárolja (mint a frameFill a keretnél).
+   */
+  bgFill: QrFill
   /** Átlátszó háttér (csak PNG/WebP/SVG exportban érvényesül). */
   transparentBackground: boolean
   logo: string
@@ -193,20 +214,12 @@ export interface QrCustomization {
   designTemplate: string
 }
 
-export interface QrColorPreset {
-  id: string
-  name: string
-  fgColor: string
-  bgColor: string
-  dotStyle: DotStyle
-  cornerSquareStyle: CornerSquareStyle
-  cornerDotStyle: CornerDotStyle
-}
-
 export interface QrDesignTemplate {
   id: string
   name: string
   hint: string
+  /** Kész márkalogó azonosítója (lásd app/lib/qr/social-logos.ts). */
+  logo?: string
   frame: FramePreset
   frameText: string
   frameSubtitle: string

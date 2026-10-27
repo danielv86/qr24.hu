@@ -12,14 +12,17 @@ import { logger } from './logger'
 export const DEFAULT_PLANS: PlansConfig = {
   free: {
     id: 'free',
-    label: 'Ingyenes',
-    maxDynamicQr: 5,
+    label: 'Alap',
+    maxDynamicQr: 10,
     analyticsDays: 30,
     campaigns: false,
     expiresAt: false,
     csvExport: false,
     apiAccess: false,
     customDomain: false,
+    priceMonthly: 890,
+    priceYearly: 8900,
+    domainLimit: 0,
   },
   pro: {
     id: 'pro',
@@ -30,18 +33,24 @@ export const DEFAULT_PLANS: PlansConfig = {
     expiresAt: true,
     csvExport: true,
     apiAccess: false,
-    customDomain: false,
+    customDomain: true,
+    priceMonthly: 3590,
+    priceYearly: 35900,
+    domainLimit: 1,
   },
   business: {
     id: 'business',
-    label: 'Business',
-    maxDynamicQr: 5000,
+    label: 'Üzleti',
+    maxDynamicQr: 999,
     analyticsDays: 1095,
     campaigns: true,
     expiresAt: true,
     csvExport: true,
     apiAccess: true,
     customDomain: true,
+    priceMonthly: 6290,
+    priceYearly: 62900,
+    domainLimit: 5,
   },
 }
 
@@ -57,6 +66,9 @@ const planPatchSchema = z.object({
   csvExport: z.boolean().optional(),
   apiAccess: z.boolean().optional(),
   customDomain: z.boolean().optional(),
+  priceMonthly: z.number().int().min(0).max(10_000_000).optional(),
+  priceYearly: z.number().int().min(0).max(100_000_000).optional(),
+  domainLimit: z.number().int().min(0).max(100).optional(),
 }).strict()
 
 /** Részleges mentés: bármelyik csomagnak csak a megadott mezői változnak. */
@@ -105,6 +117,9 @@ export function mergePlans(overrides: unknown): PlansConfig {
     if (patch.csvExport !== undefined) target.csvExport = patch.csvExport
     if (patch.apiAccess !== undefined) target.apiAccess = patch.apiAccess
     if (patch.customDomain !== undefined) target.customDomain = patch.customDomain
+    if (patch.priceMonthly !== undefined) target.priceMonthly = patch.priceMonthly
+    if (patch.priceYearly !== undefined) target.priceYearly = patch.priceYearly
+    if (patch.domainLimit !== undefined) target.domainLimit = patch.domainLimit
   }
   return merged
 }

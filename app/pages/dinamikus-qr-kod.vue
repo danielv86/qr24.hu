@@ -243,7 +243,7 @@ function copyToken() {
                 v-model="createForm.targetUrl"
                 type="url"
                 class="field-input"
-                placeholder="https://pelda.hu/ajanlat"
+                placeholder="https://qrkod24.hu/ajanlat"
                 required
                 autocomplete="url"
                 inputmode="url"
@@ -469,6 +469,29 @@ function copyToken() {
           </p>
         </div>
       </section>
+
+      <section id="osszehasonlitas" class="mt-10 scroll-mt-24">
+        <h2 class="text-2xl">Statikus vagy dinamikus QR-kód?</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-relaxed text-ink-soft">
+          A dinamikus kód akkor előnyös, ha a cél később változhat, mérni szeretnéd a
+          beolvasásokat, vagy egy kódot szüneteltetni, lejárathoz kötni szeretnél. A statikus kód
+          ezzel szemben teljesen független a szerveroldali kiszolgálástól.
+        </p>
+        <div class="mt-4">
+          <QrComparisonTable />
+        </div>
+        <p class="mt-3 max-w-3xl text-sm leading-relaxed text-ink-soft">
+          A statikus kód felépítéséről, tipikus felhasználásáról és a nyomdai szempontokról a
+          <NuxtLink to="/statikus-qr-kod" class="font-semibold text-brand-700 hover:underline">
+            statikus QR-kód
+          </NuxtLink>
+          oldalon olvashatsz részletesen.
+        </p>
+      </section>
+
+      <div class="mt-8">
+        <AdSlot placement="guide" :min-height="90" />
+      </div>
 
       <ContentFaqAccordion :faqs="FAQS" id="gyik" class="mt-10" />
 

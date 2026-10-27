@@ -1,4 +1,4 @@
-# QR24.hu
+# QRKOD24.hu
 
 Dinamikus QR-kód-kezelő rendszer egyetlen Nuxt 4 alkalmazásban: a nyilvános
 oldalak, a statikus QR-generátor, a fiókfelület, az adminisztráció és az API
@@ -27,7 +27,7 @@ app/                 a Vue alkalmazás
   utils/             automatikusan importált segédek
 server/              Nitro: API, átirányítás, adatbázis
   api/               REST végpontok (/api/**)
-  routes/r/          nyilvános dinamikus átirányítás (/r/:code)
+  routes/go/          nyilvános dinamikus átirányítás (/go/:code)
   utils/             Prisma, auth, rate limit, validáció, statisztika, beállítások
 shared/              app és szerver közös kódja (#shared alias)
   content/           típus- és landingoldalak tartalma
@@ -63,7 +63,7 @@ yarn dev                  # http://localhost:3000
 
 | Parancs | Mit csinál |
 | --- | --- |
-| `yarn dev` | Fejlesztői szerver (SSR + API + `/r/:code`) |
+| `yarn dev` | Fejlesztői szerver (SSR + API + `/go/:code`) |
 | `yarn build` | Éles build (`.output/`) |
 | `yarn preview` | Az éles build helyi futtatása |
 | `yarn typecheck` | `nuxt typecheck` (vue-tsc) |
@@ -80,7 +80,7 @@ Minden változó egy helyen, a gyökér `.env`-ben él (minta: `.env.example`).
 
 | Változó | Leírás |
 | --- | --- |
-| `NUXT_PUBLIC_SITE_URL` | Nyilvános cím, pl. `https://qr24.hu` (kanonikus URL, sitemap, rövid linkek) |
+| `NUXT_PUBLIC_SITE_URL` | Nyilvános cím, pl. `https://qrkod24.hu` (kanonikus URL, sitemap, rövid linkek) |
 | `NUXT_PUBLIC_BRAND_NAME` | Márkanév |
 | `NUXT_PUBLIC_DYNAMIC_QR_ENABLED` | A dinamikus QR funkció főkapcsolója |
 | `NUXT_DB_HOST`, `NUXT_DB_PORT`, `NUXT_DB_NAME`, `NUXT_DB_USER`, `NUXT_DB_PASSWORD` | Adatbázis-kapcsolat |
@@ -113,8 +113,8 @@ A migrációk futtatása: `yarn db:deploy` (éles) vagy `yarn db:migrate` (fejle
 
 ## Hogyan működik a dinamikus QR-kód
 
-1. Létrehozás: `POST /api/dynamic-qr` – kriptográfiailag véletlen `publicId` (12 karakter), a QR-kód a `https://qr24.hu/r/<publicId>` címre mutat.
-2. Beolvasás: `GET /r/:code` – a szerver azonosítja a kódot, ellenőrzi az állapotot és a lejáratot, majd 302-vel átirányít.
+1. Létrehozás: `POST /api/dynamic-qr` – kriptográfiailag véletlen `publicId` (12 karakter), a QR-kód a `https://qrkod24.hu/go/<publicId>` címre mutat.
+2. Beolvasás: `GET /go/:code` – a szerver azonosítja a kódot, ellenőrzi az állapotot és a lejáratot, majd 302-vel átirányít.
 3. Cél-URL módosítás: `PATCH /api/dynamic-qr/:id` – a nyilvános azonosító nem változik, a kinyomtatott kód tovább működik.
 4. Állapotok: `active` → átirányít; `paused` → QR24-s állapotoldal (200, noindex); `expired` → 410; `archived` → 410.
 5. Statisztika: minden beolvasás napi aggregátumba és eseménytáblába kerül; IP-cím és teljes user-agent nem tárolódik, a botforgalom jelölve van.
@@ -145,7 +145,7 @@ nem kerül szerverre. A megszűnt „Linkek” típus régi címe
 | `POST /api/dynamic-qr/:id/pause`, `/activate`, `/archive` | Állapotkezelés |
 | `GET /api/dynamic-qr/:id/analytics` | Beolvasási statisztika |
 | `GET /api/dashboard/summary` | Dashboard-kártyák |
-| `GET /r/:code` | Nyilvános átirányítás (bejelentkezés nélkül) |
+| `GET /go/:code` | Nyilvános átirányítás (bejelentkezés nélkül) |
 | `POST /api/admin/login`, `/logout`, `GET /api/admin/session` | Admin munkamenet |
 | `GET /api/admin/qr`, `/stats`, `/settings`, `/plans` | Admin listák és beállítások |
 | `PATCH /api/admin/settings`, `/plans`, `/seo` | Admin szerkesztés |

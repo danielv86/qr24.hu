@@ -17,43 +17,43 @@ function row(line: number, label: string, payload: string) {
 
 describe('tömeges bemenet – webcím típus', () => {
   it('pontosvesszővel elválasztott nevet és címet olvas', () => {
-    const result = parseBulkInput('Nyitólap;https://qr24.hu\nÁrlista;qr24.hu/arlista', { type: 'url' })
+    const result = parseBulkInput('Nyitólap;https://qrkod24.hu\nÁrlista;qrkod24.hu/arlista', { type: 'url' })
     expect(result.total).toBe(2)
     expect(result.valid).toHaveLength(2)
-    expect(result.valid[0]).toMatchObject({ label: 'Nyitólap', payload: 'https://qr24.hu/' })
-    expect(result.valid[1]).toMatchObject({ label: 'Árlista', payload: 'https://qr24.hu/arlista' })
+    expect(result.valid[0]).toMatchObject({ label: 'Nyitólap', payload: 'https://qrkod24.hu/' })
+    expect(result.valid[1]).toMatchObject({ label: 'Árlista', payload: 'https://qrkod24.hu/arlista' })
   })
 
   it('tabulátorral és csak címmel is működik', () => {
-    const result = parseBulkInput('Név\tpelda.hu\nhttps://masik.hu/utvonal', { type: 'url' })
+    const result = parseBulkInput('Név\tqrkod24.hu\nhttps://masik.hu/utvonal', { type: 'url' })
     expect(result.valid).toHaveLength(2)
     expect(result.valid[0]!.label).toBe('Név')
-    expect(result.valid[0]!.payload).toBe('https://pelda.hu/')
+    expect(result.valid[0]!.payload).toBe('https://qrkod24.hu/')
     expect(result.valid[1]!.payload).toBe('https://masik.hu/utvonal')
   })
 
   it('egymezejű típusnál a címben lévő vesszőt nem bontja el', () => {
-    const result = parseBulkInput('https://pelda.hu/kereses?q=alma,korte', { type: 'url' })
+    const result = parseBulkInput('https://qrkod24.hu/kereses?q=alma,korte', { type: 'url' })
     expect(result.valid).toHaveLength(1)
     expect(result.valid[0]!.payload).toContain('q=alma,korte')
   })
 
   it('elutasítja a nem http(s) címeket', () => {
-    const result = parseBulkInput('javascript:alert(1)\nftp://pelda.hu', { type: 'url' })
+    const result = parseBulkInput('javascript:alert(1)\nftp://qrkod24.hu', { type: 'url' })
     expect(result.invalidCount).toBe(2)
     expect(result.rows.every(entry => entry.status === 'invalid')).toBe(true)
     expect(result.rows.every(entry => Boolean(entry.message))).toBe(true)
   })
 
   it('jelzi a duplikált tartalmat (normalizálás után)', () => {
-    const result = parseBulkInput('Első;https://pelda.hu\nMásodik;https://pelda.hu/', { type: 'url' })
+    const result = parseBulkInput('Első;https://qrkod24.hu\nMásodik;https://qrkod24.hu/', { type: 'url' })
     expect(result.valid).toHaveLength(1)
     expect(result.duplicateCount).toBe(1)
     expect(result.rows[1]!.message).toContain('1. sorban')
   })
 
   it('a limit feletti érvényes sorokat kihagyja', () => {
-    const lines = Array.from({ length: 5 }, (_, index) => `Kód ${index + 1};https://pelda.hu/${index + 1}`)
+    const lines = Array.from({ length: 5 }, (_, index) => `Kód ${index + 1};https://qrkod24.hu/${index + 1}`)
     const result = parseBulkInput(lines.join('\n'), { type: 'url', limit: 3 })
     expect(result.valid).toHaveLength(3)
     expect(result.truncatedCount).toBe(2)
@@ -61,7 +61,7 @@ describe('tömeges bemenet – webcím típus', () => {
 
   it('az alapértelmezett limit 100 kód', () => {
     expect(BULK_LIMIT).toBe(100)
-    const lines = Array.from({ length: 105 }, (_, index) => `Kód;https://pelda.hu/${index}`)
+    const lines = Array.from({ length: 105 }, (_, index) => `Kód;https://qrkod24.hu/${index}`)
     const result = parseBulkInput(lines.join('\n'), { type: 'url' })
     expect(result.valid).toHaveLength(100)
     expect(result.truncatedCount).toBe(5)
@@ -87,17 +87,17 @@ describe('tömeges bemenet – több mezős típusok', () => {
   })
 
   it('a hiányzó kötelező mezőt soronként jelzi', () => {
-    const result = parseBulkInput('name;url\nNyár;https://pelda.hu', { type: 'coupon' })
+    const result = parseBulkInput('name;url\nNyár;https://qrkod24.hu', { type: 'coupon' })
     expect(result.valid).toHaveLength(0)
     expect(result.invalidCount).toBe(1)
     expect(result.rows[0]!.message).toBeTruthy()
   })
 
   it('a kupon típus kódot és URL-t is kezel', () => {
-    const result = parseBulkInput('name;code;url\nNyár;NYAR2026;https://pelda.hu', { type: 'coupon' })
+    const result = parseBulkInput('name;code;url\nNyár;NYAR2026;https://qrkod24.hu', { type: 'coupon' })
     expect(result.valid).toHaveLength(1)
     expect(result.valid[0]!.payload).toContain('NYAR2026')
-    expect(result.valid[0]!.payload).toContain('https://pelda.hu')
+    expect(result.valid[0]!.payload).toContain('https://qrkod24.hu')
   })
 
   it('a szöveg típus a teljes sort tartalomnak veszi', () => {
@@ -148,7 +148,7 @@ describe('fájlnevek és riport', () => {
   })
 
   it('egyedi, sorszámozott fájlnevet ad', () => {
-    expect(bulkFileName(row(1, 'Nyitólap', 'https://pelda.hu/'), 0)).toBe('nyitolap-001')
+    expect(bulkFileName(row(1, 'Nyitólap', 'https://qrkod24.hu/'), 0)).toBe('nyitolap-001')
     expect(bulkFileName(row(2, '', 'x'), 11)).toBe('qr-kod-012')
   })
 

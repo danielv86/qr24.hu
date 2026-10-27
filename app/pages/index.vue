@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import type { ContentFaq } from '#shared/content/types'
 
+// A fejléc-képek a public mappából jönnek: így a szerver és a kliens
+// ugyanazt az URL-t rendereli, és nincs hidratálási eltérés.
+const heroBackground = '/img/header/bg1.png'
+const heroBackgroundDark = '/img/header/bg1-dark.png'
+const heroQrImage = '/img/header/qr-icon.png'
+
+const HERO_BADGES = [
+  { label: '28 QR-kód típus', icon: 'lucide:layout-grid', color: 'bg-brand-100 text-brand-700' },
+  { label: 'Nincs regisztráció', icon: 'lucide:user-check', color: 'bg-emerald-100 text-emerald-700' },
+  { label: '5 exportformátum', icon: 'lucide:download', color: 'bg-amber-100 text-amber-700' },
+]
+
 const HOME_FAQS: ContentFaq[] = [
   {
     question: 'Ingyenes a QR-kód generátor?',
@@ -107,7 +119,7 @@ const INTERNAL_LINKS = [
 
 useContentSeo({
   slug: '/',
-  title: 'Ingyenes QR-kód generátor – QR24.hu',
+  title: 'Ingyenes QR-kód generátor – QRKOD24.hu',
   description:
     'Készíts ingyenes QR-kódot regisztráció nélkül: weboldal, Wi-Fi, vCard, e-mail, SMS és további típusok. Élő előnézet, egyedi színek, keretek és sablonok, PNG, JPG, WebP, SVG és PDF letöltés.',
   h1: 'Ingyenes QR-kód generátor',
@@ -118,42 +130,68 @@ useContentSeo({
 
 <template>
   <div>
-    <div class="container-page pt-4 sm:pt-6">
-      <AdSlot placement="top" :min-height="90" class="mx-auto max-w-3xl" />
-    </div>
+    <!-- Fejléc sáv a saját háttérképpel, a menüsor és a típusválasztó alá is benyúlva -->
+    <section class="relative -mt-[6.0625rem] overflow-hidden pt-[6.0625rem]">
+      <img
+        :src="heroBackground"
+        alt=""
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 h-full w-full object-cover dark:hidden"
+      >
+      <img
+        :src="heroBackgroundDark"
+        alt=""
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 hidden h-full w-full object-cover dark:block"
+      >
+      <div class="relative container-page pb-28 pt-3 sm:pt-5">
+        <AdSlot placement="top" :min-height="90" class="mx-auto max-w-3xl" />
 
-    <div class="container-page py-8 lg:py-10">
-      <div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18.75rem]">
-        <div class="min-w-0 xl:col-span-2">
-          <section class="mx-auto max-w-3xl text-center" aria-labelledby="home-heading">
+        <div class="mt-7 grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div class="text-left" aria-labelledby="home-heading">
             <span class="eyebrow">
               <Icon name="lucide:sparkles" class="h-3.5 w-3.5" aria-hidden="true" />
               Ingyenes online eszköz
             </span>
-            <h1 id="home-heading" class="mt-4 text-4xl leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
-              Ingyenes <span class="text-brand-600">QR-kód</span> generátor
+            <h1 id="home-heading" class="mt-4 text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
+              Ingyenes
+              <span class="bg-gradient-to-r from-brand-700 via-brand-600 to-fuchsia-500 bg-clip-text text-transparent">QR-kód</span>
+              generátor
             </h1>
-            <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">
+            <p class="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">
               Készíts egyedi QR-kódot bármilyen tartalomhoz. Gyors, egyszerű és testreszabható –
               regisztráció nélkül, közvetlenül a böngésződben.
             </p>
-            <p class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-medium text-ink-muted">
-              <span class="inline-flex items-center gap-1.5">
-                <Icon name="lucide:layout-grid" class="h-4 w-4 text-brand-600" aria-hidden="true" />
-                28 QR-kód típus
-              </span>
-              <span class="inline-flex items-center gap-1.5">
-                <Icon name="lucide:user-x" class="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                Nincs regisztráció
-              </span>
-              <span class="inline-flex items-center gap-1.5">
-                <Icon name="lucide:download" class="h-4 w-4 text-amber-600" aria-hidden="true" />
-                5 exportformátum
-              </span>
-            </p>
-          </section>
+            <ul class="mt-5 flex flex-wrap gap-2.5">
+              <li
+                v-for="badge in HERO_BADGES"
+                :key="badge.label"
+                class="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-surface/90 px-3 py-1.5 text-xs font-semibold text-ink shadow-sm backdrop-blur-sm"
+              >
+                <span :class="['grid h-5 w-5 place-items-center rounded-full', badge.color]">
+                  <Icon :name="badge.icon" class="h-3 w-3" aria-hidden="true" />
+                </span>
+                {{ badge.label }}
+              </li>
+            </ul>
+          </div>
 
-          <QrTypeMenu />
+          <div class="hidden justify-self-end lg:block">
+            <img
+              :src="heroQrImage"
+              alt="QR-kód előnézet"
+              class="w-[280px] drop-shadow-2xl"
+              loading="eager"
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container-page py-8 lg:py-10">
+      <div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18.75rem]">
+        <div class="min-w-0 xl:col-span-2">
+          <QrTypeMenu class="-mt-28" />
 
           <QrGenerator class="mt-5" :initial-type="'url'" :show-type-tabs="false" />
         </div>

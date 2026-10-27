@@ -16,7 +16,7 @@ function triggerDownload(blob: Blob, filename: string) {
 const SAFE_NAME = /[^a-z0-9-_]+/gi
 
 /**
- * A dinamikus QR-kód letöltése a rövid QR24.hu címből. A statikus generátorral
+ * A dinamikus QR-kód letöltése a rövid QRKOD24.hu címből. A statikus generátorral
  * azonos renderelőt használjuk, így a fájl pontosan úgy néz ki, mint az előnézet.
  */
 export async function downloadDynamicQr(

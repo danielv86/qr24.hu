@@ -203,28 +203,34 @@ export const BODY_SHAPES: ShapeDefinition<DotStyle>[] = [
     label: 'Vízszintes sáv',
     path: (x, y, s) => roundRectPath(x, y + s * 0.24, s, s * 0.52, s * 0.26),
   },
-  { value: 'tiny', label: 'Apró pontok', path: (x, y, s) => circlePath(x + s / 2, y + s / 2, s * 0.27) },
+  { value: 'tiny', label: 'Apró pontok', path: (x, y, s) => circlePath(x + s / 2, y + s / 2, s * 0.33) },
   {
     value: 'ring',
     label: 'Gyűrű',
-    path: (x, y, s) => ringPath(x + s / 2, y + s / 2, s * 0.47, s * 0.24),
+    // A gyűrű közepe sötét marad, különben a beolvasó világos modult látna.
+    path: (x, y, s) => `${ringPath(x + s / 2, y + s / 2, s * 0.47, s * 0.26)}${circlePath(x + s / 2, y + s / 2, s * 0.16)}`,
   },
   {
     value: 'grid',
     label: 'Rács',
+    // Külső keret, fehér rés és sötét mag – a modul közepe mindig sötét.
     path: (x, y, s) => `${roundRectPath(x, y, s, s, s * 0.08)}${roundRectPath(
-      x + s * 0.3,
-      y + s * 0.3,
-      s * 0.4,
-      s * 0.4,
+      x + s * 0.28,
+      y + s * 0.28,
+      s * 0.44,
+      s * 0.44,
       s * 0.06,
-    )}`,
+    )}${roundRectPath(x + s * 0.34, y + s * 0.34, s * 0.32, s * 0.32, s * 0.05)}`,
   },
   { value: 'diagonal', label: 'Átlós sáv', path: diagonalPath },
   {
     value: 'wave',
     label: 'Hullám',
-    path: (x, y, s) => `M${round(x + s)} ${round(y)}H${round(x + s / 2)}a${round(s / 2)} ${round(s / 2)} 0 0 1 0 ${round(s)}H${round(x + s)}Z`,
+    path: (x, y, s) => {
+      const top = round(y + s * 0.28)
+      const bottom = round(y + s * 0.56)
+      return `M${round(x)} ${top}Q${round(x + s * 0.25)} ${round(y)} ${round(x + s * 0.5)} ${top}Q${round(x + s * 0.75)} ${bottom} ${round(x + s)} ${top}V${round(y + s)}H${round(x)}Z`
+    },
   },
   { value: 'sparkle', label: 'Szikra', path: (x, y, s) => sparklePath(x + s / 2, y + s / 2, s * 0.5, s * 0.16) },
 ]
@@ -378,31 +384,36 @@ export const EYE_FRAME_SHAPES: ShapeDefinition<CornerSquareStyle>[] = [
   },
 ]
 
+/**
+ * A sarokelem belseje. A `s` mindig a 3 × 3 modulnyi belső négyzet, ezért a
+ * formák ennek a teljes területét kitöltik: így marad a szabványos 1 : 1 : 1
+ * arány a hétsoros sötét gyűrű, a fehér gyűrű és a belső mag között.
+ */
 export const EYE_BALL_SHAPES: ShapeDefinition<CornerDotStyle>[] = [
   {
     value: 'square',
     label: 'Négyzetes',
-    path: (x, y, s) => roundRectPath(x + s / 6, y + s / 6, s * 2 / 3, s * 2 / 3, s * 0.02),
+    path: (x, y, s) => roundRectPath(x, y, s, s, 0),
   },
   {
     value: 'dot',
     label: 'Kör',
-    path: (x, y, s) => circlePath(x + s / 2, y + s / 2, s / 3),
+    path: (x, y, s) => circlePath(x + s / 2, y + s / 2, s / 2),
   },
   {
     value: 'circle-small',
     label: 'Kis kör',
-    path: (x, y, s) => circlePath(x + s / 2, y + s / 2, s * 0.24),
+    path: (x, y, s) => circlePath(x + s / 2, y + s / 2, s * 0.34),
   },
   {
     value: 'rounded',
     label: 'Lekerekített',
-    path: (x, y, s) => roundRectPath(x + s / 6, y + s / 6, s * 2 / 3, s * 2 / 3, s * 0.24),
+    path: (x, y, s) => roundRectPath(x, y, s, s, s * 0.3),
   },
   {
     value: 'leaf',
     label: 'Levél',
-    path: (x, y, s) => roundRectPath(x + s / 6, y + s / 6, s * 2 / 3, s * 2 / 3, [s * 0.32, s * 0.08, s * 0.32, s * 0.32]),
+    path: (x, y, s) => roundRectPath(x, y, s, s, [s * 0.5, s * 0.06, s * 0.5, s * 0.5]),
   },
   {
     value: 'diamond',
@@ -410,7 +421,7 @@ export const EYE_BALL_SHAPES: ShapeDefinition<CornerDotStyle>[] = [
     path: (x, y, s) => {
       const cx = x + s / 2
       const cy = y + s / 2
-      const r = s / 3
+      const r = s / 2
       return polygonPath([
         [cx, cy - r],
         [cx + r, cy],
@@ -422,40 +433,40 @@ export const EYE_BALL_SHAPES: ShapeDefinition<CornerDotStyle>[] = [
   {
     value: 'star',
     label: 'Csillag',
-    path: (x, y, s) => starPath(x + s / 2, y + s / 2, s * 0.36, s * 0.14),
+    path: (x, y, s) => starPath(x + s / 2, y + s / 2, s * 0.5, s * 0.2),
   },
   {
     value: 'cross',
     label: 'Kereszt',
-    path: (x, y, s) => plusPath(x + s / 2, y + s / 2, s / 3, s * 0.11, Math.PI / 4),
+    path: (x, y, s) => plusPath(x + s / 2, y + s / 2, s / 2, s * 0.16, Math.PI / 4),
   },
   {
     value: 'plus',
     label: 'Plusz',
-    path: (x, y, s) => plusPath(x + s / 2, y + s / 2, s / 3, s * 0.1),
+    path: (x, y, s) => plusPath(x + s / 2, y + s / 2, s / 2, s * 0.15),
   },
   {
     value: 'hexagon',
     label: 'Hatszög',
-    path: (x, y, s) => hexagonPath(x + s / 2, y + s / 2, s / 3),
+    path: (x, y, s) => hexagonPath(x + s / 2, y + s / 2, s / 2),
   },
   {
     value: 'triangle',
     label: 'Háromszög',
-    path: (x, y, s) => trianglePath(x + s / 2, y + s * 0.52, s * 0.36),
+    path: (x, y, s) => trianglePath(x + s / 2, y + s * 0.52, s * 0.54),
   },
   {
     value: 'ring',
     label: 'Gyűrű',
-    path: (x, y, s) => ringPath(x + s / 2, y + s / 2, s / 3, s * 0.15),
+    path: (x, y, s) => ringPath(x + s / 2, y + s / 2, s / 2, s * 0.22),
   },
   {
     value: 'bars-h',
     label: 'Vízszintes sávok',
     path: (x, y, s) => {
-      const barHeight = s * 0.16
+      const barHeight = s * 0.22
       return [0, 1, 2]
-        .map(index => roundRectPath(x + s * 0.14, y + s * 0.22 + index * s * 0.24, s * 0.72, barHeight, barHeight / 2))
+        .map(index => roundRectPath(x + s * 0.06, y + s * 0.14 + index * s * 0.26, s * 0.88, barHeight, barHeight / 2))
         .join('')
     },
   },
@@ -463,9 +474,9 @@ export const EYE_BALL_SHAPES: ShapeDefinition<CornerDotStyle>[] = [
     value: 'bars-v',
     label: 'Függőleges sávok',
     path: (x, y, s) => {
-      const barWidth = s * 0.16
+      const barWidth = s * 0.22
       return [0, 1, 2]
-        .map(index => roundRectPath(x + s * 0.22 + index * s * 0.24, y + s * 0.14, barWidth, s * 0.72, barWidth / 2))
+        .map(index => roundRectPath(x + s * 0.14 + index * s * 0.26, y + s * 0.06, barWidth, s * 0.88, barWidth / 2))
         .join('')
     },
   },
@@ -473,12 +484,12 @@ export const EYE_BALL_SHAPES: ShapeDefinition<CornerDotStyle>[] = [
     value: 'dots4',
     label: 'Négy pont',
     path: (x, y, s) => {
-      const dot = s * 0.11
+      const dot = s * 0.16
       const offsets: [number, number][] = [
-        [0.3, 0.3],
-        [0.7, 0.3],
-        [0.3, 0.7],
-        [0.7, 0.7],
+        [0.25, 0.25],
+        [0.75, 0.25],
+        [0.25, 0.75],
+        [0.75, 0.75],
       ]
       return offsets.map(([ox, oy]) => circlePath(x + s * ox, y + s * oy, dot)).join('')
     },
@@ -486,15 +497,15 @@ export const EYE_BALL_SHAPES: ShapeDefinition<CornerDotStyle>[] = [
   {
     value: 'sparkle',
     label: 'Szikra',
-    path: (x, y, s) => sparklePath(x + s / 2, y + s / 2, s * 0.36, s * 0.12),
+    path: (x, y, s) => sparklePath(x + s / 2, y + s / 2, s * 0.52, s * 0.16),
   },
   {
     value: 'half',
     label: 'Félhold',
     path: (x, y, s) => {
       const cx = x + s / 2
-      const r = s * 0.32
-      const cy = y + s * 0.58
+      const r = s * 0.5
+      const cy = y + s * 0.5
       return `M${round(cx - r)} ${round(cy)}a${round(r)} ${round(r)} 0 0 1 ${round(r * 2)} 0Z`
     },
   },

@@ -9,11 +9,11 @@ const { brandName } = useSiteSettings()
     :aria-label="`${brandName} – főoldal`"
   >
     <img
-      src="~/assets/img/logo/qr24.hu-logo.png"
+      src="/img/logo/qrkod24.hu-logo.png"
       :alt="brandName"
       width="1024"
       height="404"
-      class="h-16 w-auto rounded-md bg-white dark:p-1"
+      class="h-16 w-auto dark:brightness-0 dark:invert"
       decoding="async"
     >
   </NuxtLink>

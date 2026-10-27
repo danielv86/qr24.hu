@@ -87,17 +87,17 @@
     --ink-soft: 51 65 85;
     --ink-muted: 100 116 139;
 
-    --brand-50: 239 246 255;
-    --brand-100: 219 234 254;
-    --brand-200: 191 219 254;
-    --brand-300: 147 197 253;
-    --brand-400: 96 165 250;
-    --brand-500: 59 130 246;
-    --brand-600: 37 99 235;
-    --brand-700: 29 78 216;
-    --brand-800: 30 64 175;
-    --brand-900: 30 58 138;
-    --brand-950: 23 37 84;
+    --brand-50: 245 243 255;
+    --brand-100: 237 233 254;
+    --brand-200: 221 214 254;
+    --brand-300: 196 181 253;
+    --brand-400: 167 139 250;
+    --brand-500: 139 92 246;
+    --brand-600: 109 40 217;
+    --brand-700: 91 33 182;
+    --brand-800: 76 29 149;
+    --brand-900: 59 20 116;
+    --brand-950: 46 16 101;
 
     --slate-50: 248 250 252;
     --slate-100: 241 245 249;
@@ -121,17 +121,17 @@
     --ink-soft: 203 213 225;
     --ink-muted: 148 163 184;
 
-    --brand-50: 15 32 55;
-    --brand-100: 18 39 68;
-    --brand-200: 28 55 92;
-    --brand-300: 42 82 130;
-    --brand-400: 96 165 250;
-    --brand-500: 59 130 246;
-    --brand-600: 37 99 235;
-    --brand-700: 147 197 253;
-    --brand-800: 191 219 254;
-    --brand-900: 219 234 254;
-    --brand-950: 239 246 255;
+    --brand-50: 26 19 45;
+    --brand-100: 33 24 57;
+    --brand-200: 48 35 82;
+    --brand-300: 68 50 115;
+    --brand-400: 167 139 250;
+    --brand-500: 139 92 246;
+    --brand-600: 109 40 217;
+    --brand-700: 196 181 253;
+    --brand-800: 221 214 254;
+    --brand-900: 237 233 254;
+    --brand-950: 245 243 255;
 
     --slate-50: 20 30 48;
     --slate-100: 25 37 58;
@@ -177,7 +177,7 @@
   }
 
   input[type='range'] {
-    accent-color: #2563eb;
+    accent-color: #6d28d9;
   }
 }
 
@@ -304,11 +304,26 @@
 
 /* ── Sötét téma: a kiemelt gombok és a fókuszgyűrű ── */
 /* A paletta sötét módban a szöveghez világosítja a brand-700/800-at, ezért
-   a tömör gombok hover/active állapotát itt rögzítjük a valódi kék árnyalatokra. */
-.dark .btn-primary:hover { background-color: rgb(59 130 246); }
-.dark .btn-primary:active { background-color: rgb(29 78 216); }
+   a tömör gombok hover/active állapotát itt rögzítjük a valódi lila árnyalatokra. */
+.dark .btn-primary:hover { background-color: rgb(124 58 237); }
+.dark .btn-primary:active { background-color: rgb(91 33 182); }
 
 .dark :focus-visible { --tw-ring-offset-color: rgb(7 11 20); }
 
 .dark .card,
 .dark .shadow-card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -16px rgba(0, 0, 0, 0.7); }
+
+/* ── QR-formacsempék ── */
+/* A három forma-csoport (test, sarokkeret, sarokbelső) azonos rácsot használ:
+   10 oszlop, egyenlő csempék, hogy a választó ne nyúljon szét. */
+.qr-shape-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.qr-shape-grid > button > svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}

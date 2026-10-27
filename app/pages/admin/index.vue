@@ -121,6 +121,9 @@ interface PlanForm {
   csvExport: boolean
   apiAccess: boolean
   customDomain: boolean
+  priceMonthly: number
+  priceYearly: number
+  domainLimit: number
 }
 
 type PlanFeatureKey = 'campaigns' | 'expiresAt' | 'csvExport' | 'apiAccess' | 'customDomain'
@@ -139,9 +142,9 @@ const plansSaving = ref(false)
 const plansError = ref('')
 const plansMessage = ref('')
 const plansForm = reactive<Record<PlanId, PlanForm>>({
-  free: { label: 'Ingyenes', maxDynamicQr: 5, analyticsDays: 30, campaigns: false, expiresAt: false, csvExport: false, apiAccess: false, customDomain: false },
-  pro: { label: 'Pro', maxDynamicQr: 100, analyticsDays: 365, campaigns: true, expiresAt: true, csvExport: true, apiAccess: false, customDomain: false },
-  business: { label: 'Business', maxDynamicQr: 5000, analyticsDays: 1095, campaigns: true, expiresAt: true, csvExport: true, apiAccess: true, customDomain: true },
+  free: { label: 'Alap', maxDynamicQr: 10, analyticsDays: 30, campaigns: false, expiresAt: false, csvExport: false, apiAccess: false, customDomain: false, priceMonthly: 890, priceYearly: 8900, domainLimit: 0 },
+  pro: { label: 'Pro', maxDynamicQr: 100, analyticsDays: 365, campaigns: true, expiresAt: true, csvExport: true, apiAccess: false, customDomain: true, priceMonthly: 3590, priceYearly: 35900, domainLimit: 1 },
+  business: { label: 'Üzleti', maxDynamicQr: 999, analyticsDays: 1095, campaigns: true, expiresAt: true, csvExport: true, apiAccess: true, customDomain: true, priceMonthly: 6290, priceYearly: 62900, domainLimit: 5 },
 })
 
 function applyPlans(data: PlansConfig) {
@@ -157,6 +160,9 @@ function applyPlans(data: PlansConfig) {
     target.csvExport = plan.csvExport
     target.apiAccess = plan.apiAccess
     target.customDomain = plan.customDomain
+    target.priceMonthly = plan.priceMonthly
+    target.priceYearly = plan.priceYearly
+    target.domainLimit = plan.domainLimit
   }
 }
 
@@ -190,6 +196,9 @@ async function savePlans() {
           csvExport: plan.csvExport,
           apiAccess: plan.apiAccess,
           customDomain: plan.customDomain,
+          priceMonthly: Math.max(0, Math.trunc(Number(plan.priceMonthly) || 0)),
+          priceYearly: Math.max(0, Math.trunc(Number(plan.priceYearly) || 0)),
+          domainLimit: Math.max(0, Math.trunc(Number(plan.domainLimit) || 0)),
         }]
       }),
     )
@@ -396,7 +405,7 @@ onMounted(async () => {
               class="field-input"
               autocomplete="username"
               required
-              placeholder="admin@pelda.hu"
+              placeholder="admin@qrkod24.hu"
             >
           </div>
           <div>
@@ -687,6 +696,47 @@ onMounted(async () => {
                     >
                     <p class="field-help">Visszamenőleg</p>
                   </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label :for="`plan-price-monthly-${id}`" class="field-label">Havi ár (Ft)</label>
+                    <input
+                      :id="`plan-price-monthly-${id}`"
+                      v-model.number="plansForm[id].priceMonthly"
+                      type="number"
+                      min="0"
+                      step="10"
+                      class="field-input py-2 text-sm"
+                    >
+                    <p class="field-help">0 = ingyenes</p>
+                  </div>
+                  <div>
+                    <label :for="`plan-price-yearly-${id}`" class="field-label">Éves ár (Ft)</label>
+                    <input
+                      :id="`plan-price-yearly-${id}`"
+                      v-model.number="plansForm[id].priceYearly"
+                      type="number"
+                      min="0"
+                      step="100"
+                      class="field-input py-2 text-sm"
+                    >
+                    <p class="field-help">A teljes évre</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label :for="`plan-domains-${id}`" class="field-label">Saját domain limit</label>
+                  <input
+                    :id="`plan-domains-${id}`"
+                    v-model.number="plansForm[id].domainLimit"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    class="field-input py-2 text-sm"
+                  >
+                  <p class="field-help">0 = nem rendelhető domain a csomagban</p>
                 </div>
 
                 <div class="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50/60 p-2.5">

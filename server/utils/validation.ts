@@ -86,6 +86,26 @@ export const userRegisterSchema = z.object({
     .default(''),
 }).strict()
 
+export const emailVerifySchema = z.object({
+  email: z
+    .email({ error: 'Érvényes e-mail-címet adj meg.' })
+    .trim()
+    .toLowerCase()
+    .max(190, 'Az e-mail-cím túl hosszú.'),
+  code: z
+    .string({ error: 'Add meg a 6 jegyű kódot.' })
+    .trim()
+    .regex(/^\d{6}$/, 'A kód pontosan 6 számjegyből áll.'),
+}).strict()
+
+export const emailResendSchema = z.object({
+  email: z
+    .email({ error: 'Érvényes e-mail-címet adj meg.' })
+    .trim()
+    .toLowerCase()
+    .max(190, 'Az e-mail-cím túl hosszú.'),
+}).strict()
+
 export const userLoginSchema = z.object({
   email: z
     .email({ error: 'Érvényes e-mail-címet adj meg.' })
@@ -123,6 +143,90 @@ export const adminLoginSchema = z.object({
     .min(1, 'Add meg a jelszót.')
     .max(200, 'A jelszó túl hosszú.'),
 }).strict()
+
+const passwordSchema = z
+  .string({ error: 'Add meg a jelszót.' })
+  .min(10, 'A jelszó legalább 10 karakter legyen.')
+  .max(200, 'A jelszó túl hosszú.')
+  .refine(value => /[a-zA-Z]/.test(value) && /\d/.test(value), 'A jelszó tartalmazzon betűt és számot.')
+
+export const accountUpdateSchema = z.object({
+  name: z
+    .string({ error: 'A név csak szöveg lehet.' })
+    .trim()
+    .max(120, 'A név legfeljebb 120 karakter lehet.')
+    .optional(),
+  email: z
+    .email({ error: 'Érvényes e-mail-címet adj meg.' })
+    .trim()
+    .toLowerCase()
+    .max(190, 'Az e-mail-cím túl hosszú.')
+    .optional(),
+  currentPassword: z
+    .string({ error: 'A jelszó csak szöveg lehet.' })
+    .max(200, 'A jelszó túl hosszú.')
+    .optional(),
+}).strict().refine(value => Object.keys(value).length > 0, {
+  message: 'Adj meg legalább egy módosítandó adatot.',
+})
+
+export const accountPasswordSchema = z.object({
+  currentPassword: z
+    .string({ error: 'A jelenlegi jelszó csak szöveg lehet.' })
+    .max(200, 'A jelszó túl hosszú.')
+    .optional()
+    .default(''),
+  newPassword: passwordSchema,
+}).strict()
+
+export const accountDeleteSchema = z.object({
+  password: z
+    .string({ error: 'A jelszó csak szöveg lehet.' })
+    .max(200, 'A jelszó túl hosszú.')
+    .optional()
+    .default(''),
+  confirmEmail: z
+    .email({ error: 'Írd be a fiók e-mail-címét.' })
+    .trim()
+    .toLowerCase()
+    .max(190, 'Az e-mail-cím túl hosszú.'),
+}).strict()
+
+export const domainCreateSchema = z.object({
+  host: z
+    .string({ error: 'Add meg a domaint.' })
+    .trim()
+    .toLowerCase()
+    .min(4, 'Add meg a domaint.')
+    .max(190, 'A domain legfeljebb 190 karakter lehet.'),
+}).strict()
+
+export const apiKeyCreateSchema = z.object({
+  name: z
+    .string({ error: 'Add meg a kulcs nevét.' })
+    .trim()
+    .min(1, 'Add meg a kulcs nevét.')
+    .max(80, 'A név legfeljebb 80 karakter lehet.'),
+}).strict()
+
+export const apiQrCreateSchema = z.object({
+  targetUrl: z
+    .string({ error: 'Add meg a cél-URL-t.' })
+    .trim()
+    .min(1, 'Add meg a cél-URL-t.')
+    .max(2048, 'A cél-URL legfeljebb 2048 karakter lehet.'),
+  title: z
+    .string({ error: 'A cím csak szöveg lehet.' })
+    .trim()
+    .max(120, 'A cím legfeljebb 120 karakter lehet.')
+    .optional()
+    .default(''),
+}).strict()
+
+export const apiQrListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10_000).optional().default(1),
+  perPage: z.coerce.number().int().min(1).max(50).optional().default(20),
+})
 
 const slotSchema = z
   .string({ error: 'A hirdetési azonosító csak szöveg lehet.' })
@@ -202,6 +306,9 @@ export type AdminLoginInput = z.infer<typeof adminLoginSchema>
 export type AdminSettingsInput = z.infer<typeof adminSettingsSchema>
 export type SeoOverrideInput = z.infer<typeof seoOverrideSchema>
 export type ListQueryInput = z.infer<typeof listQuerySchema>
+export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>
+export type AccountPasswordInput = z.infer<typeof accountPasswordSchema>
+export type AccountDeleteInput = z.infer<typeof accountDeleteSchema>
 
 function issuesToDetails(error: z.ZodError): Record<string, string> {
   const details: Record<string, string> = {}

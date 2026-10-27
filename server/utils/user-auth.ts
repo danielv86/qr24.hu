@@ -25,6 +25,7 @@ export interface UserRow {
   name: string | null
   passwordHash: string | null
   plan: string
+  emailVerified: boolean
   createdAt: Date
 }
 
@@ -120,7 +121,15 @@ export async function findUserByEmail(email: string) {
   return withDb(() =>
     getPrisma().user.findUnique({
       where: { email: email.toLowerCase() },
-      select: { id: true, email: true, name: true, passwordHash: true, plan: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        passwordHash: true,
+        plan: true,
+        emailVerified: true,
+        createdAt: true,
+      },
     }),
   )
 }
@@ -145,7 +154,15 @@ export async function registerUser(input: {
           passwordHash,
           plan: 'free',
         },
-        select: { id: true, email: true, name: true, passwordHash: true, plan: true, createdAt: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          passwordHash: true,
+          plan: true,
+          emailVerified: true,
+          createdAt: true,
+        },
       }),
     )
   } catch (error) {
@@ -224,7 +241,13 @@ export async function findOrCreateOAuthUser(input: {
     // Versenyhelyzet: ha közben másik kérés létrehozta a kapcsolatot, az nem hiba.
     if ((error as { code?: string }).code !== 'P2002') throw error
   })
-  await withDb(() => prisma.user.update({ where: { id: BigInt(userId) }, data: { lastLoginAt: new Date() } })).catch(() => {})
+  // A külső szolgáltató már igazolta az e-mail-címet, ezért itt megerősítettnek jelöljük.
+  await withDb(() =>
+    prisma.user.update({
+      where: { id: BigInt(userId) },
+      data: { lastLoginAt: new Date(), emailVerified: true },
+    }),
+  ).catch(() => {})
   logger.info('OAuth login', { provider: input.provider, created })
   return { userId, created }
 }

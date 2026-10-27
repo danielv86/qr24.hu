@@ -1,5 +1,4 @@
 import {
-  COLOR_PRESETS,
   DEFAULT_CUSTOMIZATION,
   cloneCustomization,
   getCustomizationWarnings,
@@ -7,7 +6,7 @@ import {
   normalizeHexColor,
 } from '~/lib/qr/customization'
 import { DESIGN_TEMPLATES, applyDesignTemplate } from '~/lib/qr/design-templates'
-import type { QrColorPreset, QrCustomization, QrDesignTemplate, QrFill } from '#shared/qr/types'
+import type { QrCustomization, QrDesignTemplate, QrFill } from '#shared/qr/types'
 
 const MAX_LOGO_BYTES = 1_500_000
 const ALLOWED_LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/gif']
@@ -19,6 +18,7 @@ const DESIGN_KEYS: (keyof QrCustomization)[] = [
   'cornerSquareStyle',
   'cornerDotStyle',
   'bodyFill',
+  'bgFill',
   'cornerSquareFill',
   'cornerDotFill',
   'transparentBackground',
@@ -56,7 +56,7 @@ export function useQrCustomization() {
     customization.value = next
   }
 
-  function setFill(key: 'bodyFill' | 'frameFill' | 'cornerSquareFill' | 'cornerDotFill', patch: Partial<QrFill>) {
+  function setFill(key: 'bodyFill' | 'bgFill' | 'frameFill' | 'cornerSquareFill' | 'cornerDotFill', patch: Partial<QrFill>) {
     const fill: QrFill = { ...customization.value[key], ...patch }
     const next: QrCustomization = { ...customization.value, [key]: fill, designTemplate: '' }
     if (key === 'bodyFill' && fill.kind === 'solid') {
@@ -67,24 +67,10 @@ export function useQrCustomization() {
     if (key === 'frameFill' && fill.kind === 'solid') {
       next.frameColor = fill.color
     }
-    customization.value = next
-  }
-
-  function applyPreset(preset: QrColorPreset) {
-    customization.value = {
-      ...customization.value,
-      designTemplate: '',
-      fgColor: preset.fgColor,
-      bgColor: preset.bgColor,
-      bodyFill: { kind: 'solid', color: preset.fgColor, color2: preset.fgColor, rotation: 45 },
-      dotStyle: preset.dotStyle,
-      cornerSquareStyle: preset.cornerSquareStyle,
-      cornerDotStyle: preset.cornerDotStyle,
-      cornerSquareColor: '',
-      cornerDotColor: '',
-      cornerSquareFill: { kind: 'solid', color: '', color2: preset.fgColor, rotation: 45 },
-      cornerDotFill: { kind: 'solid', color: '', color2: preset.fgColor, rotation: 45 },
+    if (key === 'bgFill' && fill.kind === 'solid') {
+      next.bgColor = fill.color
     }
+    customization.value = next
   }
 
   function applyTemplate(template: QrDesignTemplate) {
@@ -130,12 +116,24 @@ export function useQrCustomization() {
         ...customization.value,
         logo: dataUrl,
         logoName: file.name,
-        errorCorrection: customization.value.errorCorrection === 'L' ? 'H' : customization.value.errorCorrection,
+        // A logó takarja a kód egy részét, ezért H szintre váltunk.
+        errorCorrection: 'H',
       }
       return true
     } catch {
       logoError.value = 'A kép feltöltése nem sikerült. Próbáld újra.'
       return false
+    }
+  }
+
+  /** Kész logó (például social ikon) beállítása feltöltés nélkül. */
+  function setLogoData(dataUrl: string, name: string) {
+    logoError.value = ''
+    customization.value = {
+      ...customization.value,
+      logo: dataUrl,
+      logoName: name,
+      errorCorrection: 'H',
     }
   }
 
@@ -154,14 +152,13 @@ export function useQrCustomization() {
     warnings,
     hasLogo,
     logoError,
-    presets: COLOR_PRESETS,
     templates: DESIGN_TEMPLATES,
     update,
     setColor,
     setFill,
     setLogo,
+    setLogoData,
     removeLogo,
-    applyPreset,
     applyTemplate,
     resetCustomization,
   }

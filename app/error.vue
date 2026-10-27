@@ -8,7 +8,7 @@ const title = computed(() =>
 )
 
 useSeoMeta({
-  title: () => `${title.value} – QR24.hu`,
+  title: () => `${title.value} – QRKOD24.hu`,
   robots: 'noindex, nofollow',
 })
 
@@ -46,7 +46,7 @@ function goHome() {
 
     <footer class="border-t border-slate-200 bg-surface py-6">
       <div class="container-page text-center text-xs text-ink-muted">
-        QR24.hu – ingyenes QR-kód generátor
+        QRKOD24.hu – ingyenes QR-kód generátor
       </div>
     </footer>
   </div>

@@ -31,17 +31,13 @@ interface NavItem {
   hint?: string
 }
 
-/**
- * Csak azt a menüpontot lehet megnyitni, ami mögött tényleg van oldal. A többit
- * néma, jelölt sorokként jelenítjük meg, hogy ne legyen látszólag működő gomb.
- */
 const nav: NavItem[] = [
   { label: 'QR-kódjaim', icon: 'lucide:qr-code', to: '/fiok' },
-  { label: 'Analitika', icon: 'lucide:chart-no-axes-column', badge: 'Hamarosan' },
-  { label: 'Domainek', icon: 'lucide:globe', badge: 'Business', hint: 'Saját domain a Business csomagban lesz elérhető.' },
-  { label: 'API', icon: 'lucide:code-xml', badge: 'Business', hint: 'Az API-hozzáférés a Business csomagban lesz elérhető.' },
-  { label: 'Számlázás', icon: 'lucide:credit-card', badge: 'Hamarosan' },
-  { label: 'Fiók', icon: 'lucide:settings', badge: 'Hamarosan' },
+  { label: 'Analitika', icon: 'lucide:chart-no-axes-column', to: '/fiok/analitika' },
+  { label: 'Domainek', icon: 'lucide:globe', to: '/fiok/domainek', badge: 'Üzleti' },
+  { label: 'API', icon: 'lucide:code-xml', to: '/fiok/api', badge: 'Üzleti' },
+  { label: 'Számlázás', icon: 'lucide:credit-card', to: '/fiok/szamlazas' },
+  { label: 'Fiók', icon: 'lucide:settings', to: '/fiok/beallitasok' },
 ]
 </script>
 
@@ -63,6 +59,12 @@ const nav: NavItem[] = [
             >
               <Icon :name="item.icon" class="h-[18px] w-[18px]" aria-hidden="true" />
               {{ item.label }}
+              <span
+                v-if="item.badge"
+                class="ml-auto rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"
+              >
+                {{ item.badge }}
+              </span>
             </NuxtLink>
 
             <span
@@ -131,6 +133,8 @@ const nav: NavItem[] = [
           <AppLogo />
           <div class="flex items-center gap-2">
             <NuxtLink to="/fiok" class="text-xs font-medium text-ink-muted">QR-kódjaim</NuxtLink>
+            <NuxtLink to="/fiok/analitika" class="text-xs font-medium text-ink-muted">Analitika</NuxtLink>
+            <NuxtLink to="/fiok/beallitasok" class="text-xs font-medium text-ink-muted">Fiók</NuxtLink>
             <NuxtLink to="/dinamikus-qr-kod" class="text-xs font-medium text-ink-muted">Súgó</NuxtLink>
             <button type="button" class="btn-ghost px-2 py-1.5 text-xs" aria-label="Kijelentkezés" @click="logout">
               <Icon name="lucide:log-out" class="h-4 w-4" aria-hidden="true" />

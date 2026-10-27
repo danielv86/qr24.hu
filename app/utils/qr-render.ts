@@ -71,8 +71,11 @@ function isEyeModule(row: number, column: number, count: number): boolean {
 export function buildQrContents(data: string, customization: QrCustomization, size: number): string {
   const matrix = buildQrMatrix(data, customization.errorCorrection)
   const count = matrix.length
-  const margin = Math.max(0, Math.min(Math.round((customization.margin / 1024) * size), Math.floor(size * 0.2)))
-  const cell = (size - margin * 2) / count
+  // A csendes zónát modulban mérjük: a szabvány 4 modult ír elő, ennél
+  // kevesebb fehér sáv miatt a telefonok nehezen találják meg a kódot.
+  const quietModules = Math.max(0, Math.min(10, Math.round(customization.margin)))
+  const cell = size / (count + quietModules * 2)
+  const margin = cell * quietModules
 
   const bodyColor = fillColor(customization.bodyFill)
   const bodyPaint = buildPaint(customization.bodyFill, bodyColor)

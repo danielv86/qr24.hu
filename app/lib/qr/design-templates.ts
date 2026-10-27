@@ -1,11 +1,12 @@
 import type { QrCustomization, QrDesignTemplate } from '#shared/qr/types'
+import { SOCIAL_LOGO_MAP, getBrandLogoDataUrl } from './social-logos'
 
 /**
  * Tervezési sablonok – a qrcode-24.com design lépésének megfelelő készlete.
  * A sablon csak a megjelenést írja felül (keret, színek, formák), a QR
  * tartalmához nem nyúl.
  */
-export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
+const TEMPLATE_DEFINITIONS: Omit<QrDesignTemplate, 'logo'>[] = [
   {
     id: 'classic',
     name: 'Klasszikus',
@@ -24,8 +25,8 @@ export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
   },
   {
     id: 'instagram',
-    name: 'Kövess minket',
-    hint: 'Instagram',
+    name: 'Instagram',
+    hint: 'Kövess minket Instagramon',
     frame: 'card',
     frameText: 'Kövess minket',
     frameSubtitle: 'Instagram',
@@ -40,8 +41,8 @@ export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
   },
   {
     id: 'facebook',
-    name: 'Likeolj minket',
-    hint: 'Facebook',
+    name: 'Facebook',
+    hint: 'Likeolj minket Facebookon',
     frame: 'card',
     frameText: 'Likeolj minket',
     frameSubtitle: 'Facebook',
@@ -56,8 +57,8 @@ export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
   },
   {
     id: 'snapchat',
-    name: 'Snapelj minket',
-    hint: 'Snapchat',
+    name: 'Snapchat',
+    hint: 'Snapelj minket Snapchaten',
     frame: 'card',
     frameText: 'Snapelj minket',
     frameSubtitle: 'Snapchat',
@@ -120,8 +121,8 @@ export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
   },
   {
     id: 'whatsapp',
-    name: 'Beszélj velünk',
-    hint: 'WhatsApp',
+    name: 'WhatsApp',
+    hint: 'Beszélj velünk WhatsAppon',
     frame: 'card',
     frameText: 'Beszélj velünk',
     frameSubtitle: 'WhatsApp',
@@ -152,7 +153,7 @@ export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
   },
   {
     id: 'x',
-    name: 'X követés',
+    name: 'X (Twitter)',
     hint: 'Kövess minket X-en',
     frame: 'card',
     frameText: 'Kövess minket',
@@ -264,6 +265,27 @@ export const DESIGN_TEMPLATES: QrDesignTemplate[] = [
   },
 ]
 
+/**
+ * A márkás sablonokhoz tartozó kész logó. A közösségi oldalak sablonjai a
+ * saját logójukat viszik a kód közepére.
+ */
+const TEMPLATE_LOGO_IDS: Record<string, string> = {
+  instagram: 'instagram',
+  facebook: 'facebook',
+  snapchat: 'snapchat',
+  tiktok: 'tiktok',
+  spotify: 'spotify',
+  whatsapp: 'whatsapp',
+  x: 'x',
+  youtube: 'youtube',
+  telegram: 'telegram',
+}
+
+export const DESIGN_TEMPLATES: QrDesignTemplate[] = TEMPLATE_DEFINITIONS.map(template => ({
+  ...template,
+  logo: TEMPLATE_LOGO_IDS[template.id],
+}))
+
 export const DESIGN_TEMPLATE_MAP = new Map(DESIGN_TEMPLATES.map(template => [template.id, template]))
 
 export function getDesignTemplate(id: string): QrDesignTemplate | undefined {
@@ -271,13 +293,20 @@ export function getDesignTemplate(id: string): QrDesignTemplate | undefined {
 }
 
 /**
- * A sablon alkalmazása: a keret, a színek és a formák változnak, a tartalom,
- * a logó, a méret és a hibajavítás nem.
+ * A sablon alkalmazása: a keret, a színek, a formák és a márkalogó változnak,
+ * a QR tartalma és a méret nem.
  */
 export function applyDesignTemplate(customization: QrCustomization, template: QrDesignTemplate): QrCustomization {
+  const brandLogo = template.logo ? SOCIAL_LOGO_MAP.get(template.logo) : undefined
+  // A sablon a logót is meghatározza: a márkás sablon a sajátját teszi be,
+  // a logó nélküli sablon pedig leveszi a korábbit.
+  const logo = template.logo ? getBrandLogoDataUrl(template.logo) : ''
   return {
     ...customization,
     designTemplate: template.id,
+    logo,
+    logoName: template.logo ? (brandLogo?.label ?? '') : '',
+    errorCorrection: template.logo ? 'H' : customization.errorCorrection,
     frame: template.frame,
     frameText: template.frameText,
     frameSubtitle: template.frameSubtitle,
@@ -288,6 +317,7 @@ export function applyDesignTemplate(customization: QrCustomization, template: Qr
     fgColor: template.fgColor,
     bgColor: template.bgColor,
     bodyFill: { kind: 'solid', color: template.fgColor, color2: template.fgColor, rotation: 0 },
+    bgFill: { kind: 'solid', color: template.bgColor, color2: template.bgColor, rotation: 0 },
     transparentBackground: false,
     cornerSquareColor: '',
     cornerDotColor: '',
