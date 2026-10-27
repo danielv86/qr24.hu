@@ -169,14 +169,14 @@ onBeforeUnmount(() => {
         <NuxtLink
           v-if="user"
           :to="localePath('/fiok')"
-          class="btn-primary hidden h-10 px-4 text-sm sm:inline-flex"
+          class="btn-primary hidden h-10 px-4 text-sm font-medium sm:inline-flex"
         >
           {{ t('actions.myAccount') }}
         </NuxtLink>
         <NuxtLink
           v-else
           :to="localePath('/belepes')"
-          class="btn-secondary hidden h-10 px-3.5 sm:inline-flex"
+          class="btn-primary hidden h-10 px-4 text-sm font-medium sm:inline-flex"
         >
           {{ t('actions.signIn') }}
         </NuxtLink>
@@ -246,14 +246,14 @@ onBeforeUnmount(() => {
         <NuxtLink
           v-if="user"
           :to="localePath('/fiok')"
-          class="btn-primary mt-2 justify-center"
+          class="btn-primary mt-2 justify-center font-medium"
         >
           {{ t('actions.myAccount') }}
         </NuxtLink>
         <NuxtLink
           v-else
           :to="localePath('/belepes')"
-          class="btn-secondary mt-2 justify-center"
+          class="btn-primary mt-2 justify-center font-medium"
         >
           {{ t('actions.signIn') }}
         </NuxtLink>
