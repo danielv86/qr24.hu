@@ -21,6 +21,35 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 /**
+ * A készlet alapból csak két sort mutat, a többi a lista alatti „További formák”
+ * hivatkozással nyílik le. Így a később hozzáadott formák sem nyújtják meg a
+ * beállítási panelt.
+ */
+const gridRef = ref<HTMLElement | null>(null)
+const expanded = ref(false)
+const perRow = ref(0)
+
+function measure() {
+  if (!import.meta.client || !gridRef.value) return
+  perRow.value = getComputedStyle(gridRef.value).gridTemplateColumns.split(' ').filter(Boolean).length
+}
+
+onMounted(() => {
+  measure()
+  const index = props.options.findIndex(option => option.value === props.modelValue)
+  if (perRow.value > 0 && index >= perRow.value * 2) expanded.value = true
+  window.addEventListener('resize', measure)
+})
+
+onBeforeUnmount(() => window.removeEventListener('resize', measure))
+
+const limit = computed(() => (perRow.value > 0 ? perRow.value * 2 : props.options.length))
+const hasMore = computed(() => props.options.length > limit.value)
+const visibleOptions = computed(() =>
+  expanded.value || !hasMore.value ? props.options : props.options.slice(0, limit.value),
+)
+
+/**
  * Mini QR-minta a csempéken: ugyanaz a 7 × 7-es modulrács, amit a referencia
  * oldal használ, így a csempék pontosan úgy néznek ki, mint ott.
  */
@@ -89,15 +118,16 @@ function optionLabel(value: string): string {
 
 <template>
   <div>
-    <p :id="`${id}-label`" class="field-label">{{ label }}</p>
+    <p :id="`${id}-label`" class="mb-1.5 block text-[0.9rem] font-semibold text-ink-soft">{{ label }}</p>
     <div
       :id="id"
+      ref="gridRef"
       class="qr-shape-grid"
       role="radiogroup"
       :aria-labelledby="`${id}-label`"
     >
       <button
-        v-for="option in props.options"
+        v-for="option in visibleOptions"
         :key="option.value"
         type="button"
         role="radio"
@@ -127,5 +157,16 @@ function optionLabel(value: string): string {
       </button>
     </div>
     <p class="mt-1 truncate text-[11px] text-ink-muted">{{ optionLabel(modelValue) }}</p>
+
+    <a
+      v-if="hasMore"
+      :href="`#${id}`"
+      class="mt-1 inline-flex items-center gap-1 px-1 text-xs font-medium text-brand-700 hover:underline"
+      :aria-expanded="expanded"
+      @click.prevent="expanded = !expanded"
+    >
+      {{ expanded ? 'Kevesebb forma' : 'További formák' }}
+      <Icon :name="expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="h-3.5 w-3.5" aria-hidden="true" />
+    </a>
   </div>
 </template>

@@ -90,7 +90,7 @@ function choose(id: QrTypeId) {
 
     <a
       href="#qr-type-selector"
-      class="qr-more-pulse mt-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[#6D28D9] hover:underline"
+      class="qr-more-pulse mt-2 inline-flex items-center gap-1 px-1 text-xs font-medium text-[#6D28D9] hover:underline"
       :aria-expanded="expanded"
       @click.prevent="expanded = !expanded"
     >

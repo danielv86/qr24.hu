@@ -329,7 +329,8 @@
 }
 
 /* ── „További QR kódok” link ── */
-/* Finoman pulzáló árnyék hívja fel a figyelmet a lenyitható készletre. */
+/* A drop-shadow a szöveg körvonalát követi, így nem jelenik meg téglalap
+   alakú háttér a felirat alatt. */
 .qr-more-pulse {
   animation: qr-more-pulse 2.4s ease-in-out infinite;
 }
@@ -337,16 +338,16 @@
 @keyframes qr-more-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(109, 40, 217, 0);
+    filter: drop-shadow(0 0 0 rgba(109, 40, 217, 0));
   }
   50% {
-    box-shadow: 0 6px 16px -4px rgba(109, 40, 217, 0.45), 0 0 0 2px rgba(109, 40, 217, 0.1);
+    filter: drop-shadow(0 2px 5px rgba(109, 40, 217, 0.55));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .qr-more-pulse {
     animation: none;
-    box-shadow: 0 4px 12px -4px rgba(109, 40, 217, 0.35);
+    filter: drop-shadow(0 1px 3px rgba(109, 40, 217, 0.45));
   }
 }
