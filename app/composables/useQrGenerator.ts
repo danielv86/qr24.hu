@@ -24,6 +24,8 @@ export function useQrGenerator() {
   const payload = computed(() => (result.value.ok ? result.value.data : ''))
   const isValid = computed(() => result.value.ok)
   const errors = computed<Record<string, string>>(() => (result.value.ok ? {} : result.value.errors))
+  /** Nem blokkoló üzenetek: a kód elkészül, de a mező alatt hibaüzenet látszik. */
+  const notices = computed<Record<string, string>>(() => (result.value.ok ? (result.value.notices ?? {}) : {}))
   const warnings = computed(() => result.value.warnings)
 
   function selectType(id: string) {
@@ -87,6 +89,7 @@ export function useQrGenerator() {
     payload,
     isValid,
     errors,
+    notices,
     warnings,
     attempted,
     selectType,

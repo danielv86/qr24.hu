@@ -132,26 +132,12 @@ export const QR_TYPES: QrTypeDefinition[] = [
     seoPath: '/url-qr-kod-generator',
     fields: [
       {
-        key: 'protocol',
-        label: 'Előtag',
-        type: 'select',
-        required: true,
-        defaultValue: 'https://',
-        half: true,
-        options: [
-          { value: 'https://', label: 'https://' },
-          { value: 'http://', label: 'http://' },
-          { value: 'www.', label: 'www.' },
-        ],
-      },
-      {
         key: 'url',
         label: 'Weboldal címe',
         type: 'text',
-        placeholder: 'qrkod24.hu',
-        help: 'A kód a kiválasztott előtaggal készül. Ha teljes címet másolsz be, a protokollt lecseréljük.',
+        placeholder: 'https://qrkod24.hu',
+        help: 'Írd be a teljes címet az előtaggal együtt: https://, http:// vagy www.',
         required: true,
-        half: true,
         inputmode: 'url',
         autocomplete: 'url',
       },
@@ -1071,8 +1057,8 @@ export const QR_TYPES: QrTypeDefinition[] = [
 
 /** A főoldali típusválasztó és a generátor fülei ebben a sorrendben jelennek meg. */
 export const QR_MENU_ORDER: QrTypeId[] = [
-  'text',
   'url',
+  'text',
   'vcard',
   'contact',
   'wifi',
@@ -1123,13 +1109,8 @@ export function createDefaultValues(typeId: QrTypeId): QrFormValues {
  * Bemutató adatok: a generátor már az első betöltéskor mutat egy minta
  * QR-kódot, a felhasználó pedig bármikor felülírhatja a mezőket.
  */
-export type UrlProtocol = 'https://' | 'http://' | 'www.'
-
-/** A weboldal QR-kód előtag-választója. */
-export const URL_PROTOCOLS: UrlProtocol[] = ['https://', 'http://', 'www.']
-
 export const SAMPLE_VALUES: Partial<Record<QrTypeId, QrFormValues>> = {
-  url: { protocol: 'https://', url: 'qrkod24.hu' },
+  url: { url: 'https://qrkod24.hu' },
   text: { text: 'Írd ide a szöveget, amelyet beolvasás után látni szeretnél.' },
   phone: { phone: '+36 30 123 4567' },
   email: { email: 'info@qrkod24.hu', subject: 'Ajánlatkérés', body: 'Kedves Csapat!\nÉrdeklődni szeretnék.' },
@@ -1201,21 +1182,27 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
   const get = (key: string) => asString(values[key])
 
   if (typeId === 'url') {
-    const protocol = URL_PROTOCOLS.includes(get('protocol') as UrlProtocol) ? (get('protocol') as UrlProtocol) : 'https://'
-    const raw = get('url').trim()
-    // A beírt címről levesszük a protokollt és a www. előtagot, hogy az
-    // előtag-választó döntsön: https://, http:// vagy www.
-    const scheme = raw.match(/^([a-z][a-z0-9+.-]*):\/\//i)
-    const address = raw.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/^www\./i, '').replace(/^\/+/, '')
-    if (!raw) errors.url = 'Add meg a weboldal címét.'
-    else if (scheme && !/^https?$/i.test(scheme[1]!)) errors.url = 'Csak http:// vagy https:// cím használható.'
-    else if (!address) errors.url = 'Érvénytelen webcím. Példa: qrkod24.hu'
-    else if (!parseHttpUrl(`https://${address}`)) {
-      errors.url = 'Érvénytelen webcím. Példa: qrkod24.hu vagy https://qrkod24.hu/ajanlat'
+    const raw = get('url')
+    if (!raw) return fail({ url: 'Add meg a weboldal címét.' })
+
+    // A cím elején a https://, http:// vagy www. előtagot várjuk el.
+    const protocol = raw.match(/^([a-z][a-z0-9+.-]*):\/\//i)?.[1]?.toLowerCase() ?? ''
+    if (protocol && protocol !== 'http' && protocol !== 'https') {
+      return fail({ url: 'Csak http:// vagy https:// cím használható.' })
     }
-    if (Object.keys(errors).length) return fail(errors)
-    if (protocol === 'www.') return { ok: true, data: `www.${address}`, warnings }
-    return { ok: true, data: parseHttpUrl(`${protocol}${address}`)!.toString(), warnings }
+
+    const startsWithWww = !protocol && /^www\./i.test(raw)
+    const parsed = parseHttpUrl(protocol ? raw : `https://${raw}`)
+    if (!parsed) return fail({ url: 'Érvénytelen webcím. Példa: https://qrkod24.hu' })
+
+    // A www.-sel kezdődő cím protokoll nélkül is beolvasható, ezért azt
+    // változatlanul visszük a kódba; minden más cím normalizált https link lesz.
+    const notices: Record<string, string> = {}
+    if (!protocol && !startsWithWww) {
+      notices.url =
+        'A cím elején add meg a protokollt: https://, http:// vagy www. A kód ettől még elkészül, https:// előtaggal.'
+    }
+    return { ok: true, data: startsWithWww ? raw : parsed.toString(), warnings, notices }
   }
 
   if (typeId === 'text') {

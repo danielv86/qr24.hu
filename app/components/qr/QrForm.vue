@@ -6,6 +6,7 @@ const {
   typeDefinition,
   values,
   errors,
+  notices,
   attempted,
   isValid,
   shouldShowError,
@@ -53,8 +54,8 @@ const showGuideLink = computed(() => Boolean(guidePath.value) && route.path.repl
         :key="`${activeType}-${field.key}`"
         :field="field"
         :model-value="values[field.key]"
-        :error="errors[field.key]"
-        :show-error="shouldShowError(field.key)"
+        :error="errors[field.key] || notices[field.key]"
+        :show-error="shouldShowError(field.key) || Boolean(notices[field.key])"
         @update:model-value="setValue(field.key, $event)"
         @blur="markTouched(field.key)"
       />

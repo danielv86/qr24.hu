@@ -49,19 +49,23 @@ describe('URL QR codes', () => {
     expect(parseHttpUrl('http://localhost:3000')).toBeNull()
   })
 
-  it('az előtag-választó dönt a cím elejéről', () => {
-    const address = { url: 'qrkod24.hu/ajanlat' }
-    const https = build('url', { ...address, protocol: 'https://' })
-    const http = build('url', { ...address, protocol: 'http://' })
-    const www = build('url', { ...address, protocol: 'www.' })
+  it('az elfogadott előtagokat változatlanul hagyja', () => {
+    const https = build('url', { url: 'https://qrkod24.hu/ajanlat' })
     expect(https.ok && https.data).toBe('https://qrkod24.hu/ajanlat')
+    const http = build('url', { url: 'http://qrkod24.hu/ajanlat' })
     expect(http.ok && http.data).toBe('http://qrkod24.hu/ajanlat')
+    const httpsWww = build('url', { url: 'https://www.qrkod24.hu' })
+    expect(httpsWww.ok && httpsWww.data).toBe('https://www.qrkod24.hu/')
+    const www = build('url', { url: 'www.qrkod24.hu/ajanlat' })
     expect(www.ok && www.data).toBe('www.qrkod24.hu/ajanlat')
   })
 
-  it('a teljes címről lecseréli az előtagot', () => {
-    const result = build('url', { protocol: 'http://', url: 'https://www.qrkod24.hu' })
-    expect(result.ok && result.data).toBe('http://qrkod24.hu/')
+  it('előtag nélkül is legenerálja a kódot, de jelez', () => {
+    const result = build('url', { url: 'qrkod24.hu/ajanlat' })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data).toBe('https://qrkod24.hu/ajanlat')
+    expect(result.notices?.url).toContain('https://')
   })
 
   it('csak http(s) protokollt fogad el', () => {

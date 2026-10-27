@@ -79,6 +79,8 @@ export interface QrBuildSuccess {
   ok: true
   data: string
   warnings: string[]
+  /** Nem blokkoló mezőüzenetek: a kód elkészül, de a mező mellett hibaüzenet jelenik meg. */
+  notices?: Record<string, string>
 }
 
 export interface QrBuildFailure {
@@ -110,6 +112,21 @@ export type DotStyle =
   | 'rounded-square'
   | 'mosaic'
   | 'random-dots'
+  | 'soft-square'
+  | 'squircle'
+  | 'octagon'
+  | 'triangle'
+  | 'triangle-down'
+  | 'pentagon'
+  | 'pill-vertical'
+  | 'pill-horizontal'
+  | 'arch'
+  | 'arch-down'
+  | 'dash-vertical'
+  | 'dash-horizontal'
+  | 'cross-diagonal'
+  | 'petal'
+  | 'sparkle'
 
 export type CornerSquareStyle =
   | 'square'
@@ -126,6 +143,27 @@ export type CornerSquareStyle =
   | 'thick'
   | 'rounded-thin'
   | 'cushion'
+  | 'squircle'
+  | 'squircle-thin'
+  | 'squircle-thick'
+  | 'striped'
+  | 'striped-rounded'
+  | 'corners-thick'
+  | 'corners-thin'
+  | 'corner-squares'
+  | 'edge-notched'
+  | 'hexagon'
+  | 'hexagon-thin'
+  | 'diamond'
+  | 'diamond-thin'
+  | 'capsule'
+  | 'capsule-thin'
+  | 'capsule-thick'
+  | 'dot-ring-fine'
+  | 'dot-ring-bold'
+  | 'dash-ring'
+  | 'line-frame'
+  | 'bold-frame'
 
 export type CornerDotStyle =
   | 'square'
@@ -144,6 +182,25 @@ export type CornerDotStyle =
   | 'squircle'
   | 'plus'
   | 'cushion'
+  | 'hexagon'
+  | 'pentagon'
+  | 'octagon'
+  | 'triangle'
+  | 'triangle-down'
+  | 'star6'
+  | 'plus-thin'
+  | 'cross-diagonal'
+  | 'squircle-thin'
+  | 'capsule-vertical'
+  | 'capsule-horizontal'
+  | 'arch'
+  | 'arch-down'
+  | 'petal'
+  | 'sparkle'
+  | 'diamond-thin'
+  | 'grid3'
+  | 'dot-ring'
+  | 'rounded-thin'
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 
 /** A keret fajtája: a design sablonok ezeket használják. */
