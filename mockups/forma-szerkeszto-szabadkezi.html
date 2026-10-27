@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<title>Formaszerkesztő – szabadkézi</title>
+<style>
+  :root{
+    --brand:#6D28D9; --brand-50:#F5F3FF; --brand-100:#EDE9FE;
+    --ink:#0F172A; --ink-soft:#334155; --ink-muted:#64748B; --line:#E2E8F0;
+    --surface:#fff; --page:#F6F7FB; --ok:#059669; --ok-bg:#ECFDF5; --warn:#B45309; --warn-bg:#FFFBEB;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--page);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{padding:28px 32px}
+  .card{max-width:1180px;margin:0 auto;background:var(--surface);border:1px solid var(--line);
+        border-radius:20px;box-shadow:0 24px 60px -30px rgba(15,23,42,.35);overflow:hidden}
+  .head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px 16px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+  h1{margin:6px 0 4px;font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .sub{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-muted)}
+  .x{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink-muted);font-size:18px;line-height:1;cursor:pointer}
+  .body{display:grid;grid-template-columns:440px minmax(0,1fr);gap:26px;padding:22px 24px}
+  .canvas-card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:12px}
+  .canvas-top{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px}
+  .canvas-top .t{font-size:12px;font-weight:600;color:var(--ink-soft)}
+  .canvas-top .z{font-size:11.5px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+  .stage{position:relative;border-radius:12px;background:
+      linear-gradient(0deg,#F8FAFC,#F8FAFC);overflow:hidden}
+  .side{display:grid;gap:16px;align-content:start}
+  .label{font-size:.9rem;font-weight:600;color:var(--ink-soft);margin-bottom:8px}
+  .tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .tool{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;
+        background:#fff;padding:9px 10px;font-size:12.5px;font-weight:500;color:var(--ink-soft);cursor:pointer}
+  .tool.on{border-color:var(--brand);background:var(--brand-50);color:#4C1D95;box-shadow:0 0 0 1px var(--brand) inset}
+  .rows{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;font-size:12.5px;color:var(--ink-soft)}
+  .row + .row{border-top:1px solid var(--line)}
+  .row b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .toggle{width:34px;height:19px;border-radius:999px;background:var(--brand);position:relative}
+  .toggle::after{content:"";position:absolute;top:2.5px;right:2.5px;width:14px;height:14px;border-radius:50%;background:#fff}
+  .warn{border:1px solid #FDE68A;background:var(--warn-bg);border-radius:12px;padding:11px 12px;display:flex;gap:10px;font-size:12.5px;line-height:1.5;color:#92400E}
+  .warn svg{flex:none;margin-top:1px}
+  .actions{display:flex;gap:10px;justify-content:flex-end}
+  .btn{border-radius:11px;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;border:1px solid transparent}
+  .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink-soft)}
+  .btn.primary{background:var(--brand);color:#fff;box-shadow:0 8px 20px -10px rgba(109,40,217,.9)}
+  .foot{border-top:1px solid var(--line);padding:14px 24px 18px;display:flex;align-items:center;gap:16px}
+  .mini{width:74px;height:74px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:7px;display:grid;place-items:center}
+  .foot-txt{font-size:12.5px;color:var(--ink-soft)}
+  .foot-txt b{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px}
+  .ok{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#065F46;background:var(--ok-bg);border:1px solid #A7F3D0;border-radius:999px;padding:4px 9px}
+  .hint{margin-left:auto;font-size:11.5px;color:var(--ink-muted);max-width:330px;text-align:right;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="head">
+      <div>
+        <div class="eyebrow">Sarokelem kerete</div>
+        <h1>Szabadkézi útvonal-szerkesztő</h1>
+        <p class="sub">Húzd a csomópontokat, igazítsd rácshoz, és a mentés előtt futtass beolvasás-tesztet.</p>
+      </div>
+      <button class="x" aria-label="Bezárás">×</button>
+    </div>
+
+    <div class="body">
+      <div class="canvas-card">
+        <div class="canvas-top">
+          <span class="t">Modul · 400 × 400 egység</span>
+          <span class="z">x 0.00 – 1.00</span>
+        </div>
+        <div class="stage">
+          <svg width="100%" viewBox="0 0 420 420" role="img" aria-label="Szerkesztő vászon">
+            <defs>
+              <pattern id="grid" width="52.5" height="52.5" patternUnits="userSpaceOnUse">
+                <path d="M52.5 0H0V52.5" fill="none" stroke="#E8EDF4" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect x="0" y="0" width="420" height="420" fill="url(#grid)"/>
+            <rect x="10" y="10" width="400" height="400" fill="none" stroke="#CBD5E1" stroke-dasharray="5 5"/>
+
+            <!-- a modul alakja -->
+            <path d="M212 58 C305 58 352 122 350 208 C348 296 296 342 216 342 C172 342 138 322 120 288 L74 330 C68 268 70 190 94 138 C116 90 160 58 212 58 Z"
+                  fill="#0F172A"/>
+
+            <!-- vezérlővonalak -->
+            <g stroke="#A78BFA" stroke-width="1.2" fill="none">
+              <path d="M220 52 L286 34"/>
+              <path d="M368 210 L404 236"/>
+              <path d="M210 352 L188 400"/>
+              <path d="M72 240 L28 214"/>
+            </g>
+
+            <!-- fogantyúk -->
+            <g fill="#fff" stroke="#7C3AED" stroke-width="2">
+              <circle cx="286" cy="34" r="6"/>
+              <circle cx="404" cy="236" r="6"/>
+              <circle cx="188" cy="400" r="6"/>
+              <circle cx="28" cy="214" r="6"/>
+            </g>
+
+            <!-- csomópontok -->
+            <g fill="#fff" stroke="#6D28D9" stroke-width="2.4">
+              <rect x="212" y="44" width="16" height="16" rx="3"/>
+              <rect x="360" y="202" width="16" height="16" rx="3"/>
+              <rect x="202" y="344" width="16" height="16" rx="3"/>
+              <rect x="64" y="232" width="16" height="16" rx="3"/>
+            </g>
+            <rect x="212" y="44" width="16" height="16" rx="3" fill="#6D28D9" stroke="#fff" stroke-width="2.4"/>
+
+            <!-- címke -->
+            <g transform="translate(148 96)">
+              <rect width="132" height="30" rx="8" fill="#0F172A" opacity="0.92"/>
+              <text x="12" y="19.5" font-family="ui-sans-serif,system-ui" font-size="12" fill="#F8FAFC">Csomópont · 0.53 / 0.10</text>
+            </g>
+
+            <!-- kurzor -->
+            <g transform="translate(286 34)">
+              <path d="M0 0l13 30 4.5-11.5L29 14z" fill="#fff" stroke="#0F172A" stroke-width="1.6"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="side">
+        <div>
+          <div class="label">Eszközök</div>
+          <div class="tools">
+            <div class="tool on">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/></svg>
+              Toll
+            </div>
+            <div class="tool">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+              Csomópont
+            </div>
+            <div class="tool">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19c6 0 10-14 16-14"/></svg>
+              Ív
+            </div>
+            <div class="tool">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M4 12h8"/><path d="M16 8l4 4-4 4"/></svg>
+              Tükrözés
+            </div>
+            <div class="tool">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+              Rács
+            </div>
+            <div class="tool">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg>
+              Visszavonás
+            </div>
+          </div>
+        </div>
+
+        <div class="rows">
+          <div class="row"><span>Csomópontok</span><b>4 / 12</b></div>
+          <div class="row"><span>Rácshoz igazítás</span><span class="toggle"></span></div>
+          <div class="row"><span>Tükrözés</span><b>függőleges</b></div>
+          <div class="row"><span>Sarokkeret vastagsága</span><b>1,0 modul</b></div>
+        </div>
+
+        <div class="warn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 16H3z"/><path d="M12 9v4M12 16.5v.5"/></svg>
+          <span>A minta 41%-a tinta, a gyűrű helyenként 0,7 modulra vékonyodik. A kód ettől még beolvasható, de a teszt ajánlott.</span>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost">Mégse</button>
+          <button class="btn primary">Mentés és teszt</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="mini">
+        <svg id="miniQr" width="60" height="60" viewBox="0 0 60 60" aria-label="Mini előnézet"></svg>
+      </div>
+      <div class="foot-txt">
+        <b>Élő előnézet</b>
+        <span class="ok">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M4 12l6 6L20 6"/></svg>
+          Beolvasás-teszt: sikeres
+        </span>
+      </div>
+      <span class="hint">A teszt a kész képet dekóderrel olvassa vissza – csak olvasható forma menthető.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const N = 9
+  const CELL = 60 / N
+  const matrix = []
+  for (let r = 0; r < N; r++) {
+    matrix[r] = []
+    for (let c = 0; c < N; c++) {
+      const finder = (r < 4 && c < 4)
+      if (finder) {
+        matrix[r][c] = r === 0 || r === 3 || c === 0 || c === 3
+      } else {
+        const h = Math.sin(r * 91.7 + c * 47.3) * 43758.5453
+        matrix[r][c] = (h - Math.floor(h)) > 0.5
+      }
+    }
+  }
+  let d = ''
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (!matrix[r][c]) continue
+      const x = c * CELL + 0.6
+      const y = r * CELL + 0.6
+      const s = CELL - 1.2
+      const rr = s * 0.28
+      d += `M${x + rr} ${y}H${x + s - rr}A${rr} ${rr} 0 0 1 ${x + s} ${y + rr}V${y + s - rr}A${rr} ${rr} 0 0 1 ${x + s - rr} ${y + s}H${x + rr}A${rr} ${rr} 0 0 1 ${x} ${y + s - rr}V${y + rr}A${rr} ${rr} 0 0 1 ${x + rr} ${y}Z`
+    }
+  }
+  document.getElementById('miniQr').innerHTML = `<path d="${d}" fill="#0F172A"/>`
+</script>
+</body>
+</html>

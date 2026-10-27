@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<title>Formaszerkesztő – parametrikus</title>
+<style>
+  :root{
+    --brand:#6D28D9; --brand-50:#F5F3FF; --brand-100:#EDE9FE; --brand-200:#DDD6FE;
+    --ink:#0F172A; --ink-soft:#334155; --ink-muted:#64748B; --line:#E2E8F0;
+    --surface:#fff; --page:#F6F7FB; --ok:#059669; --ok-bg:#ECFDF5;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--page); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{padding:28px 32px}
+  .card{max-width:1180px;margin:0 auto;background:var(--surface);border:1px solid var(--line);
+        border-radius:20px;box-shadow:0 24px 60px -30px rgba(15,23,42,.35);overflow:hidden}
+  .head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+        padding:20px 24px 16px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+  h1{margin:6px 0 4px;font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .sub{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-muted)}
+  .x{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;
+     color:var(--ink-muted);font-size:18px;line-height:1;cursor:pointer}
+  .body{display:grid;grid-template-columns:420px minmax(0,1fr);gap:24px;padding:22px 24px}
+  .preview-col{display:grid;gap:14px}
+  .preview-card{border:1px solid var(--line);border-radius:16px;background:#11312C;padding:14px 14px 10px}
+  .preview-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .pill{font-size:11px;font-weight:600;color:#A7F3D0;background:rgba(16,185,129,.18);
+        border:1px solid rgba(167,243,208,.25);padding:3px 8px;border-radius:999px}
+  .preview-top .dim{font-size:11px;color:#8FA8A2}
+  .qr-wrap{display:grid;place-items:center;background:#fff;border-radius:12px;padding:16px}
+  .preview-foot{margin:10px 2px 2px;font-size:11.5px;color:#9FB8B2;line-height:1.45}
+  .zoom-card{border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;gap:14px;align-items:center}
+  .zoom-card .cap{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+  .zoom-card .val{font-size:12.5px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
+  .controls{display:grid;gap:18px;align-content:start}
+  .label{font-size:.9rem;font-weight:600;color:var(--ink-soft);margin-bottom:8px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;
+        border-radius:10px;padding:7px 10px 7px 8px;font-size:12.5px;font-weight:500;color:var(--ink-soft);cursor:pointer}
+  .chip.on{border-color:var(--brand);background:var(--brand-50);color:#4C1D95;box-shadow:0 0 0 1px var(--brand) inset}
+  .chip svg{display:block}
+  .slider{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+  .slider .name{font-size:13px;font-weight:500;color:var(--ink-soft)}
+  .slider .num{font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .slider .track{grid-column:1/-1;position:relative;height:6px;border-radius:999px;background:#EEF2F7}
+  .slider .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--brand)}
+  .slider .knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;
+                border:2px solid var(--brand);translate:-50% -50%;box-shadow:0 1px 3px rgba(15,23,42,.2)}
+  .check{display:flex;align-items:center;gap:10px;border:1px solid #A7F3D0;background:var(--ok-bg);
+         border-radius:12px;padding:10px 12px;font-size:12.5px;color:#065F46}
+  .check b{font-weight:600}
+  .check .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(5,150,105,.14)}
+  .actions{display:flex;gap:10px;justify-content:flex-end;padding-top:4px}
+  .btn{border-radius:11px;font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;border:1px solid transparent}
+  .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink-soft)}
+  .btn.primary{background:var(--brand);color:#fff;box-shadow:0 8px 20px -10px rgba(109,40,217,.9)}
+  .foot{border-top:1px solid var(--line);padding:14px 24px 18px;display:flex;align-items:center;gap:16px}
+  .foot .label{margin:0;white-space:nowrap}
+  .saved-row{display:flex;gap:8px;align-items:center}
+  .tile{width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:#fff;
+        display:grid;place-items:center;color:#0F172A}
+  .tile.new{border-style:dashed;color:var(--brand);background:var(--brand-50)}
+  .hint{font-size:11.5px;color:var(--ink-muted);margin-left:auto}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="head">
+      <div>
+        <div class="eyebrow">Test forma</div>
+        <h1>Forma szerkesztése</h1>
+        <p class="sub">A test minden moduljának alakja – csúszkákkal, élő előnézettel és olvashatósági ellenőrzéssel.</p>
+      </div>
+      <button class="x" aria-label="Bezárás">×</button>
+    </div>
+
+    <div class="body">
+      <div class="preview-col">
+        <div class="preview-card">
+          <div class="preview-top">
+            <span class="pill">Élő előnézet</span>
+            <span class="dim">15 × 15 modul</span>
+          </div>
+          <div class="qr-wrap"><svg id="qrA" width="246" height="246" viewBox="0 0 246 246" aria-label="Előnézet"></svg></div>
+          <p class="preview-foot">A minta a jelenlegi beállításokkal készül, a háttér a kiválasztott színátmenetet követi.</p>
+        </div>
+
+        <div class="zoom-card">
+          <svg width="86" height="86" viewBox="-6 -6 112 112" aria-hidden="true">
+            <rect x="-2" y="-2" width="104" height="104" rx="4" fill="none" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+            <path id="zoomShape" d="" fill="#0F172A"></path>
+          </svg>
+          <div>
+            <div class="cap">Egy modul nagyítva</div>
+            <div class="val">Betét 8% · lekerekítés 24%<br>modul 100 egység</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div>
+          <div class="label">Alapforma</div>
+          <div class="chips">
+            <div class="chip on">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#6D28D9"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>
+              Lekerekített
+            </div>
+            <div class="chip">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#334155"><circle cx="12" cy="12" r="9"/></svg>
+              Kör
+            </div>
+            <div class="chip">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#334155"><path d="M12 2c5 0 10 5 10 10s-5 10-10 10S2 17 2 12 7 2 12 2z"/></svg>
+              Squircle
+            </div>
+            <div class="chip">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#334155"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/></svg>
+              Nyolcszög
+            </div>
+            <div class="chip">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#334155"><path d="M12 2l10 10-10 10L2 12z"/></svg>
+              Rombusz
+            </div>
+            <div class="chip">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#334155"><path d="M12 1.6l2.9 6.9 7.4.6-5.6 4.9 1.7 7.3L12 17.6 5.6 21.3l1.7-7.3L1.7 9.1l7.4-.6z"/></svg>
+              Csillag
+            </div>
+          </div>
+        </div>
+
+        <div class="slider">
+          <span class="name">Betét (inset)</span><span class="num">8%</span>
+          <div class="track"><div class="fill" style="width:26%"></div><div class="knob" style="left:26%"></div></div>
+        </div>
+        <div class="slider">
+          <span class="name">Sarok lekerekítés</span><span class="num">24%</span>
+          <div class="track"><div class="fill" style="width:48%"></div><div class="knob" style="left:48%"></div></div>
+        </div>
+        <div class="slider">
+          <span class="name">Elforgatás</span><span class="num">0°</span>
+          <div class="track"><div class="fill" style="width:6%"></div><div class="knob" style="left:6%"></div></div>
+        </div>
+        <div class="slider">
+          <span class="name">Modulméret</span><span class="num">92%</span>
+          <div class="track"><div class="fill" style="width:92%"></div><div class="knob" style="left:92%"></div></div>
+        </div>
+
+        <div class="check">
+          <span class="dot"></span>
+          <span><b>Olvashatóság: kiváló</b> · 78% tintale fedettség · a magok érintetlenek</span>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost">Mégse</button>
+          <button class="btn primary">Mentés saját formaként</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="label">Saját formák</span>
+      <div class="saved-row">
+        <div class="tile"><svg width="30" height="30" viewBox="0 0 30 30" fill="#0F172A"><rect x="2" y="2" width="26" height="26" rx="7"/></svg></div>
+        <div class="tile"><svg width="30" height="30" viewBox="0 0 30 30" fill="#0F172A"><circle cx="15" cy="15" r="12"/></svg></div>
+        <div class="tile"><svg width="30" height="30" viewBox="0 0 30 30" fill="#0F172A"><path d="M15 2l13 13-13 13L2 15z"/></svg></div>
+        <div class="tile"><svg width="30" height="30" viewBox="0 0 30 30" fill="#0F172A"><path d="M15 1.5l3.6 8.4 9.1.8-6.9 6 2.1 8.9L15 21l-7.9 4.6 2.1-8.9-6.9-6 9.1-.8z"/></svg></div>
+        <div class="tile new"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+      </div>
+      <span class="hint">A saját formák a fiókodhoz mentődnek, és bármelyik kódnál újra kiválaszthatók.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const N = 15
+  const CELL = 246 / N
+  const matrix = []
+  for (let r = 0; r < N; r++) {
+    matrix[r] = []
+    for (let c = 0; c < N; c++) {
+      const finder = (r < 7 && c < 7) || (r < 7 && c >= N - 7) || (r >= N - 7 && c < 7)
+      if (finder) {
+        const lr = r >= N - 7 ? r - (N - 7) : r
+        const lc = c >= N - 7 ? c - (N - 7) : c
+        const ring = lr === 0 || lr === 6 || lc === 0 || lc === 6
+        const core = lr >= 2 && lr <= 4 && lc >= 2 && lc <= 4
+        matrix[r][c] = ring || core
+      } else {
+        const h = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453
+        matrix[r][c] = (h - Math.floor(h)) > 0.47
+      }
+    }
+  }
+
+  const rad = 0.24
+  function modulePath(x, y, s, r) {
+    const rr = Math.min(r, s / 2)
+    return `M${x + rr} ${y}H${x + s - rr}A${rr} ${rr} 0 0 1 ${x + s} ${y + rr}V${y + s - rr}A${rr} ${rr} 0 0 1 ${x + s - rr} ${y + s}H${x + rr}A${rr} ${rr} 0 0 1 ${x} ${y + s - rr}V${y + rr}A${rr} ${rr} 0 0 1 ${x + rr} ${y}Z`
+  }
+
+  let d = ''
+  const inset = CELL * 0.08
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (!matrix[r][c]) continue
+      d += modulePath(c * CELL + inset, r * CELL + inset, CELL - inset * 2, (CELL - inset * 2) * rad)
+    }
+  }
+  document.getElementById('qrA').innerHTML = `<path d="${d}" fill="#0F172A"/>`
+  document.getElementById('zoomShape').setAttribute('d', modulePath(4, 4, 92, 92 * rad))
+</script>
+</body>
+</html>
