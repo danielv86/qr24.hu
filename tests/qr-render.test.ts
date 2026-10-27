@@ -19,10 +19,10 @@ function customization(overrides: Partial<QrCustomization> = {}): QrCustomizatio
 const EXPECTED_MODULE_COUNT = /^[MLHVQCAZmlhvqcaz0-9.\- ,]+$/
 
 describe('shape library', () => {
-  it('offers 20 body, 14 eye frame and 16 eye ball variants', () => {
-    expect(BODY_SHAPES).toHaveLength(20)
-    expect(EYE_FRAME_SHAPES).toHaveLength(14)
-    expect(EYE_BALL_SHAPES).toHaveLength(16)
+  it('offers 35 body, 35 eye frame and 35 eye ball variants', () => {
+    expect(BODY_SHAPES).toHaveLength(35)
+    expect(EYE_FRAME_SHAPES).toHaveLength(35)
+    expect(EYE_BALL_SHAPES).toHaveLength(35)
   })
 
   it('has unique ids and a Hungarian label for every shape', () => {

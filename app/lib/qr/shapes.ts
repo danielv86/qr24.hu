@@ -137,6 +137,45 @@ function pillow(x: number, y: number, w: number, inset: number): string {
   )
 }
 
+/** Csillag-sokszög: felváltva külső és belső sugár. */
+function starPoly(cx: number, cy: number, outer: number, inner: number, points: number, a0 = -Math.PI / 2): string {
+  const coords: number[] = []
+  for (let index = 0; index < points * 2; index += 1) {
+    const radius = index % 2 ? inner : outer
+    const angle = a0 + (index * Math.PI) / points
+    coords.push(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle))
+  }
+  return poly(coords)
+}
+
+/** Elforgatott téglalap (átlós kereszthez, sávokhoz). */
+function rotatedBar(cx: number, cy: number, length: number, width: number, angle: number): string {
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+  const local: [number, number][] = [
+    [-length / 2, -width / 2],
+    [length / 2, -width / 2],
+    [length / 2, width / 2],
+    [-length / 2, width / 2],
+  ]
+  return poly(local.flatMap(([px, py]) => [cx + px * cos - py * sin, cy + px * sin + py * cos]))
+}
+
+function diagonalCross(cx: number, cy: number, length: number, width: number): string {
+  return rotatedBar(cx, cy, length, width, Math.PI / 4) + rotatedBar(cx, cy, length, width, -Math.PI / 4)
+}
+
+/** Körvonal superellipszisből: külső alak és egy modulnyival beljebb a belső. */
+function squircleRing(x: number, y: number, s: number, t: number, k: number): string {
+  return squircle(x, y, s, s, k) + squircle(x + t, y + t, s - 2 * t, s - 2 * t, k)
+}
+
+/** Szabályos sokszög gyűrű: a belső sugár a szélességből számolva. */
+function ngonRing(cx: number, cy: number, outer: number, t: number, n: number, a0: number): string {
+  const inner = Math.max(0.2, outer - t / Math.cos(Math.PI / n))
+  return ngon(cx, cy, outer, n, a0) + ngon(cx, cy, inner, n, a0)
+}
+
 /** Determinisztikus 0..1 érték a (sor, oszlop) párból. */
 function hash(row: number, col: number, salt: number): number {
   let h = Math.imul(row + 1, 374761393) ^ Math.imul(col + 1, 668265263) ^ Math.imul(salt + 1, 2147483647)
@@ -366,6 +405,89 @@ export const BODY_SHAPES: BodyShape[] = [
     label: 'Véletlen pontok',
     path: (x, y, m, _n, row, col) => circle(x + m / 2, y + m / 2, m * (0.4 + 0.1 * hash(row, col, 7))),
   },
+  {
+    value: 'soft-square',
+    label: 'Lágy négyzet',
+    path: (x, y, m) => {
+      const s = m * 0.9
+      const o = (m - s) / 2
+      return rrect(x + o, y + o, s, s, s * 0.22, s * 0.22, s * 0.22, s * 0.22)
+    },
+  },
+  { value: 'squircle', label: 'Squircle', path: (x, y, m) => squircle(x, y, m, m, 0.92) },
+  { value: 'octagon', label: 'Nyolcszög', path: (x, y, m) => octagon(x, y, m, m * 0.26) },
+  {
+    value: 'triangle',
+    label: 'Háromszög',
+    path: (x, y, m) => ngon(x + m / 2, y + m * 0.56, m * 0.54, 3, -Math.PI / 2),
+  },
+  {
+    value: 'triangle-down',
+    label: 'Háromszög, fordított',
+    path: (x, y, m) => ngon(x + m / 2, y + m * 0.44, m * 0.54, 3, Math.PI / 2),
+  },
+  {
+    value: 'pentagon',
+    label: 'Ötszög',
+    path: (x, y, m) => ngon(x + m / 2, y + m * 0.52, m * 0.52, 5, -Math.PI / 2),
+  },
+  {
+    value: 'pill-vertical',
+    label: 'Kapszula, álló',
+    path: (x, y, m) => {
+      const w = m * 0.62
+      const rr = w / 2
+      return rrect(x + (m - w) / 2, y, w, m, rr, rr, rr, rr)
+    },
+  },
+  {
+    value: 'pill-horizontal',
+    label: 'Kapszula, fekvő',
+    path: (x, y, m) => {
+      const h = m * 0.62
+      const rr = h / 2
+      return rrect(x, y + (m - h) / 2, m, h, rr, rr, rr, rr)
+    },
+  },
+  { value: 'arch', label: 'Arch', path: (x, y, m) => rrect(x, y, m, m, m / 2, m / 2, 0, 0) },
+  { value: 'arch-down', label: 'Arch, fordított', path: (x, y, m) => rrect(x, y, m, m, 0, 0, m / 2, m / 2) },
+  {
+    value: 'dash-vertical',
+    label: 'Rövid függőleges vonal',
+    path: (x, y, m) => {
+      const w = m * 0.44
+      const rr = w / 2
+      return rrect(x + (m - w) / 2, y, w, m, rr, rr, rr, rr)
+    },
+  },
+  {
+    value: 'dash-horizontal',
+    label: 'Rövid vízszintes vonal',
+    path: (x, y, m) => {
+      const h = m * 0.44
+      const rr = h / 2
+      return rrect(x, y + (m - h) / 2, m, h, rr, rr, rr, rr)
+    },
+  },
+  {
+    value: 'cross-diagonal',
+    label: 'Átlós kereszt',
+    path: (x, y, m) => diagonalCross(x + m / 2, y + m / 2, m * 0.94, m * 0.32),
+  },
+  {
+    value: 'petal',
+    label: 'Szirom',
+    path: (x, y, m) => {
+      const s = m * 0.94
+      const o = (m - s) / 2
+      return rrect(x + o, y + o, s, s, s / 2, s / 2, s / 2, 0)
+    },
+  },
+  {
+    value: 'sparkle',
+    label: 'Csillogás',
+    path: (x, y, m) => starPoly(x + m / 2, y + m / 2, m * 0.54, m * 0.17, 4),
+  },
 ]
 
 /* ---------- sarokelem keretek ---------- */
@@ -488,6 +610,206 @@ export const EYE_FRAME_SHAPES: EyeFrameShape[] = [
     value: 'cushion',
     label: 'Párna',
     path: (x, y, s, m) => pillow(x, y, s, 0.55 * m) + pillow(x + m, y + m, s - 2 * m, 0.4 * m),
+  },
+  { value: 'squircle', label: 'Squircle', path: (x, y, s, m) => squircleRing(x, y, s, m, 0.95) },
+  {
+    value: 'squircle-thin',
+    label: 'Squircle, vékony',
+    path: (x, y, s, m) => squircleRing(x, y, s, 0.62 * m, 0.95),
+  },
+  {
+    value: 'squircle-thick',
+    label: 'Squircle, vastag',
+    path: (x, y, s, m) => squircleRing(x, y, s, 1.3 * m, 0.95),
+  },
+  {
+    value: 'striped',
+    label: 'Csíkozott',
+    path: (x, y, s, m) => {
+      const t = 0.38 * m
+      const o = 0.62 * m
+      return rrRing(x, y, s, m, 0, 0, t) + rrRing(x + o, y + o, s - 2 * o, m, 0, 0, t)
+    },
+  },
+  {
+    value: 'striped-rounded',
+    label: 'Csíkozott, kerek',
+    path: (x, y, s, m) => {
+      const t = 0.38 * m
+      const o = 0.62 * m
+      return (
+        rrRing(x, y, s, m, 0.9 * m, 0.4 * m, t) +
+        rrRing(x + o, y + o, s - 2 * o, m, 0.7 * m, 0.25 * m, t)
+      )
+    },
+  },
+  {
+    value: 'corners-thick',
+    label: 'Sarok, vastag',
+    path: (x, y, s, m) => {
+      const arm = 3 * m
+      const t = 1.3 * m
+      const rr = 0.5 * m
+      return (
+        rrRing(x, y, s, m, 0, 0, 0.42 * m) +
+        rrect(x, y, arm, t, rr, rr, 0, 0) +
+        rrect(x + s - arm, y, arm, t, rr, rr, 0, 0) +
+        rrect(x, y + s - t, arm, t, 0, 0, rr, rr) +
+        rrect(x + s - arm, y + s - t, arm, t, 0, 0, rr, rr) +
+        rrect(x, y, t, arm, rr, 0, 0, rr) +
+        rrect(x + s - t, y, t, arm, 0, rr, rr, 0) +
+        rrect(x, y + s - arm, t, arm, rr, 0, 0, rr) +
+        rrect(x + s - t, y + s - arm, t, arm, 0, rr, rr, 0)
+      )
+    },
+  },
+  {
+    value: 'corners-thin',
+    label: 'Sarok, vékony',
+    path: (x, y, s, m) => {
+      const arm = 2 * m
+      const t = 0.62 * m
+      const rr = 0.3 * m
+      return (
+        rrRing(x, y, s, m, 0, 0, 0.42 * m) +
+        rrect(x, y, arm, t, rr, rr, 0, 0) +
+        rrect(x + s - arm, y, arm, t, rr, rr, 0, 0) +
+        rrect(x, y + s - t, arm, t, 0, 0, rr, rr) +
+        rrect(x + s - arm, y + s - t, arm, t, 0, 0, rr, rr) +
+        rrect(x, y, t, arm, rr, 0, 0, rr) +
+        rrect(x + s - t, y, t, arm, 0, rr, rr, 0) +
+        rrect(x, y + s - arm, t, arm, rr, 0, 0, rr) +
+        rrect(x + s - t, y + s - arm, t, arm, 0, rr, rr, 0)
+      )
+    },
+  },
+  {
+    value: 'corner-squares',
+    label: 'Saroknégyzetek',
+    path: (x, y, s, m) => {
+      const b = 1.7 * m
+      const rr = 0.35 * m
+      return (
+        rrRing(x, y, s, m, 0, 0, 0.42 * m) +
+        rrect(x, y, b, b, rr, rr, rr, rr) +
+        rrect(x + s - b, y, b, b, rr, rr, rr, rr) +
+        rrect(x, y + s - b, b, b, rr, rr, rr, rr) +
+        rrect(x + s - b, y + s - b, b, b, rr, rr, rr, rr)
+      )
+    },
+  },
+  {
+    value: 'edge-notched',
+    label: 'Bevágott',
+    path: (x, y, s, m) => {
+      const gap = 0.6 * m
+      return (
+        rect(x + gap, y, s - 2 * gap, m) +
+        rect(x + gap, y + s - m, s - 2 * gap, m) +
+        rect(x, y + gap, m, s - 2 * gap) +
+        rect(x + s - m, y + gap, m, s - 2 * gap)
+      )
+    },
+  },
+  {
+    value: 'hexagon',
+    label: 'Hatszög',
+    path: (x, y, s, m) => ngonRing(x + s / 2, y + s / 2, s / 2, m, 6, -Math.PI / 2),
+  },
+  {
+    value: 'hexagon-thin',
+    label: 'Hatszög, vékony',
+    path: (x, y, s, m) => ngonRing(x + s / 2, y + s / 2, s / 2, 0.62 * m, 6, -Math.PI / 2),
+  },
+  {
+    value: 'diamond',
+    label: 'Rombusz',
+    path: (x, y, s, m) => ngonRing(x + s / 2, y + s / 2, s / 2, m, 4, -Math.PI / 2),
+  },
+  {
+    value: 'diamond-thin',
+    label: 'Rombusz, vékony',
+    path: (x, y, s, m) => ngonRing(x + s / 2, y + s / 2, s / 2, 0.62 * m, 4, -Math.PI / 2),
+  },
+  {
+    value: 'capsule',
+    label: 'Kapszula',
+    path: (x, y, s, m) => rrRing(x, y, s, m, 3.1 * m, 2.1 * m, m),
+  },
+  {
+    value: 'capsule-thin',
+    label: 'Kapszula, vékony',
+    path: (x, y, s, m) => rrRing(x, y, s, m, 2.9 * m, 2 * m, 0.62 * m),
+  },
+  {
+    value: 'capsule-thick',
+    label: 'Kapszula, vastag',
+    path: (x, y, s, m) => rrRing(x, y, s, m, 2.6 * m, 1.5 * m, 1.3 * m),
+  },
+  {
+    value: 'dot-ring-fine',
+    label: 'Finom pontgyűrű',
+    path: (x, y, s, m) => {
+      let p = ''
+      const r = 0.28 * m
+      const step = 0.5 * m
+      for (let index = 1; index < 13; index += 1) {
+        const pos = index * step
+        p += circle(x + pos, y + 0.5 * m, r) + circle(x + pos, y + 6.5 * m, r)
+      }
+      for (let index = 2; index < 12; index += 1) {
+        const pos = index * step
+        p += circle(x + 0.5 * m, y + pos, r) + circle(x + 6.5 * m, y + pos, r)
+      }
+      return p
+    },
+  },
+  {
+    value: 'dot-ring-bold',
+    label: 'Vastag pontgyűrű',
+    path: (x, y, s, m) => {
+      let p = ''
+      const r = 0.4 * m
+      const step = 0.5 * m
+      for (let index = 1; index < 13; index += 1) {
+        const pos = index * step
+        p += circle(x + pos, y + 0.5 * m, r) + circle(x + pos, y + 6.5 * m, r)
+      }
+      for (let index = 2; index < 12; index += 1) {
+        const pos = index * step
+        p += circle(x + 0.5 * m, y + pos, r) + circle(x + 6.5 * m, y + pos, r)
+      }
+      return p
+    },
+  },
+  {
+    value: 'dash-ring',
+    label: 'Szaggatott gyűrű',
+    path: (x, y, s, m) => {
+      const d = 2.3 * m
+      const gap = 0.5 * m
+      const a = (s - 2 * d - gap) / 2
+      return (
+        rect(x + a, y, d, m) +
+        rect(x + a + d + gap, y, d, m) +
+        rect(x + a, y + s - m, d, m) +
+        rect(x + a + d + gap, y + s - m, d, m) +
+        rect(x, y + a, m, d) +
+        rect(x, y + a + d + gap, m, d) +
+        rect(x + s - m, y + a, m, d) +
+        rect(x + s - m, y + a + d + gap, m, d)
+      )
+    },
+  },
+  {
+    value: 'line-frame',
+    label: 'Vonalkeret',
+    path: (x, y, s, m) => rrRing(x, y, s, m, 0.2 * m, 0.2 * m, 0.42 * m),
+  },
+  {
+    value: 'bold-frame',
+    label: 'Vastag keret',
+    path: (x, y, s, m) => rrRing(x, y, s, m, 0.3 * m, 0.3 * m, 1.5 * m),
   },
 ]
 
@@ -619,6 +941,125 @@ export const EYE_BALL_SHAPES: EyeBallShape[] = [
     value: 'cushion',
     label: 'Párna',
     path: (x, y, s, m) => pillow(x, y, s, 0.3 * m),
+  },
+  {
+    value: 'hexagon',
+    label: 'Hatszög',
+    path: (x, y, s) => ngon(x + s / 2, y + s / 2, s / 2, 6, -Math.PI / 2),
+  },
+  {
+    value: 'pentagon',
+    label: 'Ötszög',
+    path: (x, y, s) => ngon(x + s / 2, y + s / 2, s / 2, 5, -Math.PI / 2),
+  },
+  {
+    value: 'octagon',
+    label: 'Nyolcszög',
+    path: (x, y, s, m) => octagon(x, y, s, 0.85 * m),
+  },
+  {
+    value: 'triangle',
+    label: 'Háromszög',
+    path: (x, y, s) => ngon(x + s / 2, y + s * 0.54, s * 0.56, 3, -Math.PI / 2),
+  },
+  {
+    value: 'triangle-down',
+    label: 'Háromszög, fordított',
+    path: (x, y, s) => ngon(x + s / 2, y + s * 0.46, s * 0.56, 3, Math.PI / 2),
+  },
+  {
+    value: 'star6',
+    label: 'Hatszögű csillag',
+    path: (x, y, s) => starPoly(x + s / 2, y + s / 2, s / 2, s * 0.3, 6),
+  },
+  {
+    value: 'plus-thin',
+    label: 'Vékony plusz',
+    path: (x, y, s, m) => {
+      const a = 1.15 * m
+      const b = 1.85 * m
+      return poly([
+        x + a, y, x + b, y, x + b, y + a, x + s, y + a, x + s, y + b, x + b, y + b,
+        x + b, y + s, x + a, y + s, x + a, y + b, x, y + b, x, y + a, x + a, y + a,
+      ])
+    },
+  },
+  {
+    value: 'cross-diagonal',
+    label: 'Átlós kereszt',
+    path: (x, y, s, m) => diagonalCross(x + s / 2, y + s / 2, s * 0.96, 0.7 * m),
+  },
+  {
+    value: 'squircle-thin',
+    label: 'Squircle, lágy',
+    path: (x, y, s) => squircle(x, y, s, s, 0.58),
+  },
+  {
+    value: 'capsule-vertical',
+    label: 'Kapszula, álló',
+    path: (x, y, s, m) => rrect(x + m / 2, y, 2 * m, s, m, m, m, m),
+  },
+  {
+    value: 'capsule-horizontal',
+    label: 'Kapszula, fekvő',
+    path: (x, y, s, m) => rrect(x, y + m / 2, s, 2 * m, m, m, m, m),
+  },
+  { value: 'arch', label: 'Arch', path: (x, y, s) => rrect(x, y, s, s, s / 2, s / 2, 0, 0) },
+  { value: 'arch-down', label: 'Arch, fordított', path: (x, y, s) => rrect(x, y, s, s, 0, 0, s / 2, s / 2) },
+  {
+    value: 'petal',
+    label: 'Szirom',
+    path: (x, y, s) => rrect(x, y, s, s, s / 2, s / 2, s / 2, 0),
+  },
+  {
+    value: 'sparkle',
+    label: 'Csillogás',
+    path: (x, y, s) => starPoly(x + s / 2, y + s / 2, s * 0.54, s * 0.18, 4),
+  },
+  {
+    value: 'diamond-thin',
+    label: 'Rombusz, karcsú',
+    path: (x, y, s, m) => {
+      const cx = x + s / 2
+      const cy = y + s / 2
+      const h = 1.35 * m
+      return poly([cx, cy - h, cx + h, cy, cx, cy + h, cx - h, cy])
+    },
+  },
+  {
+    value: 'grid3',
+    label: 'Rács',
+    path: (x, y, s, m) => {
+      let p = ''
+      const b = 0.92 * m
+      const o = 0.04 * m
+      for (let row = 0; row < 3; row += 1) {
+        for (let col = 0; col < 3; col += 1) {
+          p += rect(x + col * m + o, y + row * m + o, b, b)
+        }
+      }
+      return p
+    },
+  },
+  {
+    value: 'dot-ring',
+    label: 'Pontgyűrű',
+    path: (x, y, s, m) => {
+      let p = ''
+      const cx = x + s / 2
+      const cy = y + s / 2
+      const r = 0.55 * m
+      for (let index = 0; index < 8; index += 1) {
+        const angle = (index * Math.PI) / 4
+        p += circle(cx + 1.15 * m * Math.cos(angle), cy + 1.15 * m * Math.sin(angle), r)
+      }
+      return p
+    },
+  },
+  {
+    value: 'rounded-thin',
+    label: 'Lekerekített, lágy',
+    path: (x, y, s) => rrect(x, y, s, s, s * 0.34, s * 0.34, s * 0.34, s * 0.34),
   },
 ]
 
