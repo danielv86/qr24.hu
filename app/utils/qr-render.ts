@@ -1,6 +1,7 @@
 import qrcode from 'qrcode-generator'
 import { fillColor, isGradientFill } from '~/lib/qr/customization'
 import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import type { Neighbours } from '~/lib/qr/shapes'
 import type { ErrorCorrectionLevel, QrCustomization, QrFill } from '#shared/qr/types'
 import { buildFramedSvg, escapeXml } from './qr-frame'
 
@@ -84,29 +85,63 @@ export function buildQrContents(data: string, customization: QrCustomization, si
   const eyeFramePaint = buildPaint(customization.cornerSquareFill, eyeFrameColor)
   const eyeBallPaint = buildPaint(customization.cornerDotFill, eyeBallColor)
 
+  // A három keresőminta helyét kivesszük a rácsból, hogy a testformák
+  // szomszédszámítása ugyanazt lássa, mint a referencia motor.
+  const grid: boolean[][] = matrix.map((line, row) =>
+    line.map((dark, column) => dark && !isEyeModule(row, column, count)),
+  )
+  const at = (row: number, column: number): boolean =>
+    row >= 0 && column >= 0 && row < count && column < count ? Boolean(grid[row]![column]) : false
+
   const bodyPathShape = bodyShapePath(customization.dotStyle)
   const modules: string[] = []
   for (let row = 0; row < count; row += 1) {
     for (let column = 0; column < count; column += 1) {
-      if (!matrix[row]![column]) continue
-      if (isEyeModule(row, column, count)) continue
-      modules.push(bodyPathShape(margin + column * cell, margin + row * cell, cell))
+      if (!grid[row]![column]) continue
+      const neighbours: Neighbours = {
+        t: at(row - 1, column),
+        b: at(row + 1, column),
+        l: at(row, column - 1),
+        r: at(row, column + 1),
+        tl: at(row - 1, column - 1),
+        tr: at(row - 1, column + 1),
+        bl: at(row + 1, column - 1),
+        br: at(row + 1, column + 1),
+      }
+      modules.push(
+        bodyPathShape(margin + column * cell, margin + row * cell, cell, neighbours, row, column),
+      )
     }
   }
 
   const eyeFramePath = eyeFrameShapePath(customization.cornerSquareStyle)
   const eyeBallPath = eyeBallShapePath(customization.cornerDotStyle)
-  const eyeOrigins: [number, number][] = [
-    [0, 0],
-    [0, count - 7],
-    [count - 7, 0],
+  // A forma a bal felső szemre készül; a másik kettőt a motor 90°-kal elforgatja.
+  const eyes: { row: number; column: number; angle: number }[] = [
+    { row: 0, column: 0, angle: 0 },
+    { row: 0, column: count - 7, angle: -90 },
+    { row: count - 7, column: 0, angle: 90 },
   ]
+  const rotated = (element: string, x: number, y: number, size: number, angle: number): string => {
+    if (!angle) return element
+    const cx = (x + size / 2).toFixed(2)
+    const cy = (y + size / 2).toFixed(2)
+    return `<g transform="rotate(${angle} ${cx} ${cy})">${element}</g>`
+  }
 
-  const frames = eyeOrigins
-    .map(([row, column]) => eyeFramePath(margin + column * cell, margin + row * cell, cell * 7))
+  const frames = eyes
+    .map(({ row, column, angle }) => {
+      const x = margin + column * cell
+      const y = margin + row * cell
+      return rotated(`<path d="${eyeFramePath(x, y, cell * 7, cell)}"/>`, x, y, cell * 7, angle)
+    })
     .join('')
-  const balls = eyeOrigins
-    .map(([row, column]) => eyeBallPath(margin + (column + 2) * cell, margin + (row + 2) * cell, cell * 3))
+  const balls = eyes
+    .map(({ row, column, angle }) => {
+      const x = margin + (column + 2) * cell
+      const y = margin + (row + 2) * cell
+      return rotated(`<path d="${eyeBallPath(x, y, cell * 3, cell)}"/>`, x, y, cell * 3, angle)
+    })
     .join('')
 
   const logo = customization.logo
@@ -129,9 +164,9 @@ export function buildQrContents(data: string, customization: QrCustomization, si
 
   return [
     defs ? `<defs>${defs}</defs>` : '',
-    `<g fill="${bodyPaint.fill}" fill-rule="evenodd" shape-rendering="geometricPrecision"><path d="${modules.join('')}"/></g>`,
-    `<g fill="${eyeFramePaint.fill}" fill-rule="evenodd"><path d="${frames}"/></g>`,
-    `<g fill="${eyeBallPaint.fill}" fill-rule="evenodd"><path d="${balls}"/></g>`,
+    `<g fill="${bodyPaint.fill}" shape-rendering="geometricPrecision"><path d="${modules.join('')}"/></g>`,
+    `<g fill="${eyeFramePaint.fill}" fill-rule="evenodd">${frames}</g>`,
+    `<g fill="${eyeBallPaint.fill}">${balls}</g>`,
     logoElement,
   ].join('')
 }

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { BODY_SHAPES, EYE_BALL_SHAPES, EYE_FRAME_SHAPES, bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import {
+  BODY_SHAPES,
+  EMPTY_NEIGHBOURS,
+  EYE_BALL_SHAPES,
+  EYE_FRAME_SHAPES,
+  bodyShapePath,
+  eyeBallShapePath,
+  eyeFrameShapePath,
+} from '~/lib/qr/shapes'
 import { buildQrContents, buildQrMatrix } from '../app/utils/qr-render'
 import { DEFAULT_CUSTOMIZATION } from '~/lib/qr/customization'
 import type { QrCustomization } from '#shared/qr/types'
@@ -8,13 +16,13 @@ function customization(overrides: Partial<QrCustomization> = {}): QrCustomizatio
   return { ...DEFAULT_CUSTOMIZATION, ...overrides }
 }
 
-const EXPECTED_MODULE_COUNT = /^[MLHVQAZmlhvqaz0-9.\- ,]+$/
+const EXPECTED_MODULE_COUNT = /^[MLHVQCAZmlhvqcaz0-9.\- ,]+$/
 
 describe('shape library', () => {
-  it('offers 20 body, 14 eye frame and 17 eye ball variants', () => {
+  it('offers 20 body, 14 eye frame and 16 eye ball variants', () => {
     expect(BODY_SHAPES).toHaveLength(20)
     expect(EYE_FRAME_SHAPES).toHaveLength(14)
-    expect(EYE_BALL_SHAPES).toHaveLength(17)
+    expect(EYE_BALL_SHAPES).toHaveLength(16)
   })
 
   it('has unique ids and a Hungarian label for every shape', () => {
@@ -25,15 +33,15 @@ describe('shape library', () => {
   })
 
   it('a sarokelem belseje kitölti a teljes 3 × 3-as mezőt', () => {
-    // Korábban a mag csak 2 modul széles volt, ezért a keresőminta 1 : 1,5 : 2
-    // arányú lett, és a telefonok nem találták meg a kódot.
+    // A mag csak akkor marad olvasható, ha kitölti a 3 × 3-as mezőt, mert így
+    // lesz a keresőminta 1 : 1 : 1 arányú.
     const bounds = (d: string) => {
       const numbers = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
       return { min: Math.min(...numbers), max: Math.max(...numbers) }
     }
-    for (const value of ['square', 'dot', 'rounded', 'hexagon', 'diamond', 'leaf'] as const) {
+    for (const value of ['square', 'dot', 'rounded', 'extra-rounded', 'diamond', 'leaf'] as const) {
       const shape = EYE_BALL_SHAPES.find(item => item.value === value)!
-      const { max } = bounds(shape.path(0, 0, 3))
+      const { max } = bounds(shape.path(0, 0, 3, 1))
       expect(max).toBeGreaterThanOrEqual(2.9)
     }
   })
@@ -50,8 +58,12 @@ describe('shape library', () => {
   })
 
   it('draws every variant with a closed SVG path', () => {
-    for (const shape of [...BODY_SHAPES, ...EYE_FRAME_SHAPES, ...EYE_BALL_SHAPES]) {
-      const d = shape.path(10, 20, 30)
+    const paths = [
+      ...BODY_SHAPES.map(shape => shape.path(10, 20, 30, EMPTY_NEIGHBOURS, 3, 4)),
+      ...EYE_FRAME_SHAPES.map(shape => shape.path(10, 20, 70, 10)),
+      ...EYE_BALL_SHAPES.map(shape => shape.path(10, 20, 30, 10)),
+    ]
+    for (const d of paths) {
       expect(d.length).toBeGreaterThan(10)
       expect(d.startsWith('M')).toBe(true)
       expect(d.endsWith('Z')).toBe(true)
@@ -62,7 +74,9 @@ describe('shape library', () => {
   })
 
   it('falls back to the first variant for unknown styles', () => {
-    expect(bodyShapePath('square' as never)(0, 0, 10)).toBe(BODY_SHAPES[0]!.path(0, 0, 10))
+    expect(bodyShapePath('square' as never)(0, 0, 10, EMPTY_NEIGHBOURS, 0, 0)).toBe(
+      BODY_SHAPES[0]!.path(0, 0, 10, EMPTY_NEIGHBOURS, 0, 0),
+    )
     expect(() => eyeFrameShapePath('unknown' as never)).not.toThrow()
     expect(() => eyeBallShapePath('unknown' as never)).not.toThrow()
   })
@@ -91,11 +105,13 @@ describe('custom renderer', () => {
   it('renders body, eye frame and eye ball paths for the selected shapes', () => {
     const contents = buildQrContents(
       'https://qrkod24.hu',
-      customization({ dotStyle: 'star', cornerSquareStyle: 'brackets', cornerDotStyle: 'dots4' }),
+      customization({ dotStyle: 'heart', cornerSquareStyle: 'dots-ring', cornerDotStyle: 'dots9' }),
       512,
     )
-    expect(contents.match(/<path /g)).toHaveLength(3)
+    // 1 test path + 3 sarokkeret + 3 sarokbelső (a két elforgatott külön csoportban).
+    expect(contents.match(/<path /g)).toHaveLength(7)
     expect(contents).toContain('fill-rule="evenodd"')
+    expect(contents).toContain('rotate(-90')
     expect(contents).not.toContain('NaN')
   })
 

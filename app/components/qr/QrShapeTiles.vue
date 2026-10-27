@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import type { BodyPath, Neighbours } from '~/lib/qr/shapes'
 import type { CornerDotStyle, CornerSquareStyle, DotStyle } from '#shared/qr/types'
 
 interface ShapeOption {
@@ -19,35 +20,45 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
-/** Mini QR-minta a csempékhez: sötét modulok 9 × 9-es rácson. */
+/**
+ * Mini QR-minta a csempéken: ugyanaz a 7 × 7-es modulrács, amit a referencia
+ * oldal használ, így a csempék pontosan úgy néznek ki, mint ott.
+ */
 const SAMPLE = [
-  '111001111',
-  '101001001',
-  '111001111',
-  '000110000',
-  '101101101',
-  '011010010',
-  '111001111',
-  '100101001',
-  '111001111',
+  '1110101',
+  '1011110',
+  '1101011',
+  '0111101',
+  '1010111',
+  '1101100',
+  '0111011',
 ]
 
-const CELL = 3
-const VIEW = CELL * 9
+const CELL = 10
+const VIEW = CELL * 7
 
-/** A kirajzolt alakot a 27 × 27-es nézet közepére igazítja. */
-function centered(size: number): number {
-  return (VIEW - size) / 2
+function at(row: number, column: number): boolean {
+  return SAMPLE[row]?.[column] === '1'
 }
 
-function samplePaths(path: (x: number, y: number, s: number) => string): string {
+function samplePaths(path: BodyPath): string {
   let d = ''
-  SAMPLE.forEach((row, rowIndex) => {
-    row.split('').forEach((bit, columnIndex) => {
-      if (bit !== '1') return
-      d += path(columnIndex * CELL, rowIndex * CELL, CELL)
-    })
-  })
+  for (let row = 0; row < SAMPLE.length; row += 1) {
+    for (let column = 0; column < SAMPLE[row]!.length; column += 1) {
+      if (!at(row, column)) continue
+      const neighbours: Neighbours = {
+        t: at(row - 1, column),
+        b: at(row + 1, column),
+        l: at(row, column - 1),
+        r: at(row, column + 1),
+        tl: at(row - 1, column - 1),
+        tr: at(row - 1, column + 1),
+        bl: at(row + 1, column - 1),
+        br: at(row + 1, column + 1),
+      }
+      d += path(column * CELL, row * CELL, CELL, neighbours, row, column)
+    }
+  }
   return d
 }
 
@@ -57,22 +68,18 @@ function mainPathFor(value: string): string {
   if (props.variant === 'frame') {
     const frame = eyeFrameShapePath(value as CornerSquareStyle)
     const ball = eyeBallShapePath('dot')
-    const size = CELL * 7
-    const offset = centered(size)
-    return `${frame(offset, offset, size)}${ball(offset + CELL * 2, offset + CELL * 2, CELL * 3)}`
+    return `${frame(0, 0, VIEW, CELL)}${ball(CELL * 2, CELL * 2, CELL * 3, CELL)}`
   }
 
   const ball = eyeBallShapePath(value as CornerDotStyle)
-  const size = CELL * 3
-  const offset = centered(size)
-  return ball(offset, offset, size)
+  return ball(CELL * 2, CELL * 2, CELL * 3, CELL)
 }
 
 /** A sarokbelső csempék szürke kerete – mindig az aktuális sarokkeret-forma. */
 const backdropPath = computed(() => {
   if (props.variant !== 'ball') return ''
   const frame = eyeFrameShapePath((props.frameStyle ?? 'square') as CornerSquareStyle)
-  return frame(0, 0, VIEW)
+  return frame(0, 0, VIEW, CELL)
 })
 
 function optionLabel(value: string): string {
@@ -109,12 +116,13 @@ function optionLabel(value: string): string {
         <svg
           :viewBox="`0 0 ${VIEW} ${VIEW}`"
           fill="currentColor"
-          fill-rule="evenodd"
           shape-rendering="geometricPrecision"
           aria-hidden="true"
         >
-          <path v-if="backdropPath" :d="backdropPath" fill="#E2E8F0" />
-          <path :d="mainPathFor(option.value)" />
+          <!-- A keretek gyűrűk, ezért evenodd kell; a test és a mag formái viszont
+               átfedhetik egymást, ahol a nonzero szabály ad helyes uniót. -->
+          <path v-if="backdropPath" :d="backdropPath" fill="#E2E8F0" fill-rule="evenodd" />
+          <path :d="mainPathFor(option.value)" :fill-rule="props.variant === 'frame' ? 'evenodd' : 'nonzero'" />
         </svg>
       </button>
     </div>
