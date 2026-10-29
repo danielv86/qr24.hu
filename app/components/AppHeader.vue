@@ -32,6 +32,7 @@ const mainLinks = computed(() => [
 
 /** Az „App” menü: eszközök, amelyek a generátoron túl segítenek. */
 const appLinks = computed(() => [
+  { label: t('nav.shapeEditor'), to: localePath('/forma-szerkeszto'), icon: 'lucide:pen-tool' },
   { label: t('nav.scanner'), to: localePath('/qr-kod-olvaso'), icon: 'lucide:scan-line' },
   { label: t('nav.sizeCalculator'), to: localePath('/qr-kod-meret-kalkulator'), icon: 'lucide:ruler' },
 ])

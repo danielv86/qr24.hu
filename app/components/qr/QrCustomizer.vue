@@ -12,8 +12,11 @@ import {
   isValidHexColor,
 } from '~/lib/qr/customization'
 import { BRAND_LOGO_RADIUS_PERCENT, SOCIAL_LOGOS, brandLogoDataUrl, getBrandLogoDataUrl } from '~/lib/qr/social-logos'
+import { EMPTY_NEIGHBOURS, bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
 import type { QrBrandLogo } from '~/lib/qr/social-logos'
-import type { DotStyle, FramePreset, QrFill } from '#shared/qr/types'
+import type { CustomShape } from '#shared/qr/custom-shape'
+import type { QrDesignTemplate } from '#shared/qr/types'
+import type { CornerDotStyle, CornerSquareStyle, DotStyle, FramePreset, QrFill } from '#shared/qr/types'
 
 const {
   customization,
@@ -45,10 +48,52 @@ const tabs = [
   { id: 'frame', label: 'Keret', icon: 'lucide:frame' },
 ] as const
 
+const CUSTOM_OPTION = { value: 'custom', label: 'Saját forma' }
+
 const shapeOptions = {
-  body: DOT_STYLE_OPTIONS,
-  eyeFrame: CORNER_SQUARE_OPTIONS,
-  eyeBall: CORNER_DOT_OPTIONS,
+  body: [...DOT_STYLE_OPTIONS, { ...CUSTOM_OPTION, value: 'custom' as DotStyle }],
+  eyeFrame: [...CORNER_SQUARE_OPTIONS, { ...CUSTOM_OPTION, value: 'custom' as CornerSquareStyle }],
+  eyeBall: [...CORNER_DOT_OPTIONS, { ...CUSTOM_OPTION, value: 'custom' as CornerDotStyle }],
+}
+
+/** Melyik elem saját formáját szerkesztjük éppen. */
+const editorKind = ref<'body' | 'frame' | 'ball' | null>(null)
+/** A kiválasztott beépített forma, amiből a szerkesztés indul. */
+const editorSeed = ref('')
+
+function openEditor(kind: 'body' | 'frame' | 'ball', seed = '') {
+  editorSeed.value = seed
+  editorKind.value = kind
+}
+
+/** A jelenleg kiválasztott beépített forma útvonala a szerkesztő számára. */
+const editorSeedPath = computed(() => {
+  const kind = editorKind.value
+  const value = editorSeed.value
+  if (!kind || !value) return ''
+  if (kind === 'body') return bodyShapePath(value as DotStyle)(0, 0, 100, EMPTY_NEIGHBOURS, 1, 1)
+  if (kind === 'frame') return eyeFrameShapePath(value as CornerSquareStyle)(0, 0, 100, 100 / 7)
+  return eyeBallShapePath(value as CornerDotStyle)(0, 0, 100, 100 / 3)
+})
+
+const activeCustomShape = computed(() => {
+  if (editorKind.value === 'frame') return customization.value.customFrame
+  if (editorKind.value === 'ball') return customization.value.customBall
+  return customization.value.customBody
+})
+
+function applyCustomShape(shape: CustomShape) {
+  const kind = editorKind.value
+  if (kind === 'body') {
+    update('customBody', shape)
+    update('dotStyle', 'custom')
+  } else if (kind === 'frame') {
+    update('customFrame', shape)
+    update('cornerSquareStyle', 'custom')
+  } else if (kind === 'ball') {
+    update('customBall', shape)
+    update('cornerDotStyle', 'custom')
+  }
 }
 
 const fillKinds: { value: QrFill['kind']; label: string }[] = [
@@ -139,15 +184,18 @@ function framePreviewClass(frame: FramePreset): string {
   return 'rounded-[4px]'
 }
 
+function selectTemplateFromModal(template: QrDesignTemplate) {
+  applyTemplate(template)
+  templatesOpen.value = false
+}
+
 /** Kész keretek a Keret fülön: klasszikus, Instagram, Facebook, Snapchat. */
 const framePresets = computed(() => templates.slice(0, 4))
 
-/** Alapból csak az első öt sablon látszik, egy sorban. */
-const TEMPLATE_PREVIEW_LIMIT = 5
-const showAllTemplates = ref(false)
-const visibleTemplates = computed(() =>
-  showAllTemplates.value ? templates : templates.slice(0, TEMPLATE_PREVIEW_LIMIT),
-)
+/** Hét sablon fér el egy sorban; a többi egy modálban nyílik meg. */
+const TEMPLATE_PREVIEW_LIMIT = 7
+const templatesOpen = ref(false)
+const visibleTemplates = computed(() => templates.slice(0, TEMPLATE_PREVIEW_LIMIT))
 const activeTemplate = computed(
   () => templates.find(template => template.id === customization.value.designTemplate) ?? null,
 )
@@ -170,68 +218,23 @@ const activeTemplate = computed(
       <p class="mt-1 text-xs leading-relaxed text-ink-muted">
         Kattints egy sablonra: a keret, a színek és a formák azonnal érvényesülnek, a tartalom megmarad.
       </p>
-      <div class="mt-2 grid grid-cols-5 gap-2">
-        <button
+      <div class="mt-2 grid gap-2" style="grid-template-columns: repeat(7, minmax(0, 1fr))">
+        <QrTemplateTile
           v-for="template in visibleTemplates"
           :key="`template-${template.id}`"
-          type="button"
-          :aria-pressed="customization.designTemplate === template.id"
-          :title="`${template.name} – ${template.hint}`"
-          :class="[
-            'flex h-full min-w-0 flex-col rounded-xl border bg-surface p-1.5 text-center transition-colors',
-            customization.designTemplate === template.id
-              ? 'border-brand-600 ring-2 ring-brand-600/20'
-              : 'border-slate-200 hover:border-brand-300',
-          ]"
-          @click="applyTemplate(template)"
-        >
-          <span
-            :class="[
-              'flex w-full flex-col items-center justify-center overflow-hidden p-1.5',
-              framePreviewClass(template.frame),
-            ]"
-            :style="{
-              backgroundColor: template.frame === 'card' || template.frame === 'circle'
-                ? template.frameColor
-                : '#F8FAFC',
-              containerType: 'inline-size',
-            }"
-            aria-hidden="true"
-          >
-            <span class="block aspect-square w-full rounded-[4px] bg-white p-[3px]">
-              <QrMiniCode
-                :dot-style="template.dotStyle"
-                :corner-square-style="template.cornerSquareStyle"
-                :corner-dot-style="template.cornerDotStyle"
-                :color="template.fgColor"
-                :logo="getBrandLogoDataUrl(template.logo)"
-                class="h-full w-full"
-              />
-            </span>
-            <span
-              v-if="template.frameText"
-              class="mt-1 block max-w-full truncate rounded-full px-1.5 font-bold leading-[1.8]"
-              :style="{
-                backgroundColor: template.labelColor,
-                color: template.labelTextColor,
-                fontSize: 'clamp(4px, 7cqw, 9px)',
-              }"
-            >
-              {{ template.frameText }}
-            </span>
-          </span>
-          <span class="mt-auto block w-full truncate pt-1.5 text-[11px] font-medium leading-tight text-ink">{{ template.name }}</span>
-        </button>
+          :template="template"
+          :active="customization.designTemplate === template.id"
+          @select="applyTemplate"
+        />
       </div>
       <button
         v-if="templates.length > TEMPLATE_PREVIEW_LIMIT"
         type="button"
         class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline"
-        :aria-expanded="showAllTemplates"
-        @click="showAllTemplates = !showAllTemplates"
+        @click="templatesOpen = true"
       >
-        <Icon :name="showAllTemplates ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="h-3.5 w-3.5" aria-hidden="true" />
-        {{ showAllTemplates ? 'Kevesebb sablon' : `További ${templates.length - TEMPLATE_PREVIEW_LIMIT} sablon` }}
+        <Icon name="lucide:layout-grid" class="h-3.5 w-3.5" aria-hidden="true" />
+        Összes sablon ({{ templates.length }})
       </button>
     </div>
 
@@ -276,16 +279,34 @@ const activeTemplate = computed(
         label="Test formája"
         :options="shapeOptions.body"
         variant="body"
+        :custom-shape="customization.customBody"
         @update:model-value="update('dotStyle', $event as DotStyle)"
+        @edit-custom="openEditor('body')"
+        @edit-shape="openEditor('body', $event)"
       />
+      <p v-if="customization.dotStyle === 'custom'" class="-mt-2 text-xs">
+        <button type="button" class="font-semibold text-brand-700 hover:underline" @click="openEditor('body')">
+          Saját forma szerkesztése
+        </button>
+      </p>
       <QrShapeTiles
         id="qr-eye-frame-shapes"
         :model-value="customization.cornerSquareStyle"
         label="Sarokelem kerete"
         :options="shapeOptions.eyeFrame"
         variant="frame"
-        @update:model-value="update('cornerSquareStyle', $event as typeof customization.cornerSquareStyle)"
+        :custom-shape="customization.customFrame"
+        :ball-style="customization.cornerDotStyle"
+        :ball-custom="customization.customBall"
+        @update:model-value="update('cornerSquareStyle', $event as CornerSquareStyle)"
+        @edit-custom="openEditor('frame')"
+        @edit-shape="openEditor('frame', $event)"
       />
+      <p v-if="customization.cornerSquareStyle === 'custom'" class="-mt-2 text-xs">
+        <button type="button" class="font-semibold text-brand-700 hover:underline" @click="openEditor('frame')">
+          Saját forma szerkesztése
+        </button>
+      </p>
       <QrShapeTiles
         id="qr-eye-ball-shapes"
         :model-value="customization.cornerDotStyle"
@@ -293,8 +314,17 @@ const activeTemplate = computed(
         :options="shapeOptions.eyeBall"
         variant="ball"
         :frame-style="customization.cornerSquareStyle"
-        @update:model-value="update('cornerDotStyle', $event as typeof customization.cornerDotStyle)"
+        :frame-custom="customization.customFrame"
+        :custom-shape="customization.customBall"
+        @update:model-value="update('cornerDotStyle', $event as CornerDotStyle)"
+        @edit-custom="openEditor('ball')"
+        @edit-shape="openEditor('ball', $event)"
       />
+      <p v-if="customization.cornerDotStyle === 'custom'" class="-mt-2 text-xs">
+        <button type="button" class="font-semibold text-brand-700 hover:underline" @click="openEditor('ball')">
+          Saját forma szerkesztése
+        </button>
+      </p>
 
       <div>
         <label for="qr-margin" class="field-label">Csendes zóna: {{ customization.margin }} modul</label>
@@ -976,4 +1006,57 @@ const activeTemplate = computed(
       </p>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div
+      v-if="templatesOpen"
+      class="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      role="presentation"
+      @click.self="templatesOpen = false"
+    >
+      <div
+        class="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-t-2xl bg-surface p-4 shadow-2xl sm:rounded-2xl sm:p-5"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="qr-template-modal-title"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-700">Tervezési sablonok</p>
+            <h3 id="qr-template-modal-title" class="mt-1 text-lg font-bold text-ink">Összes sablon</h3>
+            <p class="mt-1 text-sm text-ink-muted">
+              A kiválasztott sablon kerete, színei és formái azonnal érvényesülnek, a tartalom megmarad.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-ink-muted hover:bg-slate-50"
+            aria-label="Sablonok bezárása"
+            @click="templatesOpen = false"
+          >
+            <Icon name="lucide:x" class="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-[repeat(7,minmax(0,1fr))]">
+          <QrTemplateTile
+            v-for="template in templates"
+            :key="`modal-template-${template.id}`"
+            :template="template"
+            :active="customization.designTemplate === template.id"
+            @select="selectTemplateFromModal"
+          />
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <QrShapeEditor
+    :open="editorKind !== null"
+    :kind="editorKind ?? 'body'"
+    :shape="activeCustomShape"
+    :seed-path="editorSeedPath"
+    @close="editorKind = null"
+    @save="applyCustomShape"
+  />
 </template>

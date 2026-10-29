@@ -1,4 +1,5 @@
 import qrcode from 'qrcode-generator'
+import { customFramePath, customShapePath, isValidCustomShape } from '#shared/qr/custom-shape'
 import { fillColor, isGradientFill } from '~/lib/qr/customization'
 import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
 import type { Neighbours } from '~/lib/qr/shapes'
@@ -93,11 +94,24 @@ export function buildQrContents(data: string, customization: QrCustomization, si
   const at = (row: number, column: number): boolean =>
     row >= 0 && column >= 0 && row < count && column < count ? Boolean(grid[row]![column]) : false
 
-  const bodyPathShape = bodyShapePath(customization.dotStyle)
+  // Saját forma esetén a szerkesztő csomópontjaiból készül az útvonal; a testet
+  // egyszer definiáljuk, és minden modulra `use`-bal hivatkozunk, így a kód
+  // maradék mérete nem nő a modulok számával.
+  const customBody = customization.dotStyle === 'custom' ? customization.customBody : null
+  const bodyPathShape = customBody && isValidCustomShape(customBody) ? null : bodyShapePath(customization.dotStyle)
   const modules: string[] = []
+  const customModules: string[] = []
   for (let row = 0; row < count; row += 1) {
     for (let column = 0; column < count; column += 1) {
       if (!grid[row]![column]) continue
+      const x = margin + column * cell
+      const y = margin + row * cell
+      if (!bodyPathShape) {
+        customModules.push(
+          `<use href="#qr-custom-body" transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${cell.toFixed(3)})"/>`,
+        )
+        continue
+      }
       const neighbours: Neighbours = {
         t: at(row - 1, column),
         b: at(row + 1, column),
@@ -108,14 +122,20 @@ export function buildQrContents(data: string, customization: QrCustomization, si
         bl: at(row + 1, column - 1),
         br: at(row + 1, column + 1),
       }
-      modules.push(
-        bodyPathShape(margin + column * cell, margin + row * cell, cell, neighbours, row, column),
-      )
+      modules.push(bodyPathShape(x, y, cell, neighbours, row, column))
     }
   }
+  const customBodyDefs =
+    !bodyPathShape && customBody ? `<path id="qr-custom-body" d="${customShapePath(customBody, 0, 0, 1)}"/>` : ''
 
-  const eyeFramePath = eyeFrameShapePath(customization.cornerSquareStyle)
-  const eyeBallPath = eyeBallShapePath(customization.cornerDotStyle)
+  const customFrame = customization.cornerSquareStyle === 'custom' ? customization.customFrame : null
+  const customBall = customization.cornerDotStyle === 'custom' ? customization.customBall : null
+  const eyeFramePath = isValidCustomShape(customFrame) ? null : eyeFrameShapePath(customization.cornerSquareStyle)
+  const eyeBallPath = isValidCustomShape(customBall) ? null : eyeBallShapePath(customization.cornerDotStyle)
+  const framePathFor = (x: number, y: number, size: number) =>
+    eyeFramePath ? eyeFramePath(x, y, size, cell) : customFramePath(customFrame, x, y, size)
+  const ballPathFor = (x: number, y: number, size: number) =>
+    eyeBallPath ? eyeBallPath(x, y, size, cell) : customShapePath(customBall, x, y, size)
   // A forma a bal felső szemre készül; a másik kettőt a motor 90°-kal elforgatja.
   const eyes: { row: number; column: number; angle: number }[] = [
     { row: 0, column: 0, angle: 0 },
@@ -133,14 +153,14 @@ export function buildQrContents(data: string, customization: QrCustomization, si
     .map(({ row, column, angle }) => {
       const x = margin + column * cell
       const y = margin + row * cell
-      return rotated(`<path d="${eyeFramePath(x, y, cell * 7, cell)}"/>`, x, y, cell * 7, angle)
+      return rotated(`<path d="${framePathFor(x, y, cell * 7)}"/>`, x, y, cell * 7, angle)
     })
     .join('')
   const balls = eyes
     .map(({ row, column, angle }) => {
       const x = margin + (column + 2) * cell
       const y = margin + (row + 2) * cell
-      return rotated(`<path d="${eyeBallPath(x, y, cell * 3, cell)}"/>`, x, y, cell * 3, angle)
+      return rotated(`<path d="${ballPathFor(x, y, cell * 3)}"/>`, x, y, cell * 3, angle)
     })
     .join('')
 
@@ -160,11 +180,15 @@ export function buildQrContents(data: string, customization: QrCustomization, si
     ].join('')
   }
 
-  const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}`
+  const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}${customBodyDefs}`
+
+  const bodyElement = bodyPathShape
+    ? `<path d="${modules.join('')}"/>`
+    : `<g>${customModules.join('')}</g>`
 
   return [
     defs ? `<defs>${defs}</defs>` : '',
-    `<g fill="${bodyPaint.fill}" shape-rendering="geometricPrecision"><path d="${modules.join('')}"/></g>`,
+    `<g fill="${bodyPaint.fill}" shape-rendering="geometricPrecision">${bodyElement}</g>`,
     `<g fill="${eyeFramePaint.fill}" fill-rule="evenodd">${frames}</g>`,
     `<g fill="${eyeBallPaint.fill}">${balls}</g>`,
     logoElement,

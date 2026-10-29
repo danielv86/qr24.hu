@@ -1,3 +1,4 @@
+import { cloneCustomShape, isValidCustomShape, shapeCoverage } from '#shared/qr/custom-shape'
 import { BODY_SHAPES, EYE_BALL_SHAPES, EYE_FRAME_SHAPES } from './shapes'
 import type {
   CornerDotStyle,
@@ -39,6 +40,9 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   frameFont: 'Arial',
   frameFontScale: 1,
   designTemplate: 'classic',
+  customBody: null,
+  customFrame: null,
+  customBall: null,
 }
 
 export const DOT_STYLE_OPTIONS: { value: DotStyle; label: string }[] = BODY_SHAPES.map(shape => ({
@@ -202,6 +206,28 @@ export function getCustomizationWarnings(customization: QrCustomization): string
   if (margin < 4) {
     warnings.push('A csendes zóna a szabvány szerinti 4 modul alatt van, ezért a telefonok nehezebben találják meg a kódot.')
   }
+
+  // Saját formáknál a tinta fedettsége dönti el, hogy a modulok elég nagyok-e
+  // a beolvasáshoz: a túl vékony minta a legtöbb telefonon olvashatatlan.
+  if (customization.dotStyle === 'custom' && isValidCustomShape(customization.customBody)) {
+    const coverage = shapeCoverage(customization.customBody)
+    if (coverage < 0.22) {
+      warnings.push('A saját testforma túl kevés tintát használ. Vastagítsd az alakzatot, különben nem olvasható a kód.')
+    }
+  }
+  if (customization.cornerSquareStyle === 'custom' && isValidCustomShape(customization.customFrame)) {
+    const outer = shapeCoverage(customization.customFrame)
+    const ring = outer - outer * (5 / 7) ** 2
+    if (ring < 0.16) {
+      warnings.push('A saját sarokkeret gyűrűje túl vékony, ezért a keresőminta nehezen ismerhető fel.')
+    }
+  }
+  if (customization.cornerDotStyle === 'custom' && isValidCustomShape(customization.customBall)) {
+    if (shapeCoverage(customization.customBall) < 0.28) {
+      warnings.push('A saját sarokbelső túl kicsi a 3 × 3-as maghoz, ezért a kód nehezen ismerhető fel.')
+    }
+  }
+
   return warnings
 }
 
@@ -213,5 +239,8 @@ export function cloneCustomization(customization: QrCustomization): QrCustomizat
     frameFill: { ...customization.frameFill },
     cornerSquareFill: { ...customization.cornerSquareFill },
     cornerDotFill: { ...customization.cornerDotFill },
+    customBody: cloneCustomShape(customization.customBody),
+    customFrame: cloneCustomShape(customization.customFrame),
+    customBall: cloneCustomShape(customization.customBall),
   }
 }

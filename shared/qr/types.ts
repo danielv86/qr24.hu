@@ -1,3 +1,5 @@
+import type { CustomShape } from './custom-shape'
+
 export type QrTypeId =
   | 'url'
   | 'contact'
@@ -127,6 +129,7 @@ export type DotStyle =
   | 'cross-diagonal'
   | 'petal'
   | 'sparkle'
+  | 'custom'
 
 export type CornerSquareStyle =
   | 'square'
@@ -164,6 +167,7 @@ export type CornerSquareStyle =
   | 'dash-ring'
   | 'line-frame'
   | 'bold-frame'
+  | 'custom'
 
 export type CornerDotStyle =
   | 'square'
@@ -201,6 +205,7 @@ export type CornerDotStyle =
   | 'grid3'
   | 'dot-ring'
   | 'rounded-thin'
+  | 'custom'
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 
 /** A keret fajtája: a design sablonok ezeket használják. */
@@ -268,6 +273,12 @@ export interface QrCustomization {
   frameFont: string
   frameFontScale: number
   designTemplate: string
+  /** Szabadkézi vagy feltöltött testforma (0..1-re normált csomópontok). */
+  customBody?: CustomShape | null
+  /** Szabadkézi sarokkeret-forma. */
+  customFrame?: CustomShape | null
+  /** Szabadkézi sarokbelső-forma. */
+  customBall?: CustomShape | null
 }
 
 export interface QrDesignTemplate {
