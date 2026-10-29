@@ -1,7 +1,15 @@
 import qrcode from 'qrcode-generator'
 import { customFramePath, customShapePath, isValidCustomShape } from '#shared/qr/custom-shape'
+import type { ShapePoint } from '#shared/qr/custom-shape'
+import {
+  fillLattice,
+  fitSquareInside,
+  pointsToPath,
+  polygonBounds,
+  silhouettePoints,
+} from '#shared/qr/silhouette'
 import { fillColor, isGradientFill } from '~/lib/qr/customization'
-import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import { EMPTY_NEIGHBOURS, bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
 import type { Neighbours } from '~/lib/qr/shapes'
 import type { ErrorCorrectionLevel, QrCustomization, QrFill } from '#shared/qr/types'
 import { buildFramedSvg, escapeXml } from './qr-frame'
@@ -70,14 +78,34 @@ function isEyeModule(row: number, column: number, count: number): boolean {
  * A QR-kód belső SVG tartalmát rajzolja ki a kiválasztott formákkal.
  * A keretet a buildFramedSvg teszi köré, ezért itt háttér nélkül dolgozunk.
  */
+/** A 0..1-es térben tárolt alakzatot a vászonra nagyítja, megtartva az arányokat. */
+function fitPolygon(points: ShapePoint[], size: number, pad: number): ShapePoint[] {
+  const bounds = polygonBounds(points)
+  const inner = size - pad * 2
+  const scale = inner / Math.max(bounds.width, bounds.height)
+  const offsetX = pad + (inner - bounds.width * scale) / 2 - bounds.minX * scale
+  const offsetY = pad + (inner - bounds.height * scale) / 2 - bounds.minY * scale
+  return points.map(point => ({ x: offsetX + point.x * scale, y: offsetY + point.y * scale }))
+}
+
 export function buildQrContents(data: string, customization: QrCustomization, size: number): string {
   const matrix = buildQrMatrix(data, customization.errorCorrection)
   const count = matrix.length
   // A csendes zónát modulban mérjük: a szabvány 4 modult ír elő, ennél
   // kevesebb fehér sáv miatt a telefonok nehezen találják meg a kódot.
   const quietModules = Math.max(0, Math.min(10, Math.round(customization.margin)))
-  const cell = size / (count + quietModules * 2)
-  const margin = cell * quietModules
+
+  // Alakzat: a kód a legnagyobb befoglalható négyzetbe kerül, a maradékot
+  // ugyanolyan modulok töltik ki. Ilyenkor a csendes zónát az alakzat és a
+  // kódmező közötti sáv adja, nem a margin érték.
+  const polygon = silhouettePoints(customization.silhouette ?? 'none', customization.silhouettePoints)
+  const polygonAbs = polygon ? fitPolygon(polygon, size, size * 0.03) : null
+  const square = polygonAbs ? fitSquareInside(polygonAbs, 128) : null
+  const baseCell = square ? square.side / (count + 2.2) : size / (count + quietModules * 2)
+  const gap = square ? baseCell * 1.1 : 0
+  const cell = square ? (square.side - gap * 2) / count : baseCell
+  const originX = square ? square.centerX - square.side / 2 + gap : cell * quietModules
+  const originY = square ? square.centerY - square.side / 2 + gap : cell * quietModules
 
   const bodyColor = fillColor(customization.bodyFill)
   const bodyPaint = buildPaint(customization.bodyFill, bodyColor)
@@ -104,8 +132,8 @@ export function buildQrContents(data: string, customization: QrCustomization, si
   for (let row = 0; row < count; row += 1) {
     for (let column = 0; column < count; column += 1) {
       if (!grid[row]![column]) continue
-      const x = margin + column * cell
-      const y = margin + row * cell
+      const x = originX + column * cell
+      const y = originY + row * cell
       if (!bodyPathShape) {
         customModules.push(
           `<use href="#qr-custom-body" transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${cell.toFixed(3)})"/>`,
@@ -127,6 +155,30 @@ export function buildQrContents(data: string, customization: QrCustomization, si
   }
   const customBodyDefs =
     !bodyPathShape && customBody ? `<path id="qr-custom-body" d="${customShapePath(customBody, 0, 0, 1)}"/>` : ''
+
+  // Kitöltő modulok: pontosan ugyanaz a rajzoló, ugyanazokkal a színekkel és
+  // formákkal, mint a kód moduljai — így a kitöltés egynek látszik a kóddal.
+  const fillerModules: string[] = []
+  const fillerCustom: string[] = []
+  if (polygonAbs && customization.silhouetteFill !== false) {
+    const cells = fillLattice({
+      polygon: polygonAbs,
+      field: { left: originX, top: originY, side: cell * count },
+      gap,
+      step: cell,
+    })
+    for (const point of cells) {
+      const x = point.x - cell / 2
+      const y = point.y - cell / 2
+      if (!bodyPathShape) {
+        fillerCustom.push(
+          `<use href="#qr-custom-body" transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${cell.toFixed(3)})"/>`,
+        )
+        continue
+      }
+      fillerModules.push(bodyPathShape(x, y, cell, EMPTY_NEIGHBOURS, 0, 0))
+    }
+  }
 
   const customFrame = customization.cornerSquareStyle === 'custom' ? customization.customFrame : null
   const customBall = customization.cornerDotStyle === 'custom' ? customization.customBall : null
@@ -151,15 +203,15 @@ export function buildQrContents(data: string, customization: QrCustomization, si
 
   const frames = eyes
     .map(({ row, column, angle }) => {
-      const x = margin + column * cell
-      const y = margin + row * cell
+      const x = originX + column * cell
+      const y = originY + row * cell
       return rotated(`<path d="${framePathFor(x, y, cell * 7)}"/>`, x, y, cell * 7, angle)
     })
     .join('')
   const balls = eyes
     .map(({ row, column, angle }) => {
-      const x = margin + (column + 2) * cell
-      const y = margin + (row + 2) * cell
+      const x = originX + (column + 2) * cell
+      const y = originY + (row + 2) * cell
       return rotated(`<path d="${ballPathFor(x, y, cell * 3)}"/>`, x, y, cell * 3, angle)
     })
     .join('')
@@ -180,17 +232,31 @@ export function buildQrContents(data: string, customization: QrCustomization, si
     ].join('')
   }
 
-  const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}${customBodyDefs}`
+  // Az alakzat körvonala: a modulokat ráragozzuk, így a szél nem lesz lépcsős.
+  const silhouettePath = polygonAbs ? pointsToPath(polygonAbs) : ''
+  const clipId = polygonAbs ? `qr-silhouette-${++gradientCounter}` : ''
+  const outline = polygonAbs
+    ? `<path d="${silhouettePath}" fill="none" stroke="${bodyPaint.fill}" stroke-width="${Math.max(1, cell * 0.9).toFixed(2)}" stroke-linejoin="round"/>`
+    : ''
+
+  const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}${customBodyDefs}${
+    clipId ? `<clipPath id="${clipId}"><path d="${silhouettePath}"/></clipPath>` : ''
+  }`
 
   const bodyElement = bodyPathShape
-    ? `<path d="${modules.join('')}"/>`
-    : `<g>${customModules.join('')}</g>`
+    ? `<path d="${modules.join('')}${fillerModules.join('')}"/>`
+    : `<g>${customModules.join('')}${fillerCustom.join('')}</g>`
 
-  return [
-    defs ? `<defs>${defs}</defs>` : '',
+  const content = [
     `<g fill="${bodyPaint.fill}" shape-rendering="geometricPrecision">${bodyElement}</g>`,
     `<g fill="${eyeFramePaint.fill}" fill-rule="evenodd">${frames}</g>`,
     `<g fill="${eyeBallPaint.fill}">${balls}</g>`,
+  ].join('')
+
+  return [
+    defs ? `<defs>${defs}</defs>` : '',
+    clipId ? `<g clip-path="url(#${clipId})">${content}</g>` : content,
+    outline,
     logoElement,
   ].join('')
 }

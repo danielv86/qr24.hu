@@ -43,6 +43,9 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   customBody: null,
   customFrame: null,
   customBall: null,
+  silhouette: 'none',
+  silhouettePoints: null,
+  silhouetteFill: true,
 }
 
 export const DOT_STYLE_OPTIONS: { value: DotStyle; label: string }[] = BODY_SHAPES.map(shape => ({
@@ -242,5 +245,8 @@ export function cloneCustomization(customization: QrCustomization): QrCustomizat
     customBody: cloneCustomShape(customization.customBody),
     customFrame: cloneCustomShape(customization.customFrame),
     customBall: cloneCustomShape(customization.customBall),
+    silhouettePoints: customization.silhouettePoints
+      ? customization.silhouettePoints.map(point => ({ ...point }))
+      : null,
   }
 }

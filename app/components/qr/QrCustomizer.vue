@@ -33,6 +33,16 @@ const {
 } = useQrCustomization()
 
 const activeTab = ref<'shapes' | 'colors' | 'logo' | 'frame'>('shapes')
+
+// A keret és az alakzat kizárja egymást: keret választásakor az alakzat kikapcsol.
+watch(
+  () => customization.value.frame,
+  (next, previous) => {
+    if (next !== 'none' && next !== previous && (customization.value.silhouette ?? 'none') !== 'none') {
+      update('silhouette', 'none')
+    }
+  },
+)
 const quickColorSetsBackground = ref(false)
 const colorError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -873,6 +883,10 @@ const activeTemplate = computed(
           </button>
         </div>
       </fieldset>
+
+      <div class="mt-2 rounded-xl border border-slate-200 bg-surface p-3">
+        <QrSilhouettePicker />
+      </div>
 
       <template v-if="needsLabel">
         <div class="mt-4 grid gap-3 sm:grid-cols-2">

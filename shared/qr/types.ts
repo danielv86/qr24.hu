@@ -1,4 +1,5 @@
-import type { CustomShape } from './custom-shape'
+import type { CustomShape, ShapePoint } from './custom-shape'
+import type { SilhouetteId } from './silhouette'
 
 export type QrTypeId =
   | 'url'
@@ -279,6 +280,12 @@ export interface QrCustomization {
   customFrame?: CustomShape | null
   /** Szabadkézi sarokbelső-forma. */
   customBall?: CustomShape | null
+  /** Alakzat, amibe a kód bele van foglalva (a többi részt modulok töltik ki). */
+  silhouette?: SilhouetteId
+  /** Feltöltött (SVG-ből vektorizált) alakzat körvonala, 0..1-re normálva. */
+  silhouettePoints?: ShapePoint[] | null
+  /** A kódmezőn kívüli terület kitöltése ugyanolyan modulokkal. */
+  silhouetteFill?: boolean
 }
 
 export interface QrDesignTemplate {
