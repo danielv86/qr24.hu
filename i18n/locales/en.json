@@ -9,15 +9,17 @@
     "scanner": "QR code reader",
     "sizeCalculator": "QR code size calculator",
     "info": "Information",
+    "infoMenuLabel": "Information menu",
     "guides": "QR code guide",
     "faq": "FAQ",
     "dynamic": "Dynamic QR codes",
+    "blog": "Blog",
     "mainLabel": "Main navigation",
     "mobileLabel": "Mobile navigation"
   },
   "actions": {
     "signIn": "Sign in",
-    "myAccount": "Go to my account",
+    "myAccount": "My account",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },

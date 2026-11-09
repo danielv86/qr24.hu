@@ -169,7 +169,7 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-brand-600 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-brand-600 ring-offset-2 ring-offset-canvas;
   }
 
   ::selection {
@@ -276,6 +276,7 @@
 .dark .bg-emerald-50 { background-color: rgb(6 46 35); }
 .dark .border-emerald-200 { border-color: rgb(6 78 59); }
 .dark .text-emerald-900,
+.dark .text-emerald-800,
 .dark .text-emerald-700,
 .dark .text-emerald-600 { color: rgb(167 243 208); }
 
@@ -351,3 +352,212 @@
     filter: drop-shadow(0 1px 3px rgba(109, 40, 217, 0.45));
   }
 }
+
+/* ── Blog tartalom és szerkesztő ── */
+@layer components {
+  .blog-content {
+    @apply text-[1.02rem] leading-relaxed text-ink-soft;
+  }
+
+  .blog-content > * + * {
+    @apply mt-4;
+  }
+
+  .blog-content h2 {
+    @apply mt-8 text-2xl font-bold tracking-tight text-ink;
+  }
+
+  .blog-content h3 {
+    @apply mt-6 text-xl font-semibold text-ink;
+  }
+
+  .blog-content h4 {
+    @apply mt-5 text-lg font-semibold text-ink;
+  }
+
+  .blog-content strong {
+    @apply font-semibold text-ink;
+  }
+
+  .blog-content a {
+    @apply font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800;
+  }
+
+  .blog-content ul {
+    @apply list-disc space-y-1.5 pl-6;
+  }
+
+  .blog-content ol {
+    @apply list-decimal space-y-1.5 pl-6;
+  }
+
+  .blog-content li > p {
+    @apply my-0;
+  }
+
+  .blog-content blockquote {
+    @apply border-l-4 border-brand-200 bg-brand-50/60 px-4 py-2 text-ink-soft;
+  }
+
+  .blog-content code {
+    @apply rounded bg-slate-100 px-1.5 py-0.5 text-[0.9em] text-ink;
+  }
+
+  .blog-content pre {
+    @apply overflow-x-auto rounded-xl bg-[#0b1220] p-4 text-sm text-[#e2e8f0];
+  }
+
+  .blog-content pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .blog-content img {
+    @apply mx-auto rounded-xl border border-slate-200;
+  }
+
+  .blog-content hr {
+    @apply my-8 border-slate-200;
+  }
+
+  .blog-content table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .blog-content th,
+  .blog-content td {
+    @apply border border-slate-200 px-3 py-2 text-left align-top;
+  }
+
+  .blog-content th {
+    @apply bg-slate-50 font-semibold text-ink;
+  }
+
+  .blog-content mark {
+    @apply rounded bg-amber-100 px-0.5 text-inherit;
+  }
+
+  .blog-content figcaption {
+    @apply mt-2 text-center text-xs text-ink-muted;
+  }
+
+  .blog-editor .ProseMirror {
+    @apply min-h-[24rem] px-4 py-4;
+  }
+
+  .blog-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply pointer-events-none float-left h-0 text-slate-400;
+  }
+
+  .blog-editor .ProseMirror-selectednode {
+    @apply rounded-lg ring-2 ring-brand-500;
+  }
+
+  .blog-editor .ProseMirror-gapcursor::after {
+    @apply border-t-ink;
+  }
+}
+
+.dark .blog-content blockquote {
+  background-color: rgba(30, 41, 59, 0.6);
+  border-color: rgba(109, 40, 217, 0.5);
+}
+
+.dark .blog-content code {
+  background-color: rgba(148, 163, 184, 0.18);
+}
+
+.dark .blog-content th {
+  background-color: rgba(148, 163, 184, 0.12);
+}
+
+.dark .blog-content mark {
+  color: #0f172a;
+}
+
+/* =========================================================================
+   QR-kód típus ikonok színei
+   -------------------------------------------------------------------------
+   A kezdőlap típusválasztójában minden csempe ikonja a saját
+   --qr-type-color változóját kapja. Itt tudod kedvedre átírni: elég a
+   hex kódot módosítani (a data-type az adott QR-típus azonosítója), vagy
+   egy teljesen új típus-színt felvenni ugyanezzel a mintával.
+   A második blokk a sötét témához tartozó, világosabb árnyalatokat adja.
+   ========================================================================= */
+
+.qr-type-tile {
+  --qr-type-color: #64748b;
+}
+
+.qr-type-tile .qr-type-icon {
+  color: var(--qr-type-color);
+  transition: color 150ms ease;
+}
+
+/* Web és szöveg */
+.qr-type-tile[data-type='url'] { --qr-type-color: #2563eb; }
+.qr-type-tile[data-type='text'] { --qr-type-color: #64748b; }
+.qr-type-tile[data-type='pdf'] { --qr-type-color: #b91c1c; }
+.qr-type-tile[data-type='app'] { --qr-type-color: #059669; }
+
+/* Kapcsolat */
+.qr-type-tile[data-type='phone'] { --qr-type-color: #0891b2; }
+.qr-type-tile[data-type='email'] { --qr-type-color: #ea580c; }
+.qr-type-tile[data-type='sms'] { --qr-type-color: #7c3aed; }
+.qr-type-tile[data-type='whatsapp'] { --qr-type-color: #16a34a; }
+.qr-type-tile[data-type='vcard'] { --qr-type-color: #db2777; }
+.qr-type-tile[data-type='contact'] { --qr-type-color: #0d9488; }
+.qr-type-tile[data-type='business'] { --qr-type-color: #475569; }
+
+/* Hálózat, hely, esemény */
+.qr-type-tile[data-type='wifi'] { --qr-type-color: #0284c7; }
+.qr-type-tile[data-type='map'] { --qr-type-color: #dc2626; }
+.qr-type-tile[data-type='event'] { --qr-type-color: #9333ea; }
+.qr-type-tile[data-type='event-page'] { --qr-type-color: #a16207; }
+.qr-type-tile[data-type='social'] { --qr-type-color: #c026d3; }
+.qr-type-tile[data-type='google-review'] { --qr-type-color: #ca8a04; }
+
+/* Kereskedelem */
+.qr-type-tile[data-type='bank'] { --qr-type-color: #1e40af; }
+.qr-type-tile[data-type='paypal'] { --qr-type-color: #4f46e5; }
+.qr-type-tile[data-type='coupon'] { --qr-type-color: #e11d48; }
+.qr-type-tile[data-type='menu'] { --qr-type-color: #c2410c; }
+.qr-type-tile[data-type='feedback'] { --qr-type-color: #65a30d; }
+.qr-type-tile[data-type='form'] { --qr-type-color: #0369a1; }
+
+/* Média és egyéb */
+.qr-type-tile[data-type='files'] { --qr-type-color: #b45309; }
+.qr-type-tile[data-type='audio'] { --qr-type-color: #7e22ce; }
+.qr-type-tile[data-type='gallery'] { --qr-type-color: #be185d; }
+.qr-type-tile[data-type='video'] { --qr-type-color: #0f766e; }
+.qr-type-tile[data-type='bulk'] { --qr-type-color: #6366f1; }
+
+/* Sötét téma: ugyanazok a színek világosabb árnyalattal az olvashatóságért. */
+.dark .qr-type-tile[data-type='url'] { --qr-type-color: #60a5fa; }
+.dark .qr-type-tile[data-type='text'] { --qr-type-color: #94a3b8; }
+.dark .qr-type-tile[data-type='pdf'] { --qr-type-color: #fca5a5; }
+.dark .qr-type-tile[data-type='app'] { --qr-type-color: #34d399; }
+.dark .qr-type-tile[data-type='phone'] { --qr-type-color: #22d3ee; }
+.dark .qr-type-tile[data-type='email'] { --qr-type-color: #fb923c; }
+.dark .qr-type-tile[data-type='sms'] { --qr-type-color: #a78bfa; }
+.dark .qr-type-tile[data-type='whatsapp'] { --qr-type-color: #4ade80; }
+.dark .qr-type-tile[data-type='vcard'] { --qr-type-color: #f472b6; }
+.dark .qr-type-tile[data-type='contact'] { --qr-type-color: #2dd4bf; }
+.dark .qr-type-tile[data-type='business'] { --qr-type-color: #cbd5e1; }
+.dark .qr-type-tile[data-type='wifi'] { --qr-type-color: #38bdf8; }
+.dark .qr-type-tile[data-type='map'] { --qr-type-color: #f87171; }
+.dark .qr-type-tile[data-type='event'] { --qr-type-color: #c084fc; }
+.dark .qr-type-tile[data-type='event-page'] { --qr-type-color: #fbbf24; }
+.dark .qr-type-tile[data-type='social'] { --qr-type-color: #e879f9; }
+.dark .qr-type-tile[data-type='google-review'] { --qr-type-color: #facc15; }
+.dark .qr-type-tile[data-type='bank'] { --qr-type-color: #93c5fd; }
+.dark .qr-type-tile[data-type='paypal'] { --qr-type-color: #818cf8; }
+.dark .qr-type-tile[data-type='coupon'] { --qr-type-color: #fb7185; }
+.dark .qr-type-tile[data-type='menu'] { --qr-type-color: #fdba74; }
+.dark .qr-type-tile[data-type='feedback'] { --qr-type-color: #a3e635; }
+.dark .qr-type-tile[data-type='form'] { --qr-type-color: #7dd3fc; }
+.dark .qr-type-tile[data-type='files'] { --qr-type-color: #fcd34d; }
+.dark .qr-type-tile[data-type='audio'] { --qr-type-color: #d8b4fe; }
+.dark .qr-type-tile[data-type='gallery'] { --qr-type-color: #f9a8d4; }
+.dark .qr-type-tile[data-type='video'] { --qr-type-color: #5eead4; }
+.dark .qr-type-tile[data-type='bulk'] { --qr-type-color: #a5b4fc; }

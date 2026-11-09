@@ -43,7 +43,7 @@ function choose(id: QrTypeId) {
   <div class="relative z-10">
     <nav
       id="qr-type-selector"
-      class="scroll-mt-24 rounded-2xl border border-[#e2e8f0] bg-white p-2.5 shadow-card sm:p-3.5"
+      class="scroll-mt-24 rounded-2xl border border-slate-200 bg-surface p-2.5 shadow-card sm:p-3.5"
       aria-label="QR-kód típus választó"
     >
       <div
@@ -59,19 +59,16 @@ function choose(id: QrTypeId) {
           :aria-current="activeType === type.id ? 'true' : undefined"
           :tabindex="isHidden(index) ? -1 : undefined"
           :aria-hidden="isHidden(index) ? 'true' : undefined"
+          :data-type="type.id"
           :class="[
-            'flex h-[80px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-1 text-center shadow-sm transition-colors',
+            'qr-type-tile flex h-[80px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-1 text-center shadow-sm transition-colors',
             activeType === type.id
-              ? 'border-[#a78bfa] bg-[#f5f3ff] text-[#5b21b6] ring-1 ring-[#a78bfa]/50'
-              : 'border-[#e2e8f0] bg-white text-[#334155] hover:border-[#a78bfa]/60 hover:text-[#5b21b6]',
+              ? 'border-brand-400 bg-brand-50 text-brand-700 ring-1 ring-brand-400/50'
+              : 'border-slate-200 bg-surface text-ink-soft hover:border-brand-300 hover:text-brand-700',
           ]"
           @click="choose(type.id)"
         >
-          <Icon
-            :name="type.icon"
-            :class="['h-6 w-6', activeType === type.id ? 'text-[#7c3aed]' : 'text-[#64748b]']"
-            aria-hidden="true"
-          />
+          <Icon :name="type.icon" class="qr-type-icon h-6 w-6" aria-hidden="true" />
           <span class="w-full truncate text-[11px] font-medium leading-tight">{{ type.shortLabel }}</span>
         </button>
 
@@ -80,9 +77,10 @@ function choose(id: QrTypeId) {
           title="Tömeges QR kód generátor"
           :tabindex="isHidden(templates.length) ? -1 : undefined"
           :aria-hidden="isHidden(templates.length) ? 'true' : undefined"
-          class="flex h-[80px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-white px-1 text-center text-[#334155] shadow-sm transition-colors hover:border-[#a78bfa]/60 hover:text-[#5b21b6]"
+          data-type="bulk"
+          class="qr-type-tile flex h-[80px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-surface px-1 text-center text-ink-soft shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
         >
-          <Icon name="lucide:layers" class="h-6 w-6 text-[#64748b]" aria-hidden="true" />
+          <Icon name="lucide:layers" class="qr-type-icon h-6 w-6" aria-hidden="true" />
           <span class="w-full truncate text-[11px] font-medium leading-tight">Tömeges</span>
         </NuxtLink>
       </div>
@@ -90,7 +88,7 @@ function choose(id: QrTypeId) {
 
     <a
       href="#qr-type-selector"
-      class="qr-more-pulse mt-2 inline-flex items-center gap-1 px-1 text-xs font-medium text-[#6D28D9] hover:underline"
+      class="qr-more-pulse mt-2 inline-flex items-center gap-1 px-1 text-xs font-medium text-brand-700 hover:underline"
       :aria-expanded="expanded"
       @click.prevent="expanded = !expanded"
     >

@@ -48,7 +48,6 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
     >
       <FlagIcon v-if="current" :code="current.flag" />
       <span class="uppercase tracking-wide">{{ current?.code }}</span>
-      <Icon name="lucide:chevron-down" class="h-3.5 w-3.5" aria-hidden="true" />
     </button>
 
     <div

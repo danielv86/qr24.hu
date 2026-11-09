@@ -11,15 +11,26 @@ const overHero = computed(() => route.name === 'index' && !scrolled.value)
 
 let stopScrollListener: (() => void) | undefined
 
+/**
+ * A két küszöb szándékosan eltér: a fejléc összehúzódása 32 px-et mozdít a tartalmon,
+ * amit a böngésző görgetés-rögzítése visszakorrigál — egyetlen küszöbnél ez folyamatos
+ * oda-vissza váltást (remegést) okoz a határ körül.
+ */
+const COMPACT_AT = 96
+const EXPAND_AT = 24
+
+function updateScrolled() {
+  const y = window.scrollY
+  if (!scrolled.value && y > COMPACT_AT) scrolled.value = true
+  else if (scrolled.value && y < EXPAND_AT) scrolled.value = false
+}
+
 onMounted(() => {
-  const onScroll = () => {
-    scrolled.value = window.scrollY > 12
-  }
-  onScroll()
-  window.addEventListener('scroll', onScroll, { passive: true })
+  updateScrolled()
+  window.addEventListener('scroll', updateScrolled, { passive: true })
   document.addEventListener('click', onDocumentClick)
   stopScrollListener = () => {
-    window.removeEventListener('scroll', onScroll)
+    window.removeEventListener('scroll', updateScrolled)
     document.removeEventListener('click', onDocumentClick)
   }
 })
@@ -28,6 +39,7 @@ const mainLinks = computed(() => [
   { label: t('nav.generator'), to: localePath('/qr-kod-generator') },
   { label: t('nav.bulk'), to: localePath('/tomeges-qr-kod-generator') },
   { label: t('nav.pricing'), to: localePath('/csomagok') },
+  { label: t('nav.blog'), to: localePath('/blog') },
 ])
 
 /** Az „App” menü: eszközök, amelyek a generátoron túl segítenek. */
@@ -75,14 +87,22 @@ onBeforeUnmount(() => {
 <template>
   <header
     :class="[
-      'sticky top-0 z-40 border-b transition-colors',
+      'sticky top-0 z-40 border-b transition-[background-color,border-color,box-shadow] duration-300 ease-out',
       overHero
         ? 'border-transparent bg-transparent'
-        : 'border-slate-200/80 bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80',
+        : 'border-slate-200/80 bg-surface/95 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.6)] backdrop-blur supports-[backdrop-filter]:bg-surface/80',
     ]"
   >
-    <div class="container-page flex h-24 items-center gap-3 lg:gap-6">
-      <AppLogo class="shrink-0" />
+    <div
+      :class="[
+        'container-page flex items-center gap-3 transition-[height] duration-300 ease-out motion-reduce:transition-none lg:gap-6',
+        scrolled ? 'h-16' : 'h-24',
+      ]"
+    >
+      <AppLogo
+        class="shrink-0 origin-left transition-transform duration-300 ease-out motion-reduce:transition-none"
+        :class="scrolled ? 'scale-90' : 'scale-100'"
+      />
 
       <nav class="hidden items-center gap-1 lg:flex" :aria-label="t('nav.mainLabel')">
         <NuxtLink
@@ -147,7 +167,7 @@ onBeforeUnmount(() => {
             v-if="infoOpen"
             id="header-info-menu"
             role="menu"
-            :aria-label="t('nav.info')"
+            :aria-label="t('nav.infoMenuLabel')"
             class="absolute left-0 top-full z-50 mt-1 w-60 overflow-hidden rounded-xl border border-slate-200 bg-surface py-1 shadow-lift"
           >
             <NuxtLink
