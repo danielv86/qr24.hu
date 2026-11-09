@@ -202,7 +202,7 @@ function notifyBell() {
     <div v-else class="dark flex min-h-screen bg-[#0A0D1D] text-slate-100">
       <aside
         :class="[
-          'sticky top-0 z-40 hidden h-screen shrink-0 flex-col border-r border-white/[0.07] bg-[linear-gradient(180deg,#0B0A20_0%,#141033_42%,#1D1547_78%,#241A50_100%)] transition-[width] duration-200 lg:flex',
+          'sticky top-0 z-40 hidden h-screen shrink-0 flex-col border-r border-white/[0.07] bg-[linear-gradient(180deg,#120D2E_0%,#1A1242_45%,#241752_80%,#2B1A5F_100%)] transition-[width] duration-200 lg:flex',
           collapsed ? 'w-[84px]' : 'w-[250px]',
         ]"
       >
@@ -254,7 +254,7 @@ function notifyBell() {
                 collapsed ? 'justify-center px-0' : 'gap-3.5 px-3.5',
                 isActive(item)
                   ? 'bg-[linear-gradient(90deg,#6D3ABF_0%,#7A46CC_45%,#5A30A8_100%)] text-white shadow-[0_14px_30px_-16px_rgba(110,62,176,0.95)] ring-1 ring-inset ring-white/10'
-                  : 'text-[#CFC9EA]/75 hover:bg-white/[0.05] hover:text-white',
+                  : 'text-[#8B84AE] hover:bg-white/[0.05] hover:text-white',
               ]"
             >
               <Icon :name="item.icon" class="h-[19px] w-[19px] shrink-0" aria-hidden="true" />
@@ -271,7 +271,7 @@ function notifyBell() {
                   'flex items-center justify-center rounded-xl py-3 transition-colors',
                   isActive(item)
                     ? 'bg-[linear-gradient(90deg,#6D3ABF_0%,#7A46CC_45%,#5A30A8_100%)] text-white ring-1 ring-inset ring-white/10'
-                    : 'text-[#CFC9EA]/75 hover:bg-white/[0.05] hover:text-white',
+                    : 'text-[#8B84AE] hover:bg-white/[0.05] hover:text-white',
                 ]"
               >
                 <Icon :name="item.icon" class="h-[19px] w-[19px]" aria-hidden="true" />
@@ -284,7 +284,7 @@ function notifyBell() {
                   :aria-controls="`admin-nav-group-${item.to.split('/').pop()}`"
                   :class="[
                     'flex w-full items-center gap-3.5 rounded-xl px-3.5 py-3 text-left text-[13.5px] font-medium transition-colors',
-                    isActive(item) ? 'text-white' : 'text-[#CFC9EA]/75 hover:bg-white/[0.05] hover:text-white',
+                    isActive(item) ? 'text-white' : 'text-[#8B84AE] hover:bg-white/[0.05] hover:text-white',
                   ]"
                   @click="toggleGroup(item)"
                 >
@@ -309,8 +309,8 @@ function notifyBell() {
                       :class="[
                         'flex items-center gap-3 rounded-lg py-2 pl-[3.1rem] pr-2 text-[12.5px] transition-colors',
                         route.path === child.to
-                          ? 'font-semibold text-[#D47EFF]'
-                          : 'text-[#CFC9EA]/60 hover:text-white',
+                          ? 'font-semibold text-[#C77DFF]'
+                          : 'text-[#7F78A0] hover:text-white',
                       ]"
                     >
                       <Icon :name="child.icon" class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -424,7 +424,7 @@ function notifyBell() {
                 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
                 isActive(item)
                   ? 'bg-[#6D3ABF]/35 font-semibold text-white'
-                  : 'text-[#CFC9EA]/70 hover:bg-white/5 hover:text-white',
+                  : 'text-[#8B84AE] hover:bg-white/5 hover:text-white',
               ]"
             >
               <Icon :name="item.icon" class="h-3.5 w-3.5" aria-hidden="true" />
