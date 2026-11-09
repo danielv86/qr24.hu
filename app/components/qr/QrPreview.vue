@@ -312,14 +312,14 @@ function resetAppearance() {
 
     <div
       v-if="warnings.length"
-      class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3"
+      class="mt-3 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-3"
       role="status"
     >
-      <p class="flex items-center gap-1.5 text-xs font-semibold text-amber-900">
+      <p class="flex items-center gap-1.5 text-xs font-semibold text-amber-900 dark:text-amber-200">
         <Icon name="lucide:triangle-alert" class="h-4 w-4" aria-hidden="true" />
         A beolvashatóság ellenőrzése
       </p>
-      <ul class="mt-1.5 space-y-1 text-xs leading-relaxed text-amber-900">
+      <ul class="mt-1.5 space-y-1 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
         <li v-for="warning in warnings" :key="warning" class="flex gap-1.5">
           <span aria-hidden="true">•</span>
           <span>{{ warning }}</span>

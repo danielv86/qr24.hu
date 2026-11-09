@@ -4,7 +4,7 @@ import { writeAudit } from '../../utils/audit'
 import { hashPassword, verifyPassword } from '../../utils/auth'
 import { getPrisma, withDb } from '../../utils/db'
 import { enforceRateLimit } from '../../utils/rate-limit'
-import { requireUser } from '../../utils/user-auth'
+import { requireUser, revokeOtherUserSessions } from '../../utils/user-auth'
 import { accountPasswordSchema, assertSameOrigin, readJsonBody } from '../../utils/validation'
 
 export default defineApiHandler(async (event) => {
@@ -53,6 +53,13 @@ export default defineApiHandler(async (event) => {
       data: { passwordHash },
     }),
   )
-  await writeAudit({ action: 'user.password_changed', userId: session.id })
-  return apiSuccess(event, { updated: true })
+  // Az új jelszó után minden más eszközön érvénytelenné válik a munkamenet,
+  // hogy egy korábban ellopott süti ne maradjon használható.
+  const otherSessions = await revokeOtherUserSessions(event, session.id)
+  await writeAudit({
+    action: 'user.password_changed',
+    userId: session.id,
+    details: { otherSessions },
+  })
+  return apiSuccess(event, { updated: true, otherSessions })
 })

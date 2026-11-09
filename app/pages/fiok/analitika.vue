@@ -98,7 +98,7 @@ function formatDateTime(value: string): string {
           type="button"
           :class="[
             'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
-            days === option.value ? 'bg-brand-600 text-white' : 'bg-white text-ink-soft ring-1 ring-slate-200 hover:ring-brand-300',
+            days === option.value ? 'bg-brand-600 text-white' : 'bg-surface text-ink-soft ring-1 ring-slate-200 hover:ring-brand-300',
           ]"
           @click="days = option.value"
         >
@@ -111,7 +111,7 @@ function formatDateTime(value: string): string {
       {{ planLabel }} csomag · a részletes analitika {{ planDays }} napra visszamenőleg érhető el.
     </p>
 
-    <p v-if="error" class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+    <p v-if="error" class="mt-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300" role="alert">
       Az analitika betöltése nem sikerült.
       <button type="button" class="ml-1 font-semibold underline" @click="refresh()">Újrapróbálás</button>
     </p>
@@ -124,7 +124,7 @@ function formatDateTime(value: string): string {
         </div>
         <div class="card p-4">
           <p class="text-xs font-medium text-ink-muted">Emberi látogató</p>
-          <p class="mt-1 text-2xl font-semibold text-emerald-600">{{ data?.humanTotal ?? 0 }}</p>
+          <p class="mt-1 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{{ data?.humanTotal ?? 0 }}</p>
         </div>
         <div class="card p-4">
           <p class="text-xs font-medium text-ink-muted">Bot / előnézet</p>

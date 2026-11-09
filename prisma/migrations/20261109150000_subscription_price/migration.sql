@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `subscriptions`
+    ADD COLUMN `price` INTEGER UNSIGNED NOT NULL DEFAULT 0,
+    ADD COLUMN `currency` VARCHAR(3) NOT NULL DEFAULT 'HUF';

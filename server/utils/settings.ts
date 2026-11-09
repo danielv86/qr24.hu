@@ -1,4 +1,6 @@
-import type { PublicSettings, SeoOverride } from '#shared/types/api'
+import type { LibraryShape } from '#shared/qr/library-shape'
+import { parseLibraryShapes } from '#shared/qr/library-shape'
+import type { BillingSettings, PublicSettings, SeoOverride } from '#shared/types/api'
 import { getPrisma, isDbConfigured, withDb } from './db'
 import { logger } from './logger'
 
@@ -49,8 +51,22 @@ function runtimeDefaults(): PublicSettings {
       hostingAddress: '',
     },
     seo: {},
+    silhouetteShapes: [],
+    billing: { ...DEFAULT_BILLING },
   }
 }
+
+/*
+ * Amíg nincs vállalkozás és fizetési szolgáltató, a csomagvásárlás alapból ki
+ * van kapcsolva. Az adminban egy kapcsolóval bekapcsolható, a próbaidő hossza
+ * pedig 14 és 30 nap között (vagy tetszőleges 0–90 nap között) állítható.
+ */
+export const DEFAULT_BILLING: BillingSettings = {
+  plansEnabled: false,
+  trialDays: 14,
+}
+
+const BILLING_KEY = 'billing'
 
 function safeJson<T>(value: string, fallback: T): T {
   try {
@@ -74,6 +90,8 @@ function mergeSettings(
     adsense: { client: base.adsense.client, slots: { ...base.adsense.slots } },
     legal: { ...base.legal },
     seo: {},
+    silhouetteShapes: [],
+    billing: { ...base.billing },
   }
   for (const row of rows) {
     if (row.key === 'brand') {
@@ -89,6 +107,14 @@ function mergeSettings(
         content: pickString(parsed.slots?.content, 40),
         guide: pickString(parsed.slots?.guide, 40),
         mobile: pickString(parsed.slots?.mobile, 40),
+      }
+    } else if (row.key === 'silhouette-shapes') {
+      result.silhouetteShapes = parseLibraryShapes(safeJson(row.value, []))
+    } else if (row.key === BILLING_KEY) {
+      const parsed = safeJson<Record<string, unknown>>(row.value, {})
+      result.billing = {
+        plansEnabled: parsed.plansEnabled === true,
+        trialDays: normalizeTrialDays(parsed.trialDays),
       }
     } else if (row.key === 'legal') {
       const parsed = safeJson<Record<string, unknown>>(row.value, {})
@@ -129,7 +155,7 @@ export async function loadPublicSettings(options: { force?: boolean } = {}): Pro
     const [rows, seoRows] = await withDb(() =>
       getPrisma().$transaction([
         getPrisma().setting.findMany({
-          where: { key: { in: ['brand', 'adsense', 'legal'] } },
+          where: { key: { in: ['brand', 'adsense', 'legal', 'silhouette-shapes', BILLING_KEY] } },
           select: { key: true, value: true },
         }),
         getPrisma().seoOverride.findMany({
@@ -153,15 +179,54 @@ export function invalidateSettingsCache() {
   cache = null
 }
 
+const SILHOUETTE_SHAPES_KEY = 'silhouette-shapes'
+
+/** Az adminban feltöltött alakzatok friss listája (írás előtti ellenőrzéshez). */
+export async function loadSilhouetteShapes(): Promise<LibraryShape[]> {
+  const settings = await loadPublicSettings({ force: true })
+  return settings.silhouetteShapes
+}
+
+export async function saveSilhouetteShapes(shapes: LibraryShape[]): Promise<void> {
+  const value = JSON.stringify(shapes)
+  const prisma = getPrisma()
+  await withDb(() =>
+    prisma.setting.upsert({
+      where: { key: SILHOUETTE_SHAPES_KEY },
+      create: { key: SILHOUETTE_SHAPES_KEY, value },
+      update: { value },
+    }),
+  )
+  invalidateSettingsCache()
+}
+
+/** A próbaidő hosszát 0–90 nap közé szorítjuk; hiányzó értéknél 14 nap. */
+export function normalizeTrialDays(value: unknown): number {
+  const days = Math.trunc(Number(value))
+  if (!Number.isFinite(days)) return DEFAULT_BILLING.trialDays
+  return Math.min(90, Math.max(0, days))
+}
+
+/** A csomagvásárlás kapcsolóinak friss olvasása (30 mp-es cache). */
+export async function loadBillingSettings(options: { force?: boolean } = {}): Promise<BillingSettings> {
+  const settings = await loadPublicSettings(options)
+  return { ...settings.billing }
+}
+
 export async function saveBrandAndIntegrations(input: {
   brandName: string
   adsense: PublicSettings['adsense']
   legal: PublicSettings['legal']
+  billing: BillingSettings
 }): Promise<void> {
   const entries: [string, unknown][] = [
     ['brand', { name: input.brandName }],
     ['adsense', input.adsense],
     ['legal', input.legal],
+    [BILLING_KEY, {
+      plansEnabled: input.billing.plansEnabled === true,
+      trialDays: normalizeTrialDays(input.billing.trialDays),
+    }],
   ]
   const prisma = getPrisma()
   await withDb(() =>

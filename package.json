@@ -39,7 +39,7 @@
     "fflate": "0.8.2",
     "jsqr": "^1.4.0",
     "mariadb": "3.5.4",
-    "nuxt": "4.6.2",
+    "nuxt": "4.6.3",
     "nuxt-tiptap-editor": "^3.4.0",
     "qr-code-styling": "1.9.2",
     "qrcode-generator": "1.5.2",

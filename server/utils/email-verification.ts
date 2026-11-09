@@ -10,9 +10,30 @@ export const VERIFICATION_TTL_MINUTES = 15
 export const VERIFICATION_MAX_ATTEMPTS = 5
 /** Két kódkérés között ennyi másodpercet kell várni. */
 export const RESEND_COOLDOWN_SECONDS = 60
+/** A megerősítő kód hossza karakterben. */
+export const VERIFICATION_CODE_LENGTH = 8
+/**
+ * A kód ábécéje: nagybetűk és számjegyek, az összetéveszthető karakterek
+ * (O, 0, I, 1, L) nélkül, hogy telefonról is könnyű legyen beírni.
+ */
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+
+/** 8 karakteres, betűkből és számokból álló kód. */
+export function generateVerificationCode(): string {
+  let code = ''
+  for (let index = 0; index < VERIFICATION_CODE_LENGTH; index += 1) {
+    code += CODE_ALPHABET[randomInt(0, CODE_ALPHABET.length)]
+  }
+  return code
+}
+
+/** A beírt kód egységes alakja: nagybetűs, szóközök nélkül. */
+export function normalizeVerificationCode(code: string): string {
+  return code.replace(/\s+/g, '').toUpperCase()
+}
 
 function codeDigest(userId: bigint | number, code: string): string {
-  return hashIdentifier(`email-verify:${userId}:${code}`)
+  return hashIdentifier(`email-verify:${userId}:${normalizeVerificationCode(code)}`)
 }
 
 function escapeHtml(value: string): string {
@@ -43,13 +64,13 @@ QRKOD24.hu – ingyenes QR-kód generátor`
         <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6d28d9">QRKOD24.hu</p>
         <h1 style="margin:14px 0 0;font-size:22px;line-height:1.3">Erősítsd meg az e-mail-címedet</h1>
         <p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:#475569">${greeting}</p>
-        <p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#475569">Írd be ezt a 6 jegyű kódot a regisztrációs oldalon:</p>
+        <p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#475569">Írd be a kapott 8 karakteres kódot a regisztrációs oldalon:</p>
       </td>
     </tr>
     <tr>
       <td style="padding:18px 28px">
         <div style="border-radius:12px;background:#f5f3ff;border:1px solid #ddd6fe;padding:18px;text-align:center">
-          <span style="font-size:34px;font-weight:800;letter-spacing:.35em;color:#4c1d95">${code}</span>
+          <span style="font-size:30px;font-weight:800;letter-spacing:.22em;color:#4c1d95">${code}</span>
         </div>
       </td>
     </tr>
@@ -78,7 +99,7 @@ export interface IssuedVerification {
 }
 
 /**
- * Új 6 jegyű kódot generál, eltárolja a lenyomatát és kiküldi e-mailben.
+ * Új 8 karakteres kódot generál, eltárolja a lenyomatát és kiküldi e-mailben.
  * A kód sosem kerül naplóba.
  */
 export async function issueVerificationCode(
@@ -86,7 +107,7 @@ export async function issueVerificationCode(
   email: string,
   name?: string | null,
 ): Promise<IssuedVerification> {
-  const code = String(randomInt(0, 1_000_000)).padStart(6, '0')
+  const code = generateVerificationCode()
   const now = new Date()
   const expiresAt = new Date(now.getTime() + VERIFICATION_TTL_MINUTES * 60 * 1000)
 
@@ -114,7 +135,7 @@ export interface VerifiedEmail {
 
 /**
  * A beírt kód ellenőrzése. Hibás kódnál növeljük a próbálkozások számát, hogy
- * a 6 jegyű kód ne legyen kitalálható.
+ * a 8 karakteres kód ne legyen kitalálható.
  */
 export async function verifyEmailCode(email: string, code: string): Promise<VerifiedEmail> {
   const prisma = getPrisma()

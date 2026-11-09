@@ -38,6 +38,7 @@ export const dynamicQrCreateSchema = z.object({
     .max(40, 'Érvénytelen lejárati dátum.')
     .optional(),
   style: z.string().max(8000, 'A megjelenési beállítás túl hosszú.').optional(),
+  captchaToken: z.string().max(4096).optional(),
 }).strict()
 
 export const dynamicQrUpdateSchema = z.object({
@@ -75,9 +76,10 @@ export const userRegisterSchema = z.object({
     .max(190, 'Az e-mail-cím túl hosszú.'),
   password: z
     .string({ error: 'Add meg a jelszót.' })
-    .min(10, 'A jelszó legalább 10 karakter legyen.')
+    .min(8, 'A jelszó legalább 8 karakter legyen.')
     .max(200, 'A jelszó túl hosszú.')
     .refine(value => /[a-zA-Z]/.test(value) && /\d/.test(value), 'A jelszó tartalmazzon betűt és számot.'),
+  captchaToken: z.string().max(4096).optional(),
   name: z
     .string({ error: 'A név csak szöveg lehet.' })
     .trim()
@@ -93,9 +95,9 @@ export const emailVerifySchema = z.object({
     .toLowerCase()
     .max(190, 'Az e-mail-cím túl hosszú.'),
   code: z
-    .string({ error: 'Add meg a 6 jegyű kódot.' })
+    .string({ error: 'Add meg a 8 karakteres kódot.' })
     .trim()
-    .regex(/^\d{6}$/, 'A kód pontosan 6 számjegyből áll.'),
+    .regex(/^[A-Za-z0-9]{8}$/, 'A kód 8 karakter, betűkből és számokból.'),
 }).strict()
 
 export const emailResendSchema = z.object({
@@ -116,6 +118,7 @@ export const userLoginSchema = z.object({
     .string({ error: 'Add meg a jelszót.' })
     .min(1, 'Add meg a jelszót.')
     .max(200, 'A jelszó túl hosszú.'),
+  captchaToken: z.string().max(4096).optional(),
 }).strict()
 
 export const dynamicQrListQuerySchema = z.object({
@@ -142,11 +145,12 @@ export const adminLoginSchema = z.object({
     .string({ error: 'Add meg a jelszót.' })
     .min(1, 'Add meg a jelszót.')
     .max(200, 'A jelszó túl hosszú.'),
+  captchaToken: z.string().max(4096).optional(),
 }).strict()
 
 const passwordSchema = z
   .string({ error: 'Add meg a jelszót.' })
-  .min(10, 'A jelszó legalább 10 karakter legyen.')
+  .min(8, 'A jelszó legalább 8 karakter legyen.')
   .max(200, 'A jelszó túl hosszú.')
   .refine(value => /[a-zA-Z]/.test(value) && /\d/.test(value), 'A jelszó tartalmazzon betűt és számot.')
 
@@ -270,6 +274,14 @@ export const adminSettingsSchema = z.object({
     hostingProvider: optionalText(160, 'A tárhelyszolgáltató neve legfeljebb 160 karakter lehet.'),
     hostingAddress: optionalText(240, 'A tárhelyszolgáltató címe legfeljebb 240 karakter lehet.'),
   }),
+  billing: z.object({
+    plansEnabled: z.boolean({ error: 'A csomagvásárlás kapcsolója kötelező.' }),
+    trialDays: z
+      .number({ error: 'A próbaidő hossza napban kötelező.' })
+      .int('A próbaidő hossza egész nap lehet.')
+      .min(0, 'A próbaidő nem lehet negatív.')
+      .max(90, 'A próbaidő legfeljebb 90 nap lehet.'),
+  }).strict(),
 }).strict()
 
 export const seoOverrideSchema = z.object({
@@ -395,6 +407,13 @@ export type DynamicQrCreateInput = z.infer<typeof dynamicQrCreateSchema>
 export type DynamicQrUpdateInput = z.infer<typeof dynamicQrUpdateSchema>
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>
 export type AdminSettingsInput = z.infer<typeof adminSettingsSchema>
+
+/** Csomag kiválasztása a vásárlásnál: csak fizetős csomag, havi vagy éves ciklussal. */
+export const billingSubscribeSchema = z.object({
+  planId: z.enum(['pro', 'business'], { error: 'Érvénytelen csomag.' }),
+  interval: z.enum(['monthly', 'yearly'], { error: 'Érvénytelen számlázási időszak.' }),
+}).strict()
+export type BillingSubscribeInput = z.infer<typeof billingSubscribeSchema>
 export type SeoOverrideInput = z.infer<typeof seoOverrideSchema>
 export type LibraryShapeCreateInput = z.infer<typeof libraryShapeCreateSchema>
 export type BlogPostInput = z.infer<typeof blogPostSchema>

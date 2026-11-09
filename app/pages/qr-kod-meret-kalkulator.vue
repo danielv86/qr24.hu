@@ -93,9 +93,9 @@ function formatMm(value: number): string {
 }
 
 const tones: Record<Tone, string> = {
-  good: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-900',
-  warn: 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900',
-  bad: 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900',
+  good: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900',
+  warn: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-900',
+  bad: 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-900',
 }
 
 const printSizes = [
@@ -322,7 +322,7 @@ useContentSeo({
 
             <p
               v-if="tooLong"
-              class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+              class="mt-3 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-900 dark:text-amber-200"
               role="alert"
             >
               Ez a tartalom túl hosszú ehhez a hibajavítási szinthez. Rövidítsd a szöveget, vagy
@@ -330,22 +330,22 @@ useContentSeo({
             </p>
 
             <div v-else class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:bg-slate-900/40">
+              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <p class="text-xs text-ink-muted">Verzió / modulok</p>
                 <p class="mt-1 text-xl font-semibold text-ink">{{ version }}</p>
                 <p class="text-xs text-ink-muted">{{ modules }} × {{ modules }} modul</p>
               </div>
-              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:bg-slate-900/40">
+              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <p class="text-xs text-ink-muted">Egy modul mérete</p>
                 <p class="mt-1 text-xl font-semibold text-ink">{{ formatMm(moduleMm) }}</p>
                 <p class="text-xs text-ink-muted">{{ formatNumber(modulePx, 1) }} px @ {{ safeDpi }} DPI</p>
               </div>
-              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:bg-slate-900/40">
+              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <p class="text-xs text-ink-muted">Kép mérete</p>
                 <p class="mt-1 text-xl font-semibold text-ink">{{ formatNumber(widthPx) }} px</p>
                 <p class="text-xs text-ink-muted">{{ formatMm(safeWidth) }} szélességnél</p>
               </div>
-              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:bg-slate-900/40">
+              <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <p class="text-xs text-ink-muted">Olvasható távolság</p>
                 <p class="mt-1 text-xl font-semibold text-ink">kb. {{ formatNumber(maxDistanceCm) }} cm</p>
                 <p class="text-xs text-ink-muted">10:1 ökölszabály szerint</p>

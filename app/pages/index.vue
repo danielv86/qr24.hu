@@ -9,8 +9,8 @@ const heroQrImage = '/img/header/qr-icon.png'
 
 const HERO_BADGES = [
   { label: '28 QR-kód típus', icon: 'lucide:layout-grid', color: 'bg-brand-100 text-brand-700' },
-  { label: 'Nincs regisztráció', icon: 'lucide:user-check', color: 'bg-emerald-100 text-emerald-700' },
-  { label: '5 exportformátum', icon: 'lucide:download', color: 'bg-amber-100 text-amber-700' },
+  { label: 'Nincs regisztráció', icon: 'lucide:user-check', color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
+  { label: '5 exportformátum', icon: 'lucide:download', color: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
 ]
 
 const HOME_FAQS: ContentFaq[] = [
@@ -57,19 +57,19 @@ const BENEFITS = [
     icon: 'lucide:palette',
     title: 'Egyedi megjelenés',
     text: 'Színek, pontok, sarokelemek, logó, keret és csendes zóna beállítása.',
-    color: 'bg-emerald-50 text-emerald-700',
+    color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300',
   },
   {
     icon: 'lucide:layout-grid',
     title: '28 QR-kód típus',
     text: 'Weboldal, névjegy, Wi-Fi, bank, PayPal, PDF, galéria, videó és további célok.',
-    color: 'bg-amber-50 text-amber-700',
+    color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300',
   },
   {
     icon: 'lucide:download',
     title: 'PNG, JPG, WebP, SVG és PDF',
     text: 'Képernyőre PNG, JPG vagy WebP, nyomdára SVG, PDF-be ágyazva is.',
-    color: 'bg-sky-50 text-sky-700',
+    color: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300',
   },
 ]
 
@@ -89,12 +89,12 @@ const GUIDE_STEPS = [
 ]
 
 const POPULAR_TYPES = [
-  { label: 'Weboldal QR-kód', icon: 'lucide:link', to: '/url-qr-kod-generator', color: 'bg-blue-50 text-blue-600' },
-  { label: 'Kapcsolat (vCard)', icon: 'lucide:id-card', to: '/vcard-qr-kod-generator', color: 'bg-emerald-50 text-emerald-600' },
-  { label: 'Wi-Fi megosztás', icon: 'lucide:wifi', to: '/wifi-qr-kod-generator', color: 'bg-amber-50 text-amber-600' },
+  { label: 'Weboldal QR-kód', icon: 'lucide:link', to: '/url-qr-kod-generator', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' },
+  { label: 'Kapcsolat (vCard)', icon: 'lucide:id-card', to: '/vcard-qr-kod-generator', color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' },
+  { label: 'Wi-Fi megosztás', icon: 'lucide:wifi', to: '/wifi-qr-kod-generator', color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' },
   { label: 'E-mail küldés', icon: 'lucide:mail', to: '/email-qr-kod-generator', color: 'bg-violet-50 text-violet-600' },
-  { label: 'Telefonhívás', icon: 'lucide:phone', to: '/telefon-qr-kod-generator', color: 'bg-rose-50 text-rose-600' },
-  { label: 'SMS küldés', icon: 'lucide:message-square', to: '/sms-qr-kod-generator', color: 'bg-yellow-50 text-yellow-700' },
+  { label: 'Telefonhívás', icon: 'lucide:phone', to: '/telefon-qr-kod-generator', color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400' },
+  { label: 'SMS küldés', icon: 'lucide:message-square', to: '/sms-qr-kod-generator', color: 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300' },
   { label: 'Közösségi oldalak', icon: 'lucide:share-2', to: '/qr-kod-generator', color: 'bg-pink-50 text-pink-600' },
   { label: 'Szöveg QR-kód', icon: 'lucide:type', to: '/szoveg-qr-kod-generator', color: 'bg-teal-50 text-teal-600' },
   { label: 'Tömeges QR kód generátor', icon: 'lucide:layers', to: '/tomeges-qr-kod-generator', color: 'bg-indigo-50 text-indigo-600' },
@@ -326,12 +326,12 @@ useContentSeo({
               </ul>
             </div>
 
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-              <p class="flex items-center gap-1.5 text-xs font-semibold text-emerald-900">
+            <div class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 p-4">
+              <p class="flex items-center gap-1.5 text-xs font-semibold text-emerald-900 dark:text-emerald-200">
                 <Icon name="lucide:shield-check" class="h-4 w-4" aria-hidden="true" />
                 Adatvédelem első helyen
               </p>
-              <p class="mt-1.5 text-xs leading-relaxed text-emerald-900">
+              <p class="mt-1.5 text-xs leading-relaxed text-emerald-900 dark:text-emerald-200">
                 A statikus QR-kódok a böngésződben készülnek. Az űrlap tartalmát nem küldjük el a szervernek.
               </p>
             </div>

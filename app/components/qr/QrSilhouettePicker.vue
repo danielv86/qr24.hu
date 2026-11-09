@@ -7,13 +7,15 @@ import {
   silhouetteLabel,
   silhouettePoints,
 } from '#shared/qr/silhouette'
-import type { SilhouetteId, SilhouettePreset } from '#shared/qr/silhouette'
+import type { SilhouetteId } from '#shared/qr/silhouette'
 import type { ShapePoint } from '#shared/qr/custom-shape'
-import { ShapeImportError, importShapeFromSvg } from '~/lib/qr/shape-import'
+import { findLibraryShape } from '#shared/qr/library-shape'
+import { ShapeImportError, importShapeFromImage, importShapeFromSvg, shapeFileKind } from '~/lib/qr/shape-import'
 import { buildQrMatrix } from '~/utils/qr-render'
 
-const { customization, update } = useQrCustomization()
+const { customization, update, patch } = useQrCustomization()
 const { payload } = useQrGenerator()
+const { settings } = useSiteSettings()
 
 const input = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
@@ -22,6 +24,9 @@ const uploadError = ref('')
 const active = computed(() => customization.value.silhouette ?? 'none')
 const polygon = computed(() => silhouettePoints(active.value, customization.value.silhouettePoints))
 const fillEnabled = computed(() => customization.value.silhouetteFill !== false)
+const borderWidth = computed(() => customization.value.silhouetteBorderWidth ?? 0.9)
+const libraryShapes = computed(() => settings.value.silhouetteShapes ?? [])
+const libraryShape = computed(() => findLibraryShape(libraryShapes.value, customization.value.silhouetteId))
 
 const moduleCount = computed(() => {
   if (!payload.value) return 33
@@ -37,19 +42,37 @@ const evaluation = computed(() =>
 )
 
 interface Tile {
-  id: SilhouetteId
+  key: string
   label: string
   points: ShapePoint[] | null
+  silhouette: SilhouetteId
+  libraryId?: string
 }
 
 const tiles = computed<Tile[]>(() => [
-  ...SILHOUETTE_PRESETS.map((preset: SilhouettePreset) => ({
-    id: preset.id as SilhouetteId,
+  ...SILHOUETTE_PRESETS.map(preset => ({
+    key: `preset:${preset.id}`,
     label: preset.label,
     points: preset.points,
+    silhouette: preset.id as SilhouetteId,
   })),
-  { id: 'custom', label: 'Saját SVG', points: customization.value.silhouettePoints ?? null },
+  ...libraryShapes.value.map(shape => ({
+    key: `library:${shape.id}`,
+    label: shape.label,
+    points: shape.points,
+    silhouette: 'custom' as SilhouetteId,
+    libraryId: shape.id,
+  })),
+  { key: 'custom', label: 'Saját SVG', points: customization.value.silhouettePoints ?? null, silhouette: 'custom' as SilhouetteId },
 ])
+
+const activeKey = computed(() => {
+  if (active.value === 'none') return ''
+  if (libraryShape.value) return `library:${libraryShape.value.id}`
+  return active.value === 'custom' ? 'custom' : `preset:${active.value}`
+})
+
+const activeLabel = computed(() => libraryShape.value?.label ?? silhouetteLabel(active.value))
 
 /** A csempe előnézete: alakzat + a kód helye (a befoglalható négyzet). */
 function tilePreview(points: ShapePoint[] | null) {
@@ -66,20 +89,23 @@ function tilePreview(points: ShapePoint[] | null) {
 }
 
 const previews = computed(() =>
-  Object.fromEntries(tiles.value.map(tile => [tile.id, tilePreview(tile.points)])),
+  Object.fromEntries(tiles.value.map(tile => [tile.key, tilePreview(tile.points)])),
 )
 
-function selectTile(id: SilhouetteId) {
-  if (id === 'custom' && !customization.value.silhouettePoints) {
+function selectTile(tile: Tile) {
+  if (tile.key === 'custom' && !tile.points) {
     input.value?.click()
     return
   }
-  update('silhouette', id)
-  if (id !== 'none') update('frame', 'none')
+  patch({
+    silhouette: tile.silhouette,
+    silhouettePoints: tile.points,
+    silhouetteId: tile.libraryId ?? '',
+  })
 }
 
 function clearSilhouette() {
-  update('silhouette', 'none')
+  patch({ silhouette: 'none', silhouetteId: '' })
 }
 
 async function onFileSelected(event: Event) {
@@ -87,25 +113,28 @@ async function onFileSelected(event: Event) {
   const file = element.files?.[0]
   element.value = ''
   if (!file) return
+  const kind = shapeFileKind(file)
+  if (!kind) {
+    uploadError.value = 'Csak SVG, PNG, JPG, WebP vagy GIF tölthető fel.'
+    return
+  }
   uploading.value = true
   uploadError.value = ''
   try {
-    const points = await importShapeFromSvg(file)
-    update('silhouettePoints', points)
-    update('silhouette', 'custom')
-    update('frame', 'none')
+    const points = kind === 'svg' ? await importShapeFromSvg(file) : await importShapeFromImage(file)
+    patch({ silhouette: 'custom', silhouettePoints: points, silhouetteId: '' })
   } catch (error) {
     uploadError.value =
-      error instanceof ShapeImportError ? error.message : 'Az SVG feldolgozása nem sikerült. Próbálj egyszerűbb formát.'
+      error instanceof ShapeImportError ? error.message : 'A fájl feldolgozása nem sikerült. Próbálj egyszerűbb formát.'
   } finally {
     uploading.value = false
   }
 }
 
 const statusClasses: Record<string, string> = {
-  good: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  risky: 'border-amber-200 bg-amber-50 text-amber-800',
-  unsafe: 'border-red-200 bg-red-50 text-red-700',
+  good: 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300',
+  risky: 'border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300',
+  unsafe: 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300',
 }
 const statusIcon: Record<string, string> = {
   good: 'lucide:circle-check',
@@ -121,32 +150,33 @@ const statusIcon: Record<string, string> = {
       <div class="grid gap-1.5" style="grid-template-columns: repeat(7, minmax(0, 1fr))">
         <button
           v-for="tile in tiles"
-          :key="tile.id"
+          :key="tile.key"
           type="button"
-          :aria-pressed="active === tile.id"
+          :aria-pressed="activeKey === tile.key"
+          :aria-label="tile.label"
           :title="tile.label"
           :class="[
-            'group relative grid aspect-square place-items-center overflow-hidden rounded-md border bg-white p-1 transition-colors',
-            tile.id === 'custom' ? 'border-dashed' : '',
-            active === tile.id
+            'group relative grid aspect-square place-items-center overflow-hidden rounded-md border bg-slate-50 p-1 transition-colors',
+            tile.key === 'custom' ? 'border-dashed' : '',
+            activeKey === tile.key
               ? 'border-brand-600 text-brand-700 ring-1 ring-brand-600'
               : 'border-slate-200 text-slate-700 hover:border-brand-300',
           ]"
-          @click="selectTile(tile.id)"
+          @click="selectTile(tile)"
         >
           <svg
-            v-if="previews[tile.id]"
+            v-if="previews[tile.key]"
             viewBox="0 0 100 100"
             class="h-full w-full"
             aria-hidden="true"
             shape-rendering="geometricPrecision"
           >
-            <path :d="previews[tile.id]!.path" fill="#E2E8F0" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+            <path :d="previews[tile.key]!.path" class="fill-slate-200" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
             <rect
-              :x="previews[tile.id]!.field.x"
-              :y="previews[tile.id]!.field.y"
-              :width="previews[tile.id]!.field.size"
-              :height="previews[tile.id]!.field.size"
+              :x="previews[tile.key]!.field.x"
+              :y="previews[tile.key]!.field.y"
+              :width="previews[tile.key]!.field.size"
+              :height="previews[tile.key]!.field.size"
               rx="1.5"
               fill="currentColor"
             />
@@ -154,12 +184,32 @@ const statusIcon: Record<string, string> = {
           <Icon v-else name="lucide:file-up" class="h-4 w-4 text-brand-700" aria-hidden="true" />
         </button>
       </div>
-      <p class="mt-1 truncate text-[11px] text-ink-muted">{{ silhouetteLabel(active) }}</p>
+      <p class="mt-1 truncate text-[11px] text-ink-muted">{{ activeLabel }}</p>
       <p class="field-help">
         A kód a legnagyobb befoglalható négyzetbe kerül, a többi részt ugyanolyan modulok töltik ki — a keret
         ilyenkor automatikusan kikapcsol.
       </p>
+      <p v-if="!libraryShapes.length" class="field-help">
+        Az admin «Alakzatok» oldalán feltöltött formák itt is megjelennek.
+      </p>
     </fieldset>
+
+    <div v-if="active !== 'none'" class="mt-3">
+      <label for="qr-silhouette-border" class="field-label">
+        Körvonal vastagsága: {{ borderWidth.toFixed(1) }} modul
+      </label>
+      <input
+        id="qr-silhouette-border"
+        type="range"
+        min="0"
+        max="3"
+        step="0.1"
+        class="w-full accent-brand-600"
+        :value="borderWidth"
+        @input="update('silhouetteBorderWidth', Number(($event.target as HTMLInputElement).value))"
+      >
+      <p class="field-help">0 esetén nincs körvonal; a vastagabb él hangsúlyosabb kontúrt ad az alakzatnak.</p>
+    </div>
 
     <div class="mt-2 flex flex-wrap items-center gap-2">
       <button
@@ -169,7 +219,7 @@ const statusIcon: Record<string, string> = {
         @click="input?.click()"
       >
         <Icon name="lucide:upload" class="h-3.5 w-3.5" aria-hidden="true" />
-        {{ uploading ? 'Feldolgozás…' : 'SVG feltöltés' }}
+        {{ uploading ? 'Feldolgozás…' : 'Alakzat feltöltése' }}
       </button>
       <button
         v-if="active !== 'none'"
@@ -182,9 +232,9 @@ const statusIcon: Record<string, string> = {
       <input
         ref="input"
         type="file"
-        accept=".svg,image/svg+xml"
+        accept=".svg,.png,.jpg,.jpeg,.webp,.gif,.bmp,image/svg+xml,image/png,image/jpeg,image/webp,image/gif,image/bmp"
         class="hidden"
-        aria-label="Alakzat feltöltése SVG fájlból"
+        aria-label="Alakzat feltöltése képfájlból"
         @change="onFileSelected"
       >
     </div>

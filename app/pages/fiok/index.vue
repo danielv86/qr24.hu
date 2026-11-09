@@ -309,9 +309,9 @@ function toggleStatus(item: UserDynamicQrItem) {
 }
 
 function statusClass(value: DynamicQrStatus): string {
-  if (value === 'active') return 'bg-emerald-50 text-emerald-700'
-  if (value === 'paused') return 'bg-amber-50 text-amber-700'
-  if (value === 'expired') return 'bg-red-50 text-red-700'
+  if (value === 'active') return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+  if (value === 'paused') return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+  if (value === 'expired') return 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300'
   return 'bg-slate-100 text-slate-600'
 }
 </script>
@@ -338,7 +338,7 @@ function statusClass(value: DynamicQrStatus): string {
       </div>
       <div class="card p-4">
         <p class="text-xs font-medium text-ink-muted">Aktív</p>
-        <p class="mt-1 text-2xl font-semibold text-emerald-600">{{ summary?.activeQrCodes ?? 0 }}</p>
+        <p class="mt-1 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{{ summary?.activeQrCodes ?? 0 }}</p>
       </div>
       <div class="card p-4">
         <p class="text-xs font-medium text-ink-muted">Összes beolvasás</p>
@@ -350,14 +350,14 @@ function statusClass(value: DynamicQrStatus): string {
       </div>
     </div>
 
-    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300" role="status">
       {{ actionMessage }}
     </p>
-    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
       {{ actionError }}
     </p>
 
-    <div class="mt-5 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center">
+    <div class="mt-5 flex flex-col gap-3 rounded-xl border border-slate-200 bg-surface p-3 sm:flex-row sm:items-center">
       <div class="relative flex-1">
         <Icon name="lucide:search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden="true" />
         <input
@@ -409,7 +409,7 @@ function statusClass(value: DynamicQrStatus): string {
         :aria-selected="status === filter.value"
         :class="[
           'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
-          status === filter.value ? 'bg-brand-600 text-white' : 'bg-white text-ink-soft ring-1 ring-slate-200 hover:ring-brand-300',
+          status === filter.value ? 'bg-brand-600 text-white' : 'bg-surface text-ink-soft ring-1 ring-slate-200 hover:ring-brand-300',
         ]"
         @click="status = filter.value"
       >
@@ -418,17 +418,17 @@ function statusClass(value: DynamicQrStatus): string {
     </div>
 
     <div class="mt-4 space-y-3">
-      <p v-if="pending" class="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-ink-muted">
+      <p v-if="pending" class="rounded-xl border border-slate-200 bg-surface p-6 text-center text-sm text-ink-muted">
         Betöltés…
       </p>
-      <p v-else-if="listError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <p v-else-if="listError" class="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300" role="alert">
         A QR-kódok betöltése nem sikerült. Frissítsd az oldalt.
       </p>
 
       <article
         v-for="item in items"
         :key="item.id"
-        class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
+        class="rounded-2xl border border-slate-200 bg-surface p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
       >
         <div class="flex flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-6">
           <div class="shrink-0 rounded-xl bg-slate-50 p-2">
@@ -520,7 +520,7 @@ function statusClass(value: DynamicQrStatus): string {
             </NuxtLink>
             <button
               type="button"
-              class="btn-ghost h-9 w-9 p-0 text-ink-soft hover:text-red-600"
+              class="btn-ghost h-9 w-9 p-0 text-ink-soft hover:text-red-600 dark:text-red-400"
               title="Törlés"
               aria-label="Törlés"
               @click="confirmDelete = item"
@@ -545,7 +545,7 @@ function statusClass(value: DynamicQrStatus): string {
         </div>
       </article>
 
-      <div v-if="isEmpty" class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+      <div v-if="isEmpty" class="rounded-xl border border-dashed border-slate-300 bg-surface p-8 text-center">
         <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-brand-700">
           <Icon name="lucide:qr-code" class="h-6 w-6" aria-hidden="true" />
         </span>
@@ -570,7 +570,7 @@ function statusClass(value: DynamicQrStatus): string {
 
     <div v-if="summary?.recentActivity?.length" class="mt-8">
       <h2 class="text-sm font-semibold text-ink">Legutóbbi aktivitás</h2>
-      <ul class="mt-2 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+      <ul class="mt-2 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-surface">
         <li v-for="activity in summary.recentActivity" :key="activity.id" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-xs">
           <span class="font-medium text-ink">{{ activity.label }}</span>
           <span v-if="activity.qrName" class="truncate text-ink-soft">{{ activity.qrName }}</span>
@@ -581,7 +581,7 @@ function statusClass(value: DynamicQrStatus): string {
 
     <!-- Létrehozás -->
     <div v-if="showCreate" class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4" @click.self="showCreate = false">
-      <div class="mt-10 w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="create-qr-title">
+      <div class="mt-10 w-full max-w-lg rounded-2xl bg-surface p-5 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="create-qr-title">
         <div class="flex items-start justify-between gap-2">
           <h2 id="create-qr-title" class="text-lg font-semibold text-ink">Új dinamikus QR-kód</h2>
           <button type="button" class="btn-ghost px-2 py-1" aria-label="Bezárás" @click="showCreate = false">
@@ -589,7 +589,7 @@ function statusClass(value: DynamicQrStatus): string {
           </button>
         </div>
 
-        <p v-if="quotaReached" class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+        <p v-if="quotaReached" class="mt-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-900 dark:text-amber-200" role="status">
           Elérted a(z) {{ summary?.planLabel || 'Ingyenes' }} csomag limitjét ({{ summary?.planLimit }} kód). Archiválj egy kódot, vagy válts nagyobb csomagra.
         </p>
 
@@ -639,7 +639,7 @@ function statusClass(value: DynamicQrStatus): string {
 
     <!-- Sikeres létrehozás -->
     <div v-if="created" class="fixed inset-0 z-50 grid place-items-center bg-slate-900/50 p-4">
-      <div class="w-full max-w-md rounded-2xl bg-white p-5 text-center shadow-xl" role="dialog" aria-modal="true" aria-labelledby="created-title">
+      <div class="w-full max-w-md rounded-2xl bg-surface p-5 text-center shadow-xl" role="dialog" aria-modal="true" aria-labelledby="created-title">
         <h2 id="created-title" class="text-lg font-semibold text-ink">Elkészült a QR-kód</h2>
         <div class="mx-auto mt-4 w-48 rounded-xl border border-slate-200 bg-white p-2">
           <QrMiniCode
@@ -671,7 +671,7 @@ function statusClass(value: DynamicQrStatus): string {
 
     <!-- Törlés megerősítése -->
     <div v-if="confirmDelete" class="fixed inset-0 z-50 grid place-items-center bg-slate-900/50 p-4">
-      <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
+      <div class="w-full max-w-sm rounded-2xl bg-surface p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
         <h2 id="delete-title" class="text-lg font-semibold text-ink">QR-kód törlése</h2>
         <p class="mt-2 text-sm text-ink-soft">
           Biztosan törlöd a(z) <strong>{{ confirmDelete.name || confirmDelete.shortCode }}</strong> kódot? A kinyomtatott QR-kód a törlés után már nem működik, és a statisztikái is elvésznek.

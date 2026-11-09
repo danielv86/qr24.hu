@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ApiSuccess, DashboardSummary, PlanDefinition, PlanId } from '#shared/types/api'
+import type { ApiSuccess, BillingOverview, DashboardSummary, PlanDefinition, PlanId } from '#shared/types/api'
 
 definePageMeta({ layout: 'fiok', middleware: 'auth' })
 
@@ -22,7 +22,115 @@ const { data: summary } = await useAsyncData<DashboardSummary | null>(
 
 const { settings } = useSiteSettings()
 
-const currentPlan = computed(() => (summary.value?.plan || 'free') as PlanId)
+/* ---- Előfizetés ---- */
+
+const overview = ref<BillingOverview | null>(null)
+const billingLoading = ref(true)
+const actionBusy = ref(false)
+const actionError = ref('')
+const actionMessage = ref('')
+const confirmingCancel = ref(false)
+
+const subscription = computed(() => overview.value?.subscription ?? null)
+const billingConfig = computed(() => overview.value?.billing ?? settings.value.billing ?? { plansEnabled: false, trialDays: 14 })
+
+const trialDaysLeft = computed(() => {
+  if (!subscription.value?.trialEndsAt) return 0
+  const diff = new Date(subscription.value.trialEndsAt).getTime() - Date.now()
+  return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)))
+})
+
+const renewDate = computed(() => {
+  const sub = subscription.value
+  if (!sub || sub.status === 'expired') return '–'
+  if (sub.interval === 'lifetime') return 'nincs lejárata'
+  return formatDate(sub.currentPeriodEnd)
+})
+
+const statusLabel = computed(() => {
+  const sub = subscription.value
+  if (!sub || sub.status === 'expired') return 'Ingyenes'
+  if (sub.cancelAtPeriodEnd) return 'Lemondva'
+  if (sub.status === 'trialing') return `Próbaidő (${trialDaysLeft.value} nap)`
+  return 'Aktív'
+})
+
+const statusClasses = computed(() => {
+  const sub = subscription.value
+  if (!sub || sub.status === 'expired') return 'bg-slate-100 text-slate-600'
+  if (sub.cancelAtPeriodEnd) return 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+  if (sub.status === 'trialing') return 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
+  return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+})
+
+const canCancel = computed(() => {
+  if (subscription.value?.interval === 'lifetime') return false
+  const sub = subscription.value
+  return Boolean(sub && sub.status !== 'expired' && !sub.cancelAtPeriodEnd)
+})
+
+const canResume = computed(() => Boolean(subscription.value?.cancelAtPeriodEnd))
+
+async function loadBilling() {
+  billingLoading.value = true
+  actionError.value = ''
+  try {
+    const response = await $fetch<ApiSuccess<BillingOverview>>('/api/billing', {
+      headers: { accept: 'application/json' },
+    })
+    overview.value = response.data
+  } catch (error) {
+    actionError.value = apiErrorMessage(error, 'Az előfizetés állapotát nem sikerült betölteni.')
+  } finally {
+    billingLoading.value = false
+  }
+}
+
+async function cancelSubscription() {
+  if (actionBusy.value) return
+  actionBusy.value = true
+  actionError.value = ''
+  try {
+    const response = await $fetch<ApiSuccess<BillingOverview>>('/api/billing/cancel', {
+      method: 'POST',
+      headers: { accept: 'application/json' },
+    })
+    overview.value = response.data
+    confirmingCancel.value = false
+    actionMessage.value = 'Az előfizetés lemondva. A csomag az időszak végéig még jár, utána a fiók az ingyenes csomagra vált.'
+    await refreshNuxtData('fiok-billing-summary')
+  } catch (error) {
+    actionError.value = apiErrorMessage(error, 'A lemondás nem sikerült.')
+  } finally {
+    actionBusy.value = false
+  }
+}
+
+async function resumeSubscription() {
+  if (actionBusy.value) return
+  actionBusy.value = true
+  actionError.value = ''
+  try {
+    const response = await $fetch<ApiSuccess<BillingOverview>>('/api/billing/resume', {
+      method: 'POST',
+      headers: { accept: 'application/json' },
+    })
+    overview.value = response.data
+    actionMessage.value = 'A lemondás visszavonva, az előfizetés az időszak végéig aktív marad.'
+  } catch (error) {
+    actionError.value = apiErrorMessage(error, 'A visszavonás nem sikerült.')
+  } finally {
+    actionBusy.value = false
+  }
+}
+
+onMounted(loadBilling)
+
+const currentPlan = computed(() => {
+  const sub = subscription.value
+  if (sub && sub.status !== 'expired') return sub.plan
+  return (summary.value?.plan || 'free') as PlanId
+})
 const plans = computed<{ id: PlanId; definition: PlanDefinition }[]>(() => {
   const config = settings.value.plans
   if (!config) return []
@@ -54,6 +162,17 @@ function planName(id: PlanId): string {
   return settings.value.plans?.[id]?.label || id
 }
 
+function formatHuf(value: number): string {
+  const grouped = String(Math.max(0, Math.round(value))).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')
+  return `${grouped} Ft`
+}
+
+const priceSuffix = computed(() => {
+  if (!subscription.value || subscription.value.status === 'expired') return ''
+  if (subscription.value.interval === 'lifetime') return ''
+  return subscription.value.interval === 'yearly' ? ' / év' : ' / hó'
+})
+
 function formatDate(value: string | null | undefined): string {
   if (!value) return '–'
   return new Date(value).toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -70,15 +189,89 @@ const memberSince = computed(() => formatDate(accountCreated.value?.createdAt))
       A csomagod, a limitek és a számlázási adatok egy helyen.
     </p>
 
+    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300" role="alert">{{ actionError }}</p>
+    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300" role="status">{{ actionMessage }}</p>
+
     <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <section class="card p-4" aria-labelledby="plan-title">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p class="text-xs font-medium uppercase tracking-wide text-ink-muted">Jelenlegi csomag</p>
-            <h2 id="plan-title" class="mt-1 text-xl font-semibold text-ink">{{ summary?.planLabel || planName(currentPlan) }}</h2>
+            <h2 id="plan-title" class="mt-1 text-xl font-semibold text-ink">{{ subscription?.planLabel || summary?.planLabel || planName(currentPlan) }}</h2>
             <p class="mt-1 text-xs text-ink-muted">Tagság kezdete: {{ memberSince }}</p>
           </div>
-          <span class="eyebrow">{{ summary?.planLabel || planName(currentPlan) }}</span>
+          <span :class="['inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold', statusClasses]">{{ statusLabel }}</span>
+        </div>
+
+        <div v-if="billingLoading" class="mt-3 text-xs text-ink-muted">Előfizetés betöltése…</div>
+        <div v-else class="mt-3 space-y-1.5 text-xs">
+          <template v-if="subscription && subscription.status !== 'expired'">
+            <p v-if="subscription.cancelAtPeriodEnd" class="flex items-start gap-2 text-amber-700 dark:text-amber-300">
+              <Icon name="lucide:calendar-x" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>A lemondás rögzítve. A csomag {{ renewDate }}-ig még jár, utána a fiók az ingyenes csomagra vált.</span>
+            </p>
+            <p v-else-if="subscription.status === 'trialing'" class="flex items-start gap-2 text-sky-700 dark:text-sky-300">
+              <Icon name="lucide:gift" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>A próbaidő {{ renewDate }}-ig tart ({{ trialDaysLeft }} nap). Utána a fiók az ingyenes csomagra vált, ha nem választasz csomagot.</span>
+            </p>
+            <p v-else class="flex items-start gap-2 text-ink-soft">
+              <Icon name="lucide:calendar-check" class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+              <span>Az aktuális időszak {{ renewDate }}-ig tart. Automatikus megújítás nincs, a bankkártyás fizetés még nem aktív.</span>
+            </p>
+          </template>
+          <p v-else class="flex items-start gap-2 text-ink-soft">
+            <Icon name="lucide:info" class="mt-0.5 h-4 w-4 shrink-0 text-ink-muted" aria-hidden="true" />
+            <span v-if="billingConfig.plansEnabled">Jelenleg nincs fizetős előfizetésed. A csomagok a Csomagok oldalon választhatók ki.</span>
+            <span v-else>Jelenleg nincs fizetős előfizetésed, és a csomagvásárlás átmenetileg szünetel.</span>
+          </p>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <NuxtLink
+            :to="billingConfig.plansEnabled ? '/csomagok' : '/kapcsolat'"
+            class="btn-secondary px-3 py-2 text-xs"
+          >
+            <Icon name="lucide:repeat" class="h-4 w-4" aria-hidden="true" />
+            {{ billingConfig.plansEnabled
+              ? (canCancel || canResume ? 'Csomagváltás' : 'Csomagok megtekintése')
+              : 'Csomagváltás igénylése' }}
+          </NuxtLink>
+          <button
+            v-if="canCancel"
+            type="button"
+            class="btn-secondary px-3 py-2 text-xs"
+            :disabled="actionBusy"
+            @click="confirmingCancel = true"
+          >
+            <Icon name="lucide:x-circle" class="h-4 w-4" aria-hidden="true" />
+            Előfizetés lemondása
+          </button>
+          <button
+            v-if="canResume"
+            type="button"
+            class="btn-primary px-3 py-2 text-xs"
+            :disabled="actionBusy"
+            @click="resumeSubscription"
+          >
+            <Icon name="lucide:rotate-ccw" class="h-4 w-4" aria-hidden="true" />
+            Lemondás visszavonása
+          </button>
+        </div>
+
+        <div v-if="confirmingCancel" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200" role="alertdialog">
+          <p class="font-semibold">Biztosan lemondod az előfizetést?</p>
+          <p class="mt-1 leading-relaxed">
+            A csomag az aktuális időszak végéig jár, azt követően a fiók az ingyenes csomagra vált. A QR-kódjaid megmaradnak,
+            csak a prémium funkciók és a limit szűkül.
+          </p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button type="button" class="btn-primary px-3 py-1.5 text-xs" :disabled="actionBusy" @click="cancelSubscription">
+              {{ actionBusy ? 'Lemondás…' : 'Igen, lemondom' }}
+            </button>
+            <button type="button" class="btn-secondary px-3 py-1.5 text-xs" :disabled="actionBusy" @click="confirmingCancel = false">
+              Mégse
+            </button>
+          </div>
         </div>
 
         <div class="mt-4">
@@ -113,11 +306,47 @@ const memberSince = computed(() => formatDate(accountCreated.value?.createdAt))
         <dl class="mt-3 space-y-2 text-xs">
           <div class="flex justify-between gap-3">
             <dt class="text-ink-muted">Számlázási mód</dt>
-            <dd class="text-right font-medium text-ink">Nincs előfizetés</dd>
+            <dd class="text-right font-medium text-ink">
+              {{ subscription && subscription.status !== 'expired'
+                ? (subscription.interval === 'lifetime'
+                  ? 'Élettartam csomag'
+                  : subscription.interval === 'yearly' ? 'Éves előfizetés' : 'Havi előfizetés')
+                : 'Nincs előfizetés' }}
+            </dd>
           </div>
           <div class="flex justify-between gap-3">
+            <dt class="text-ink-muted">Időszak vége</dt>
+            <dd class="text-right font-medium text-ink">{{ renewDate }}</dd>
+          </div>
+          <template v-if="subscription && subscription.status !== 'expired'">
+            <div class="flex justify-between gap-3">
+              <dt class="text-ink-muted">Aktuális időszak ára</dt>
+              <dd class="text-right font-medium text-ink">
+                <template v-if="subscription.interval === 'lifetime'">Nincs díj</template>
+                <template v-else>{{ formatHuf(subscription.price) }}{{ priceSuffix }}</template>
+              </dd>
+            </div>
+            <div v-if="subscription.interval !== 'lifetime'" class="flex justify-between gap-3">
+              <dt class="text-ink-muted">Következő időszak ára</dt>
+              <dd class="text-right font-medium text-ink">
+                <template v-if="subscription.nextPrice > 0">{{ formatHuf(subscription.nextPrice) }}{{ priceSuffix }}</template>
+                <template v-else>–</template>
+              </dd>
+            </div>
+            <p
+              v-if="subscription.priceChanged && subscription.interval !== 'lifetime'"
+              class="flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-2 text-[11px] leading-relaxed text-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <Icon name="lucide:info" class="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                A csomag ára azóta változott. A jelenlegi időszak ára változatlan, az új ár a következő
+                időszaktól érvényes.
+              </span>
+            </p>
+          </template>
+          <div class="flex justify-between gap-3">
             <dt class="text-ink-muted">Következő terhelés</dt>
-            <dd class="text-right font-medium text-ink">–</dd>
+            <dd class="text-right font-medium text-ink">nincs automatikus terhelés</dd>
           </div>
           <div class="flex justify-between gap-3">
             <dt class="text-ink-muted">Fizetési mód</dt>
@@ -140,13 +369,18 @@ const memberSince = computed(() => formatDate(accountCreated.value?.createdAt))
           </p>
         </div>
 
-        <NuxtLink :to="contactHref" class="btn-secondary mt-4 w-full px-3 py-2 text-xs">
-          <Icon name="lucide:mail" class="h-4 w-4" aria-hidden="true" />
-          Csomagváltás igénylése
+        <NuxtLink :to="billingConfig.plansEnabled ? '/csomagok' : contactHref" class="btn-secondary mt-4 w-full px-3 py-2 text-xs">
+          <Icon :name="billingConfig.plansEnabled ? 'lucide:repeat' : 'lucide:mail'" class="h-4 w-4" aria-hidden="true" />
+          {{ billingConfig.plansEnabled ? 'Csomagok és árak' : 'Csomagváltás igénylése' }}
         </NuxtLink>
         <p class="mt-2 text-[11px] leading-relaxed text-ink-muted">
-          Az online fizetés még nem elérhető. A csomagváltást a kapcsolati űrlapon tudod kérni, a módosítás a fiókodon
-          azonnal érvénybe lép.
+          <template v-if="billingConfig.plansEnabled">
+            A bankkártyás fizetés még nem aktív: a csomagvásárlás fizetés nélküli aktiválást jelent, automatikus
+            terhelés nélkül.
+          </template>
+          <template v-else>
+            A csomagvásárlás átmenetileg nem elérhető. Csomagváltást a kapcsolati űrlapon tudsz kérni.
+          </template>
         </p>
       </section>
     </div>

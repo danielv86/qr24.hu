@@ -69,13 +69,13 @@ async function savePassword() {
     passwordError.value = 'A két jelszó nem egyezik.'
     return
   }
-  if (password.newPassword.length < 10) {
-    passwordError.value = 'A jelszó legalább 10 karakter legyen.'
+  if (password.newPassword.length < 8) {
+    passwordError.value = 'A jelszó legalább 8 karakter legyen.'
     return
   }
   savingPassword.value = true
   try {
-    await $fetch('/api/account/password', {
+    const response = await $fetch<ApiSuccess<{ updated: boolean; otherSessions: number }>>('/api/account/password', {
       method: 'POST',
       body: {
         currentPassword: password.currentPassword,
@@ -85,7 +85,10 @@ async function savePassword() {
     password.currentPassword = ''
     password.newPassword = ''
     password.confirm = ''
-    passwordMessage.value = 'A jelszó frissítve.'
+    const otherSessions = response?.data?.otherSessions ?? 0
+    passwordMessage.value = otherSessions > 0
+      ? `A jelszó frissítve. ${otherSessions} másik eszközön kijelentkeztettünk.`
+      : 'A jelszó frissítve.'
   } catch (error) {
     passwordError.value = apiErrorMessage(error, 'A jelszó módosítása nem sikerült.')
   } finally {
@@ -149,10 +152,10 @@ const memberSince = computed(() => {
           <h2 id="profile-title" class="text-base font-semibold text-ink">Profil</h2>
           <p class="mt-1 text-xs text-ink-muted">A név és az e-mail-cím a fiókodhoz tartozik.</p>
 
-          <p v-if="profileMessage" class="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+          <p v-if="profileMessage" class="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300" role="status">
             {{ profileMessage }}
           </p>
-          <p v-if="profileError" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          <p v-if="profileError" class="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
             {{ profileError }}
           </p>
 
@@ -197,13 +200,13 @@ const memberSince = computed(() => {
         <section class="card p-4" aria-labelledby="password-title">
           <h2 id="password-title" class="text-base font-semibold text-ink">Jelszó</h2>
           <p class="mt-1 text-xs text-ink-muted">
-            Legalább 10 karakter, betűvel és számmal. Ha külső szolgáltatóval jelentkezel be, itt adhatsz meg jelszót a fiókodhoz.
+            Legalább 8 karakter, betűvel és számmal. Ha külső szolgáltatóval jelentkezel be, itt adhatsz meg jelszót a fiókodhoz.
           </p>
 
-          <p v-if="passwordMessage" class="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+          <p v-if="passwordMessage" class="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300" role="status">
             {{ passwordMessage }}
           </p>
-          <p v-if="passwordError" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          <p v-if="passwordError" class="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
             {{ passwordError }}
           </p>
 
@@ -228,7 +231,7 @@ const memberSince = computed(() => {
                   class="field-input"
                   type="password"
                   autocomplete="new-password"
-                  minlength="10"
+                  minlength="8"
                   required
                 >
               </div>
@@ -240,7 +243,7 @@ const memberSince = computed(() => {
                   class="field-input"
                   type="password"
                   autocomplete="new-password"
-                  minlength="10"
+                  minlength="8"
                   required
                 >
               </div>
@@ -263,13 +266,13 @@ const memberSince = computed(() => {
           </div>
         </section>
 
-        <section class="rounded-2xl border border-red-200 bg-white p-4" aria-labelledby="danger-title">
-          <h2 id="danger-title" class="text-base font-semibold text-red-700">Fiók törlése</h2>
+        <section class="rounded-2xl border border-red-200 dark:border-red-900 bg-surface p-4" aria-labelledby="danger-title">
+          <h2 id="danger-title" class="text-base font-semibold text-red-700 dark:text-red-300">Fiók törlése</h2>
           <p class="mt-1 text-xs leading-relaxed text-ink-muted">
             A törléssel megszűnik a hozzáférésed, a dinamikus QR-kódjaid átirányítása leáll, és a statisztikáid
             véglegesen elvész. A művelet nem visszavonható.
           </p>
-          <button type="button" class="btn-secondary mt-3 border-red-300 px-3 py-2 text-xs text-red-700 hover:bg-red-50" @click="openDelete">
+          <button type="button" class="btn-secondary mt-3 border-red-300 dark:border-red-800 px-3 py-2 text-xs text-red-700 dark:text-red-300 hover:bg-red-50 dark:bg-red-950/40" @click="openDelete">
             <Icon name="lucide:trash-2" class="h-4 w-4" aria-hidden="true" />
             Fiók törlése
           </button>
@@ -306,14 +309,14 @@ const memberSince = computed(() => {
     </div>
 
     <div v-if="deleteOpen" class="fixed inset-0 z-50 grid place-items-center bg-slate-900/50 p-4">
-      <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="delete-account-title">
+      <div class="w-full max-w-md rounded-2xl bg-surface p-5 shadow-xl" role="alertdialog" aria-modal="true" aria-labelledby="delete-account-title">
         <h2 id="delete-account-title" class="text-lg font-semibold text-ink">Fiók végleges törlése</h2>
         <p class="mt-2 text-sm text-ink-soft">
           Ez a művelet nem visszavonható. A megerősítéshez írd be a fiókod e-mail-címét
           (<strong>{{ user?.email }}</strong>), és add meg a jelszavad.
         </p>
 
-        <p v-if="deleteError" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <p v-if="deleteError" class="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
           {{ deleteError }}
         </p>
 

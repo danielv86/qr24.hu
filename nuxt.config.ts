@@ -82,6 +82,10 @@ export default defineNuxtConfig({
       siteUrl,
       brandName: process.env.NUXT_PUBLIC_BRAND_NAME || 'QRKOD24.hu',
       dynamicQrEnabled: process.env.NUXT_PUBLIC_DYNAMIC_QR_ENABLED !== 'false',
+      // Cloudflare Turnstile – csak az űrlapokon, és csak ha be van állítva.
+      turnstile: {
+        siteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+      },
       adsense: {
         client: process.env.NUXT_PUBLIC_ADSENSE_CLIENT || '',
         slots: {

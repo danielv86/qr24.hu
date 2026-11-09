@@ -34,15 +34,8 @@ const {
 
 const activeTab = ref<'shapes' | 'colors' | 'logo' | 'frame'>('shapes')
 
-// A keret és az alakzat kizárja egymást: keret választásakor az alakzat kikapcsol.
-watch(
-  () => customization.value.frame,
-  (next, previous) => {
-    if (next !== 'none' && next !== previous && (customization.value.silhouette ?? 'none') !== 'none') {
-      update('silhouette', 'none')
-    }
-  },
-)
+// A keret és az alakzat kizárja egymást; ezt a useQrCustomization.update()
+// kezeli, hogy minden módosítási útvonalon érvényes legyen.
 const quickColorSetsBackground = ref(false)
 const colorError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -354,6 +347,10 @@ const activeTemplate = computed(
         </p>
       </div>
 
+      <!-- A kód teljes alakja: a QR a legnagyobb befoglalható négyzetbe kerül. -->
+      <div class="border-t border-slate-200 pt-4">
+        <QrSilhouettePicker />
+      </div>
     </div>
 
     <!-- SZÍNEK -->
@@ -658,7 +655,7 @@ const activeTemplate = computed(
       <p v-if="colorError" class="field-error" role="alert">{{ colorError }}</p>
       <p v-if="contrast !== null" class="mt-2 text-xs">
         <span
-          :class="contrast >= 4.5 ? 'text-emerald-700' : contrast >= 3 ? 'text-amber-700' : 'text-red-600'"
+          :class="contrast >= 4.5 ? 'text-emerald-700 dark:text-emerald-300' : contrast >= 3 ? 'text-amber-700 dark:text-amber-300' : 'text-red-600 dark:text-red-400'"
           class="font-medium"
         >
           Kontraszt: {{ contrast.toFixed(1) }}:1 – {{ contrastLabel }}
@@ -706,7 +703,7 @@ const activeTemplate = computed(
               <Icon name="lucide:upload" class="h-4 w-4" aria-hidden="true" />
               {{ uploading ? 'Feltöltés…' : hasLogo ? 'Logó cseréje' : 'Logó feltöltése' }}
             </button>
-            <button v-if="hasLogo" type="button" class="btn-ghost text-red-600 hover:bg-red-50" @click="removeLogo">
+            <button v-if="hasLogo" type="button" class="btn-ghost text-red-600 dark:text-red-400 hover:bg-red-50 dark:bg-red-950/40" @click="removeLogo">
               <Icon name="lucide:trash-2" class="h-4 w-4" aria-hidden="true" />
               Eltávolítás
             </button>

@@ -46,7 +46,7 @@ useContentSeo({
             </p>
           </div>
 
-          <div v-else class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="status">
+          <div v-else class="mt-5 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-900 dark:text-amber-200" role="status">
             <p class="font-medium">Az elérhetőség még nincs beállítva.</p>
             <p class="mt-1 text-xs leading-relaxed">
               Az üzemeltető az adminisztrációs felületen adhatja meg a kapcsolattartó e-mail-címét.

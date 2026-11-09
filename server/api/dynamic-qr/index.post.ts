@@ -1,5 +1,5 @@
 import { setResponseHeader } from 'h3'
-import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
+import { ApiProblem, apiSuccess, defineApiHandler } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
 import { getPublicSiteUrl, requireDynamicQrEnabled } from '../../utils/config'
 import { assertPlanCapacity, createDynamicQr } from '../../utils/dynamic-qr'
@@ -7,27 +7,24 @@ import { getPlanConfig } from '../../utils/plans'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { parseExpiry } from '#shared/qr/status'
 import { validateRedirectTarget } from '../../utils/security'
-import { getUserSession } from '../../utils/user-auth'
+import { requireUser } from '../../utils/user-auth'
 import { dynamicQrCreateSchema, readJsonBody } from '../../utils/validation'
 
 export default defineApiHandler(async (event) => {
   requireDynamicQrEnabled()
-  const user = await getUserSession(event)
+  // A dinamikus kód szerveroldali átirányítás, ezért csak fiókkal hozható létre.
+  const user = await requireUser(event)
   await enforceRateLimit(event, {
-    bucket: user ? 'dynamic-qr-create-user' : 'dynamic-qr-create',
-    key: user ? String(user.id) : getClientIp(event),
-    limit: user ? 40 : 8,
+    bucket: 'dynamic-qr-create-user',
+    key: String(user.id),
+    limit: 40,
     windowSeconds: 10 * 60,
     message: 'Túl sok dinamikus QR-kód létrehozási kísérlet. Próbáld később.',
   })
   setResponseHeader(event, 'Cache-Control', 'no-store')
 
   const input = await readJsonBody(event, dynamicQrCreateSchema)
-  const plan = await getPlanConfig(user?.plan)
-  const wantsExtras = Boolean(input.description || input.category || input.campaign || input.expiresAt)
-  if (!user && wantsExtras) {
-    throw new ApiProblem(401, 'login_required', 'A leíráshoz, kategóriához és lejárathoz be kell jelentkezned.')
-  }
+  const plan = await getPlanConfig(user.plan)
   if (input.expiresAt && !plan.expiresAt) {
     throw new ApiProblem(403, 'plan_feature_locked', 'A lejárati dátum a Pro és Business csomagban érhető el.')
   }
@@ -50,7 +47,7 @@ export default defineApiHandler(async (event) => {
     }
   }
 
-  if (user) await assertPlanCapacity(user.id, user.plan)
+  await assertPlanCapacity(user.id, user.plan)
 
   const target = await validateRedirectTarget(input.targetUrl)
   const created = await createDynamicQr({
@@ -61,17 +58,15 @@ export default defineApiHandler(async (event) => {
     campaign: input.campaign,
     expiresAt,
     style: input.style ?? null,
-    ownerId: user?.id ?? null,
+    ownerId: user.id,
     siteUrl: getPublicSiteUrl(event),
   })
 
-  if (user) {
-    await writeAudit({
-      action: 'qr.created',
-      userId: user.id,
-      qrId: created.id,
-      details: { shortCode: created.shortCode },
-    })
-  }
+  await writeAudit({
+    action: 'qr.created',
+    userId: user.id,
+    qrId: created.id,
+    details: { shortCode: created.shortCode },
+  })
   return apiSuccess(event, created, 201)
 })

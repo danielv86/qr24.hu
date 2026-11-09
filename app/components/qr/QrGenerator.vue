@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isQrTypeId } from '#shared/qr/content'
+import { isQrTypeId, parseHttpUrl } from '#shared/qr/content'
 import type { QrTypeId } from '#shared/qr/types'
 
 const props = withDefaults(
@@ -11,12 +11,57 @@ const props = withDefaults(
 )
 
 const route = useRoute()
-const { activeType, selectType, typeDefinition, validateNow } = useQrGenerator()
+const { activeType, selectType, typeDefinition, validateNow, payload } = useQrGenerator()
+const { user } = useUserSession()
 
 /** 1 = tartalom, 2 = stílus. Egyszerre mindig csak az aktív lépés látszik. */
 const step = ref<1 | 2>(1)
-/** Statikus vagy dinamikus kód – egyelőre csak vizuális választás, működés nélkül. */
+/** Statikus vagy dinamikus kód. A dinamikus fiókhoz kötött. */
 const mode = ref<'static' | 'dynamic'>('static')
+
+/** A megtervezett kód átadása a dinamikus oldalnak bejelentkezés után. */
+const DRAFT_KEY = 'qr24:dynamic-draft'
+
+/* Bejelentkezés modálban, hogy ne kelljen elhagyni az oldalt. */
+const authOpen = ref(false)
+const authMode = ref<'login' | 'register'>('register')
+
+function openAuth(mode: 'login' | 'register') {
+  authMode.value = mode
+  authOpen.value = true
+}
+
+function onAuthenticated() {
+  authOpen.value = false
+  saveDynamicDraft()
+  void navigateTo('/dinamikus-qr-kod')
+}
+
+function saveDynamicDraft() {
+  if (!import.meta.client) return
+  // Csak akkor tudjuk átadni a tartalmat, ha az URL-ként is értelmezhető.
+  const targetUrl = payload.value && parseHttpUrl(payload.value) ? payload.value : ''
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ targetUrl }))
+  } catch {
+    // Ha a böngésző tiltja a tárolást, a dinamikus oldal üresen nyílik meg.
+  }
+}
+
+function selectMode(next: 'static' | 'dynamic') {
+  if (next === 'static') {
+    mode.value = 'static'
+    return
+  }
+  if (user.value) {
+    saveDynamicDraft()
+    void navigateTo('/dinamikus-qr-kod')
+    return
+  }
+  // A megtervezett tartalmat elmentjük, hogy regisztráció után ne kelljen újra beírni.
+  saveDynamicDraft()
+  mode.value = 'dynamic'
+}
 
 const MODE_OPTIONS = [
   {
@@ -117,7 +162,7 @@ function backToType() {
               type="button"
               :aria-pressed="mode === option.id"
               class="flex w-full items-center gap-3 text-left"
-              @click="mode = option.id"
+              @click="selectMode(option.id)"
             >
               <span
                 :class="[
@@ -139,23 +184,67 @@ function backToType() {
           </div>
         </div>
 
-        <div v-if="showTypeTabs" id="qr-type-selector" class="mt-4 scroll-mt-24 border-b border-slate-200 pb-1">
-          <QrTypeTabs :model-value="activeType" @update:model-value="selectType" />
-        </div>
+        <template v-if="mode === 'static'">
+          <div v-if="showTypeTabs" id="qr-type-selector" class="mt-4 scroll-mt-24 border-b border-slate-200 pb-1">
+            <QrTypeTabs :model-value="activeType" @update:model-value="selectType" />
+          </div>
 
-        <div class="pt-5">
-          <QrForm />
-        </div>
+          <div class="pt-5">
+            <QrForm />
+          </div>
 
-        <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-          <button type="button" class="btn-secondary" @click="backToType">
-            <Icon name="lucide:arrow-left" class="h-4 w-4" aria-hidden="true" />
-            Típus kiválasztása
-          </button>
-          <button type="button" class="btn-primary w-full sm:w-auto" @click="goToStyle">
-            Stílus beállítások
-            <Icon name="lucide:arrow-right" class="h-4 w-4" aria-hidden="true" />
-          </button>
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+            <button type="button" class="btn-secondary" @click="backToType">
+              <Icon name="lucide:arrow-left" class="h-4 w-4" aria-hidden="true" />
+              Típus kiválasztása
+            </button>
+            <button type="button" class="btn-primary w-full sm:w-auto" @click="goToStyle">
+              Stílus beállítások
+              <Icon name="lucide:arrow-right" class="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </template>
+
+        <!-- Dinamikus kód: fiókhoz kötött -->
+        <div v-else class="mt-5 rounded-xl border border-brand-200 bg-brand-50/60 p-4 sm:p-5 dark:border-brand-800 dark:bg-brand-950/30">
+          <div class="flex items-start gap-3">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-600 text-white">
+              <Icon name="lucide:refresh-cw" class="h-4.5 w-4.5" aria-hidden="true" />
+            </span>
+            <div class="min-w-0">
+              <h3 class="text-sm font-semibold text-ink">A dinamikus QR-kód fiókhoz kötött</h3>
+              <ul class="mt-2 space-y-1.5 text-sm text-ink-soft">
+                <li class="flex items-start gap-2">
+                  <Icon name="lucide:check" class="mt-1 h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
+                  A cél-URL utólag is módosítható, újranyomtatás nélkül.
+                </li>
+                <li class="flex items-start gap-2">
+                  <Icon name="lucide:check" class="mt-1 h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
+                  Scan-statisztika: látszik, honnan és mennyien olvassák be.
+                </li>
+                <li class="flex items-start gap-2">
+                  <Icon name="lucide:check" class="mt-1 h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
+                  Ingyenes fiókkal 10 dinamikus kód, bankkártya nélkül.
+                </li>
+              </ul>
+
+              <div class="mt-4 flex flex-wrap items-center gap-2">
+                <button type="button" class="btn-primary" @click="openAuth('register')">
+                  <Icon name="lucide:user-plus" class="h-4 w-4" aria-hidden="true" />
+                  Ingyenes fiók létrehozása
+                </button>
+                <button type="button" class="btn-secondary" @click="openAuth('login')">Bejelentkezés</button>
+              </div>
+
+              <p class="mt-3 text-xs leading-relaxed text-ink-muted">
+                A megadott adatokat átvisszük a fiókodba, nem kell újra beírni.
+                A statikus kódhoz nem kell fiók –
+                <button type="button" class="font-semibold text-brand-700 underline underline-offset-2" @click="selectMode('static')">
+                  válts vissza a statikusra
+                </button>.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -187,5 +276,7 @@ function backToType() {
         <QrPreview />
       </div>
     </div>
+
+    <AuthModal v-model:open="authOpen" :initial-mode="authMode" @authenticated="onAuthenticated" />
   </section>
 </template>

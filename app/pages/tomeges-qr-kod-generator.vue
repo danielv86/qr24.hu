@@ -255,7 +255,7 @@ const steps = [
             <div class="mt-4 flex flex-wrap items-end gap-3">
               <label class="text-sm">
                 <span class="mb-1 block font-medium text-ink">PNG méret</span>
-                <select v-model.number="pngSize" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+                <select v-model.number="pngSize" class="rounded-lg border border-slate-300 bg-surface px-3 py-2 text-sm">
                   <option :value="512">512 × 512 px</option>
                   <option :value="1024">1024 × 1024 px</option>
                 </select>
@@ -310,7 +310,7 @@ const steps = [
               </p>
             </div>
 
-            <p v-if="error" class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p v-if="error" class="mt-3 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-sm text-rose-700 dark:text-rose-300">
               {{ error }}
             </p>
           </section>

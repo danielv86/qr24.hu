@@ -3,6 +3,7 @@ import {
   cloneCustomization,
   getCustomizationWarnings,
   isValidHexColor,
+  normalizeCustomization,
   normalizeHexColor,
 } from '~/lib/qr/customization'
 import { DESIGN_TEMPLATES, applyDesignTemplate } from '~/lib/qr/design-templates'
@@ -40,10 +41,33 @@ export function useQrCustomization() {
   const warnings = computed(() => getCustomizationWarnings(customization.value))
   const hasLogo = computed(() => Boolean(customization.value.logo))
 
+  /** Minden írás ezen megy át, így a beállítás sosem marad inkonzisztens. */
+  function commit(input: QrCustomization) {
+    customization.value = normalizeCustomization(input)
+  }
+
   function update<K extends keyof QrCustomization>(key: K, value: QrCustomization[K]) {
     const next: QrCustomization = { ...customization.value, [key]: value }
     if (DESIGN_KEYS.includes(key)) next.designTemplate = ''
-    customization.value = next
+    // A keret és az alakzat ugyanazt a felületet rajzolja, ezért nem lehet
+    // egyszerre aktív: a frissen választott elem kapcsolja ki a másikat.
+    if (key === 'frame' && (value as unknown) !== 'none') {
+      next.silhouette = 'none'
+      next.silhouetteId = ''
+    }
+    if (key === 'silhouette' && (value as unknown) !== 'none') next.frame = 'none'
+    commit(next)
+  }
+
+  /** Több mező egy lépésben (például alakzat + körvonal + keret kikapcsolása). */
+  function patch(partial: Partial<QrCustomization>) {
+    const next: QrCustomization = { ...customization.value, ...partial }
+    if (partial.frame && partial.frame !== 'none') {
+      next.silhouette = 'none'
+      next.silhouetteId = ''
+    }
+    if (partial.silhouette && partial.silhouette !== 'none') next.frame = 'none'
+    commit(next)
   }
 
   function setColor(role: 'fgColor' | 'bgColor', value: string) {
@@ -53,11 +77,14 @@ export function useQrCustomization() {
     if (role === 'fgColor' && customization.value.bodyFill.kind === 'solid') {
       next.bodyFill = { ...customization.value.bodyFill, color }
     }
-    customization.value = next
+    commit(next)
   }
 
-  function setFill(key: 'bodyFill' | 'bgFill' | 'frameFill' | 'cornerSquareFill' | 'cornerDotFill', patch: Partial<QrFill>) {
-    const fill: QrFill = { ...customization.value[key], ...patch }
+  function setFill(
+    key: 'bodyFill' | 'bgFill' | 'frameFill' | 'cornerSquareFill' | 'cornerDotFill',
+    partial: Partial<QrFill>,
+  ) {
+    const fill: QrFill = { ...customization.value[key], ...partial }
     const next: QrCustomization = { ...customization.value, [key]: fill, designTemplate: '' }
     if (key === 'bodyFill' && fill.kind === 'solid') {
       next.fgColor = fill.color
@@ -70,11 +97,13 @@ export function useQrCustomization() {
     if (key === 'bgFill' && fill.kind === 'solid') {
       next.bgColor = fill.color
     }
-    customization.value = next
+    commit(next)
   }
 
   function applyTemplate(template: QrDesignTemplate) {
-    customization.value = applyDesignTemplate(customization.value, template)
+    const applied = applyDesignTemplate(customization.value, template)
+    // A sablon kerete felülírja az alakzatot, különben két felület rajzolódna.
+    commit(applied.frame !== 'none' ? { ...applied, silhouette: 'none', silhouetteId: '' } : applied)
   }
 
   function readFileAsDataUrl(file: File): Promise<string> {
@@ -112,13 +141,13 @@ export function useQrCustomization() {
         logoError.value = 'A kép nem tölthető be, vagy kisebb, mint 32 × 32 pixel.'
         return false
       }
-      customization.value = {
+      commit({
         ...customization.value,
         logo: dataUrl,
         logoName: file.name,
         // A logó takarja a kód egy részét, ezért H szintre váltunk.
         errorCorrection: 'H',
-      }
+      })
       return true
     } catch {
       logoError.value = 'A kép feltöltése nem sikerült. Próbáld újra.'
@@ -129,16 +158,16 @@ export function useQrCustomization() {
   /** Kész logó (például social ikon) beállítása feltöltés nélkül. */
   function setLogoData(dataUrl: string, name: string) {
     logoError.value = ''
-    customization.value = {
+    commit({
       ...customization.value,
       logo: dataUrl,
       logoName: name,
       errorCorrection: 'H',
-    }
+    })
   }
 
   function removeLogo() {
-    customization.value = { ...customization.value, logo: '', logoName: '' }
+    commit({ ...customization.value, logo: '', logoName: '' })
     logoError.value = ''
   }
 
@@ -154,6 +183,7 @@ export function useQrCustomization() {
     logoError,
     templates: DESIGN_TEMPLATES,
     update,
+    patch,
     setColor,
     setFill,
     setLogo,

@@ -22,6 +22,8 @@ export function useSiteSettings() {
       hostingAddress: '',
     },
     seo: {},
+    silhouetteShapes: [],
+    billing: { plansEnabled: false, trialDays: 14 },
   }))
 
   const { data } = useFetch<ApiResponse<PublicSettings>>('/api/settings/public', {
@@ -47,6 +49,7 @@ export function useSiteSettings() {
     adsense: computed(() => settings.value.adsense),
     legal: computed(() => settings.value.legal),
     dynamicQrEnabled: computed(() => settings.value.dynamicQrEnabled),
+    billing: computed(() => settings.value.billing ?? { plansEnabled: false, trialDays: 14 }),
     refresh: () => refreshNuxtData('public-settings'),
   }
 }

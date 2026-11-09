@@ -231,7 +231,7 @@ useContentSeo({
 
             <div
               class="mt-4 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-colors"
-              :class="dragging ? 'border-brand-500 bg-brand-50/70' : 'border-slate-300 bg-slate-50/60 dark:bg-slate-900/40'"
+              :class="dragging ? 'border-brand-500 bg-brand-50/70' : 'border-slate-300 bg-slate-50/60'"
               @dragover.prevent="dragging = true"
               @dragleave.prevent="dragging = false"
               @drop.prevent="onDrop"
@@ -254,7 +254,7 @@ useContentSeo({
             </div>
 
             <p v-if="busy" class="mt-4 text-sm text-ink-soft" role="status">Beolvasás folyamatban…</p>
-            <p v-if="error" class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" role="alert">
+            <p v-if="error" class="mt-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-900 dark:text-amber-200" role="alert">
               {{ error }}
             </p>
 
@@ -272,7 +272,7 @@ useContentSeo({
                     <Icon :name="result.icon" class="h-4 w-4 text-brand-600" aria-hidden="true" />
                     {{ result.kind }}
                   </p>
-                  <p class="mt-1 break-words rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs leading-relaxed text-ink-soft dark:bg-slate-900/60">
+                  <p class="mt-1 break-words rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs leading-relaxed text-ink-soft">
                     {{ result.text }}
                   </p>
                   <div class="mt-3 flex flex-wrap gap-2">

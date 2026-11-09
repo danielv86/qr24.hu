@@ -126,18 +126,18 @@ function formatDate(value: string | null): string {
       </span>
     </div>
 
-    <div v-if="data && !data.available" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-      <p class="text-sm font-semibold text-amber-900">A saját domain az Üzleti csomag része</p>
+    <div v-if="data && !data.available" class="mt-4 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4">
+      <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">A saját domain az Üzleti csomag része</p>
       <p class="mt-1 text-sm text-amber-900/80">
         A csomagodban jelenleg nincs domain-hozzáférés. A csomagok és a limitek a Számlázás oldalon láthatók.
       </p>
       <NuxtLink to="/fiok/szamlazas" class="btn-secondary mt-3 px-3 py-2 text-xs">Csomagok megtekintése</NuxtLink>
     </div>
 
-    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300" role="status">
       {{ actionMessage }}
     </p>
-    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
       {{ actionError }}
     </p>
 
@@ -164,10 +164,10 @@ function formatDate(value: string | null): string {
       </button>
     </form>
 
-    <p v-if="pending" class="mt-4 rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-ink-muted">
+    <p v-if="pending" class="mt-4 rounded-xl border border-slate-200 bg-surface p-6 text-center text-sm text-ink-muted">
       Betöltés…
     </p>
-    <p v-else-if="error" class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+    <p v-else-if="error" class="mt-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300" role="alert">
       A domainek betöltése nem sikerült.
     </p>
 
@@ -180,7 +180,7 @@ function formatDate(value: string | null): string {
               <span
                 :class="[
                   'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                  domain.status === 'verified' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
+                  domain.status === 'verified' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300',
                 ]"
               >
                 {{ domain.status === 'verified' ? 'Hitelesítve' : 'Hitelesítésre vár' }}
@@ -206,7 +206,7 @@ function formatDate(value: string | null): string {
           <button
             v-else
             type="button"
-            class="btn-ghost px-2 py-1.5 text-xs text-red-600"
+            class="btn-ghost px-2 py-1.5 text-xs text-red-600 dark:text-red-400"
             title="Domain eltávolítása"
             @click="confirmDelete = domain.id"
           >
@@ -251,7 +251,7 @@ function formatDate(value: string | null): string {
             </dl>
           </div>
 
-          <div class="rounded-lg border border-slate-200 bg-white p-3">
+          <div class="rounded-lg border border-slate-200 bg-surface p-3">
             <p class="text-xs font-semibold text-ink">2. A domain irányítása a szolgáltatásra</p>
             <p class="mt-1 text-xs text-ink-soft">
               Vegyél fel egy <code class="text-ink">CNAME</code> rekordot a domainre, amely a
@@ -277,7 +277,7 @@ function formatDate(value: string | null): string {
       </article>
     </div>
 
-    <div v-else-if="data" class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+    <div v-else-if="data" class="mt-4 rounded-xl border border-dashed border-slate-300 bg-surface p-8 text-center">
       <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-brand-700">
         <Icon name="lucide:globe" class="h-6 w-6" aria-hidden="true" />
       </span>

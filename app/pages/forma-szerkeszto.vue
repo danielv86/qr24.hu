@@ -118,7 +118,7 @@ const miniPreview = computed(() => customShapePath(activeShape.value, 0, 0, 100)
       </NuxtLink>
     </div>
 
-    <p v-if="savedMessage" class="mt-3 flex items-center gap-2 text-sm font-medium text-emerald-700">
+    <p v-if="savedMessage" class="mt-3 flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
       <Icon name="lucide:check-circle-2" class="h-4 w-4" aria-hidden="true" />
       {{ savedMessage }}
     </p>

@@ -4,6 +4,7 @@ import { writeAudit } from '../../utils/audit'
 import { getPrisma, withDb } from '../../utils/db'
 import { issueVerificationCode } from '../../utils/email-verification'
 import { enforceRateLimit } from '../../utils/rate-limit'
+import { assertTurnstile } from '../../utils/turnstile'
 import { registerUser } from '../../utils/user-auth'
 import { assertSameOrigin, readJsonBody, userRegisterSchema } from '../../utils/validation'
 
@@ -19,6 +20,8 @@ export default defineApiHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
 
   const input = await readJsonBody(event, userRegisterSchema)
+  await assertTurnstile(event, input.captchaToken)
+
   const user = await registerUser({
     email: input.email,
     password: input.password,

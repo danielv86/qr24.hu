@@ -29,13 +29,19 @@ export function useUserSession() {
     }
   }
 
-  async function login(email: string, password: string): Promise<void> {
-    await $fetch('/api/auth/login', { method: 'POST', body: { email, password } })
+  async function login(email: string, password: string, captchaToken?: string): Promise<void> {
+    await $fetch('/api/auth/login', {
+      method: 'POST',
+      body: { email, password, ...(captchaToken ? { captchaToken } : {}) },
+    })
     await refresh()
   }
 
-  async function register(email: string, password: string, name: string): Promise<void> {
-    await $fetch('/api/auth/register', { method: 'POST', body: { email, password, name } })
+  async function register(email: string, password: string, name: string, captchaToken?: string): Promise<void> {
+    await $fetch('/api/auth/register', {
+      method: 'POST',
+      body: { email, password, name, ...(captchaToken ? { captchaToken } : {}) },
+    })
     await refresh()
   }
 

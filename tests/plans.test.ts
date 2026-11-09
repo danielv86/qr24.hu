@@ -34,7 +34,13 @@ describe('mergePlans', () => {
 
   it('az ismeretlen csomagnevet nem hozza létre', () => {
     const plans = mergePlans({ enterprise: { maxDynamicQr: 99_999 } })
-    expect(Object.keys(plans).sort()).toEqual(['business', 'free', 'pro'])
+    expect(Object.keys(plans).sort()).toEqual(['business', 'free', 'lifetime', 'pro'])
+  })
+
+  it('az élettartam csomag csak kézi kiosztású', () => {
+    expect(DEFAULT_PLANS.lifetime.manualOnly).toBe(true)
+    expect(DEFAULT_PLANS.pro.manualOnly).toBe(false)
+    expect(mergePlans({ lifetime: { label: 'Örökös' } }).lifetime.label).toBe('Örökös')
   })
 
   it('a címke felülírható, de üresen nem', () => {

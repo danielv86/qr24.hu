@@ -3,6 +3,7 @@ import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../uti
 import { writeAudit } from '../../utils/audit'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { hashIdentifier } from '../../utils/security'
+import { assertTurnstile } from '../../utils/turnstile'
 import { authenticateUser, createUserSession, serializeUser } from '../../utils/user-auth'
 import { assertSameOrigin, readJsonBody, userLoginSchema } from '../../utils/validation'
 
@@ -26,6 +27,8 @@ export default defineApiHandler(async (event) => {
     message: 'Túl sok próbálkozás ehhez az e-mail-címhez. Várj 15 percet.',
   })
 
+  await assertTurnstile(event, input.captchaToken)
+
   const user = await authenticateUser(input.email, input.password)
   if (!user) {
     throw new ApiProblem(401, 'invalid_credentials', 'A megadott e-mail-cím vagy jelszó nem megfelelő.')
@@ -34,7 +37,7 @@ export default defineApiHandler(async (event) => {
     throw new ApiProblem(
       403,
       'email_not_verified',
-      'Az e-mail-címed még nincs megerősítve. Írd be a regisztrációkor kapott 6 jegyű kódot.',
+      'Az e-mail-címed még nincs megerősítve. Írd be a regisztrációkor kapott 8 karakteres kódot.',
     )
   }
   await createUserSession(event, user.id)

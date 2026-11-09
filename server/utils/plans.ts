@@ -23,6 +23,7 @@ export const DEFAULT_PLANS: PlansConfig = {
     priceMonthly: 890,
     priceYearly: 8900,
     domainLimit: 0,
+    manualOnly: false,
   },
   pro: {
     id: 'pro',
@@ -37,6 +38,7 @@ export const DEFAULT_PLANS: PlansConfig = {
     priceMonthly: 3590,
     priceYearly: 35900,
     domainLimit: 1,
+    manualOnly: false,
   },
   business: {
     id: 'business',
@@ -51,10 +53,30 @@ export const DEFAULT_PLANS: PlansConfig = {
     priceMonthly: 6290,
     priceYearly: 62900,
     domainLimit: 5,
+    manualOnly: false,
+  },
+  /**
+   * Élettartam csomag: nem vásárolható, kizárólag az admin osztja ki kézzel a
+   * felhasználó adatlapján. Nincs lejárata és nincs megújítás.
+   */
+  lifetime: {
+    id: 'lifetime',
+    label: 'Élettartam',
+    maxDynamicQr: 999,
+    analyticsDays: 1095,
+    campaigns: true,
+    expiresAt: true,
+    csvExport: true,
+    apiAccess: true,
+    customDomain: true,
+    priceMonthly: 0,
+    priceYearly: 0,
+    domainLimit: 10,
+    manualOnly: true,
   },
 }
 
-export const PLAN_IDS: PlanId[] = ['free', 'pro', 'business']
+export const PLAN_IDS: PlanId[] = ['free', 'pro', 'business', 'lifetime']
 export const PLAN_SETTING_KEY = 'plans'
 
 const planPatchSchema = z.object({
@@ -76,6 +98,7 @@ export const plansPatchSchema = z.object({
   free: planPatchSchema.optional(),
   pro: planPatchSchema.optional(),
   business: planPatchSchema.optional(),
+  lifetime: planPatchSchema.optional(),
 }).strict().refine(value => Object.keys(value).length > 0, {
   message: 'Adj meg legalább egy módosítandó csomagot.',
 })
@@ -96,6 +119,7 @@ export function mergePlans(overrides: unknown): PlansConfig {
     free: { ...DEFAULT_PLANS.free },
     pro: { ...DEFAULT_PLANS.pro },
     business: { ...DEFAULT_PLANS.business },
+    lifetime: { ...DEFAULT_PLANS.lifetime },
   }
   if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) return merged
 

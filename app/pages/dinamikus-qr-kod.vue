@@ -40,6 +40,16 @@ useContentSeo({
 })
 
 const createForm = reactive({ targetUrl: '', title: '' })
+const { user: sessionUser } = useUserSession()
+
+/* Bejelentkezés modálban, hogy az oldalt ne kelljen elhagyni. */
+const authOpen = ref(false)
+const authMode = ref<'login' | 'register'>('register')
+
+function openAuth(mode: 'login' | 'register') {
+  authMode.value = mode
+  authOpen.value = true
+}
 const createError = ref('')
 const fieldError = ref('')
 const creating = ref(false)
@@ -56,6 +66,26 @@ const saveError = ref('')
 const saveMessage = ref('')
 const confirmDelete = ref(false)
 const deleting = ref(false)
+
+// A főoldali generátorban megtervezett tartalom átvétele. A kulcsot nem
+// töröljük rögtön: a kliensoldali navigációnál a komponens újraindulhat, és
+// ilyenkor a mount előtti és utáni bekötés is ugyanazt az értéket kapja.
+const DRAFT_KEY = 'qr24:dynamic-draft'
+
+function applyDraft() {
+  if (!import.meta.client) return
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    if (!raw) return
+    const draft = JSON.parse(raw) as { targetUrl?: string }
+    if (draft.targetUrl && !createForm.targetUrl) createForm.targetUrl = draft.targetUrl
+  } catch {
+    // Hibás vagy régi draft: egyszerűen figyelmen kívül hagyjuk.
+  }
+}
+
+onBeforeMount(applyDraft)
+onMounted(applyDraft)
 
 async function copyText(value: string, label: string) {
   try {
@@ -94,6 +124,8 @@ async function createDynamic() {
     editForm.isActive = response.data.isActive
     createForm.targetUrl = ''
     createForm.title = ''
+    // A létrehozott kód után a piszkozat már nem kell.
+    if (import.meta.client) sessionStorage.removeItem(DRAFT_KEY)
   } catch (error) {
     createError.value = apiErrorMessage(error, 'A dinamikus QR-kód létrehozása nem sikerült.')
   } finally {
@@ -218,7 +250,7 @@ function copyToken() {
     <div class="container-page py-8">
       <div
         v-if="!dynamicQrEnabled"
-        class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        class="mb-6 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm text-amber-900 dark:text-amber-200"
         role="status"
       >
         A dinamikus QR-kód modul ezen a telepítésen jelenleg ki van kapcsolva. A statikus generátor
@@ -235,7 +267,22 @@ function copyToken() {
             A létrehozás után a szerver ellenőrzi a célt. A rövid linkhez azonnal QR-kódot kapsz.
           </p>
 
-          <form class="mt-5 space-y-4" novalidate @submit.prevent="createDynamic">
+          <div v-if="!sessionUser" class="mt-5 rounded-xl border border-brand-200 bg-brand-50/60 p-4 dark:border-brand-800 dark:bg-brand-950/30">
+            <p class="text-sm font-semibold text-ink">A dinamikus QR-kód létrehozásához fiók kell</p>
+            <p class="mt-1.5 text-sm leading-relaxed text-ink-soft">
+              Ingyenes fiókkal 10 dinamikus kódot kezelhetsz, a cél-URL-t bármikor módosíthatod, és
+              látod a scan-statisztikát. A megadott adatokat átvisszük a fiókodba, nem kell újra beírni.
+            </p>
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <button type="button" class="btn-primary" @click="openAuth('register')">
+                <Icon name="lucide:user-plus" class="h-4 w-4" aria-hidden="true" />
+                Ingyenes fiók létrehozása
+              </button>
+              <button type="button" class="btn-secondary" @click="openAuth('login')">Bejelentkezés</button>
+            </div>
+          </div>
+
+          <form v-if="sessionUser" class="mt-5 space-y-4" novalidate @submit.prevent="createDynamic">
             <div>
               <label for="dynamic-target" class="field-label">Cél-URL <span class="text-brand-600">*</span></label>
               <input
@@ -281,14 +328,14 @@ function copyToken() {
             </button>
           </form>
 
-          <div v-if="created" class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <p class="flex items-center gap-1.5 text-sm font-semibold text-emerald-900">
+          <div v-if="created" class="mt-5 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 p-4">
+            <p class="flex items-center gap-1.5 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
               <Icon name="lucide:check-circle-2" class="h-4 w-4" aria-hidden="true" />
               A dinamikus QR-kód elkészült
             </p>
 
             <div class="mt-3">
-              <label for="created-short-url" class="field-label text-emerald-900">Rövid link</label>
+              <label for="created-short-url" class="field-label text-emerald-900 dark:text-emerald-200">Rövid link</label>
               <div class="flex gap-2">
                 <input
                   id="created-short-url"
@@ -305,7 +352,7 @@ function copyToken() {
             </div>
 
             <div class="mt-3">
-              <label for="created-token" class="field-label text-emerald-900">Szerkesztői token – csak egyszer látható</label>
+              <label for="created-token" class="field-label text-emerald-900 dark:text-emerald-200">Szerkesztői token – csak egyszer látható</label>
               <div class="flex gap-2">
                 <input
                   id="created-token"
@@ -319,7 +366,7 @@ function copyToken() {
                   <span class="sr-only">Szerkesztői token másolása</span>
                 </button>
               </div>
-              <p class="mt-1.5 text-xs leading-relaxed text-emerald-900">
+              <p class="mt-1.5 text-xs leading-relaxed text-emerald-900 dark:text-emerald-200">
                 Őrizd meg biztonságos helyen. Új oldalbetöltés után már nem jelenik meg, és a token
                 nélkül a kódot nem tudod szerkeszteni.
               </p>
@@ -392,7 +439,7 @@ function copyToken() {
               </div>
               <div>
                 <dt class="text-ink-muted">Állapot</dt>
-                <dd class="mt-0.5 font-medium" :class="managed.isActive ? 'text-emerald-700' : 'text-red-600'">
+                <dd class="mt-0.5 font-medium" :class="managed.isActive ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400'">
                   {{ managed.isActive ? 'Aktív' : 'Inaktív' }}
                 </dd>
               </div>
@@ -417,26 +464,26 @@ function copyToken() {
               </label>
 
               <p v-if="saveError" class="field-error" role="alert">{{ saveError }}</p>
-              <p v-if="saveMessage" class="text-xs font-medium text-emerald-700" role="status">{{ saveMessage }}</p>
+              <p v-if="saveMessage" class="text-xs font-medium text-emerald-700 dark:text-emerald-300" role="status">{{ saveMessage }}</p>
 
               <button type="submit" class="btn-primary w-full" :disabled="saving">
                 {{ saving ? 'Mentés…' : 'Módosítások mentése' }}
               </button>
             </form>
 
-            <div class="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
-              <p class="text-xs font-semibold text-red-800">A kód törlése végleges</p>
-              <p class="mt-0.5 text-xs text-red-700">A rövid link és a hozzá tartozó statisztika is törlődik.</p>
+            <div class="mt-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-3">
+              <p class="text-xs font-semibold text-red-800 dark:text-red-300">A kód törlése végleges</p>
+              <p class="mt-0.5 text-xs text-red-700 dark:text-red-300">A rövid link és a hozzá tartozó statisztika is törlődik.</p>
               <button
                 v-if="!confirmDelete"
                 type="button"
-                class="btn-ghost mt-2 px-0 text-xs text-red-700 hover:bg-transparent hover:text-red-800"
+                class="btn-ghost mt-2 px-0 text-xs text-red-700 dark:text-red-300 hover:bg-transparent hover:text-red-800 dark:text-red-300"
                 @click="confirmDelete = true"
               >
                 Törlés indítása
               </button>
               <div v-else class="mt-2 flex flex-wrap gap-2">
-                <button type="button" class="btn-secondary border-red-300 text-red-700" :disabled="deleting" @click="deleteManaged">
+                <button type="button" class="btn-secondary border-red-300 dark:border-red-800 text-red-700 dark:text-red-300" :disabled="deleting" @click="deleteManaged">
                   {{ deleting ? 'Törlés…' : 'Igen, törlöm' }}
                 </button>
                 <button type="button" class="btn-ghost" @click="confirmDelete = false">Mégsem</button>
@@ -500,5 +547,7 @@ function copyToken() {
         Ha ezek hiányoznak, a statikus QR-kód generátor továbbra is teljes funkcionalitással működik.
       </p>
     </div>
+
+    <AuthModal v-model:open="authOpen" :initial-mode="authMode" />
   </div>
 </template>

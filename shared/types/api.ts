@@ -1,3 +1,5 @@
+import type { LibraryShape } from '../qr/library-shape'
+
 export interface AdsenseSlots {
   top: string
   sidebar: string
@@ -28,7 +30,7 @@ export interface SeoOverride {
   noindex: boolean
 }
 
-export type PlanId = 'free' | 'pro' | 'business'
+export type PlanId = 'free' | 'pro' | 'business' | 'lifetime'
 
 /**
  * Egy csomag szabályai. A backend ebből kényszeríti ki a limiteket, a felület
@@ -52,9 +54,202 @@ export interface PlanDefinition {
   priceYearly: number
   /** Hány saját domain rendelhető a csomagban (0 = nem elérhető). */
   domainLimit: number
+  /** Igaz, ha a csomag nem vásárolható, csak az admin oszthatja ki kézzel. */
+  manualOnly: boolean
 }
 
 export type PlansConfig = Record<PlanId, PlanDefinition>
+
+/**
+ * Csomagvásárlás kapcsolói. Az adminban állítható: amíg nincs bekapcsolva,
+ * a fizetős csomagok megvásárolhatatlanok, de a meglévő előfizetések élnek.
+ */
+export interface BillingSettings {
+  /** Igaz, ha a fizetős csomagok megvásárolhatók a felületen. */
+  plansEnabled: boolean
+  /** A próbaidőszak hossza napban (0 = nincs próbaidő). */
+  trialDays: number
+}
+
+export type BillingInterval = 'monthly' | 'yearly' | 'lifetime'
+
+export type SubscriptionStatus = 'trialing' | 'active' | 'expired'
+
+/** A fiók előfizetésének pillanatképe a felületnek. */
+export interface SubscriptionSummary {
+  plan: PlanId
+  planLabel: string
+  status: SubscriptionStatus
+  interval: BillingInterval
+  /** Próbaidő vége (ISO), ha az előfizetés próbaidőszakban van. */
+  trialEndsAt: string | null
+  /** Az aktuális (fizetett vagy próba-) időszak vége (ISO). */
+  currentPeriodEnd: string | null
+  /** Lemondva: az időszak végéig még használható. */
+  cancelAtPeriodEnd: boolean
+  /** Igaz, ha a fiók még nem használta el a próbaidőszakot. */
+  trialAvailable: boolean
+  /**
+   * Az aktuális időszakra rögzített ár forintban: a megvásárláskor érvényes
+   * ár, amit a későbbi árváltozás nem módosít.
+   */
+  price: number
+  /** Az aktuális listaár ugyanerre a csomagra és időszakra (a következő időszak ára). */
+  nextPrice: number
+  /** Igaz, ha a listaár azóta eltér a rögzített ártól. */
+  priceChanged: boolean
+  /** Pénznem (jelenleg mindig HUF). */
+  currency: string
+}
+
+export interface BillingOverview {
+  billing: BillingSettings
+  plans: PlansConfig
+  subscription: SubscriptionSummary | null
+}
+
+/** Admin előfizetés-lista egy sora. */
+export interface AdminSubscriptionRow {
+  userId: number
+  email: string
+  name: string | null
+  createdAt: string
+  /** Az érvényes csomag (lejárt előfizetésnél ingyenes). */
+  plan: PlanId
+  planLabel: string
+  status: 'trialing' | 'active' | 'canceled' | 'expired' | 'free'
+  interval: BillingInterval | null
+  trialEndsAt: string | null
+  currentPeriodEnd: string | null
+  cancelAtPeriodEnd: boolean
+  canceledAt: string | null
+  endedAt: string | null
+}
+
+export interface AdminSubscriptionsSummary {
+  total: number
+  active: number
+  trialing: number
+  canceled: number
+  expired: number
+  free: number
+}
+
+export interface AdminSubscriptionsPayload {
+  items: AdminSubscriptionRow[]
+  summary: AdminSubscriptionsSummary
+  page: number
+  perPage: number
+  total: number
+  totalPages: number
+}
+
+export type AdminSubscriptionFilter = 'all' | 'active' | 'trialing' | 'canceled' | 'expired' | 'free'
+
+export type AdminUserFilter = 'all' | 'verified' | 'unverified' | 'subscribers' | 'withQr'
+
+/** Admin felhasználó-lista egy sora. */
+export interface AdminUserRow {
+  id: number
+  email: string
+  name: string | null
+  plan: PlanId
+  planLabel: string
+  /** Az előfizetés állapota (ingyenes fióknál `free`). */
+  status: 'trialing' | 'active' | 'canceled' | 'expired' | 'free'
+  emailVerified: boolean
+  qrCount: number
+  createdAt: string
+  lastLoginAt: string | null
+}
+
+export interface AdminUsersSummary {
+  total: number
+  verified: number
+  unverified: number
+  subscribers: number
+  withQr: number
+}
+
+export interface AdminUsersPayload {
+  items: AdminUserRow[]
+  summary: AdminUsersSummary
+  page: number
+  perPage: number
+  total: number
+  totalPages: number
+}
+
+/** Admin adatlap: egy dinamikus QR-kód. */
+export interface AdminUserQrRow {
+  id: number
+  publicId: string
+  shortUrl: string
+  targetUrl: string
+  title: string | null
+  description: string | null
+  category: string | null
+  campaign: string | null
+  status: string
+  isActive: boolean
+  scans: number
+  lastScanAt: string | null
+  expiresAt: string | null
+  createdAt: string
+  updatedAt: string
+  /** Van-e beállított megjelenés (stílus) a kódhoz. */
+  hasStyle: boolean
+  /** A QR-kódot felhasználóként létrehozták-e (van tulajdonos). */
+  owned: boolean
+}
+
+export interface AdminUserSubscription {
+  id: number
+  plan: PlanId
+  planLabel: string
+  storedPlan: string
+  status: 'trialing' | 'active' | 'canceled' | 'expired' | 'free'
+  interval: BillingInterval
+  trialEndsAt: string | null
+  currentPeriodStart: string | null
+  currentPeriodEnd: string | null
+  cancelAtPeriodEnd: boolean
+  canceledAt: string | null
+  endedAt: string | null
+  trialAvailable: boolean
+  createdAt: string | null
+  updatedAt: string | null
+}
+
+/** Admin adatlap: teljes felhasználói profil minden kapcsolódó adattal. */
+export interface AdminUserDetail {
+  id: number
+  email: string
+  name: string | null
+  plan: PlanId
+  planLabel: string
+  /** A users.plan oszlopban tárolt érték (szinkronizálás előtti állapot is lehet). */
+  storedPlan: string
+  emailVerified: boolean
+  emailVerification: {
+    sentAt: string | null
+    expiresAt: string | null
+    attempts: number
+    pending: boolean
+  }
+  hasPassword: boolean
+  oauthProviders: string[]
+  createdAt: string
+  updatedAt: string
+  lastLoginAt: string | null
+  sessions: { total: number; active: number; latestExpiresAt: string | null }
+  qrCodes: AdminUserQrRow[]
+  qrTotalScans: number
+  subscription: AdminUserSubscription | null
+  customDomains: { id: number; host: string; verifiedAt: string | null; createdAt: string }[]
+  apiKeys: { id: number; name: string; prefix: string; lastUsedAt: string | null; revokedAt: string | null; createdAt: string }[]
+  auditLogs: { id: number; action: string; createdAt: string; details: string | null }[]
+}
 
 export interface PublicSettings {
   brandName: string
@@ -63,8 +258,12 @@ export interface PublicSettings {
   adsense: AdsenseSettings
   legal: LegalSettings
   seo: Record<string, SeoOverride>
+  /** Az adminban feltöltött alakzatok a QR-alakzat választóhoz. */
+  silhouetteShapes: LibraryShape[]
   /** Ha valamiért nem érhető el, a felület nem kínál prémium funkciót. */
   plans?: PlansConfig
+  /** Csomagvásárlás kapcsolói (bekapcsolva / próbaidő hossza). */
+  billing: BillingSettings
 }
 
 export interface ApiSuccess<T> {

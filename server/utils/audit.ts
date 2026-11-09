@@ -22,6 +22,18 @@ export type AuditAction =
   | 'domain.verified'
   | 'domain.removed'
   | 'plans.updated'
+  | 'billing.subscribed'
+  | 'billing.plan_changed'
+  | 'billing.canceled'
+  | 'billing.resumed'
+  | 'billing.expired'
+  | 'admin.plan.lifetime'
+  | 'admin.plan.revoked'
+  | 'shape.created'
+  | 'shape.deleted'
+  | 'blog.created'
+  | 'blog.updated'
+  | 'blog.deleted'
 
 export const AUDIT_LABELS: Record<AuditAction, string> = {
   'qr.created': 'QR-kód létrehozva',
@@ -44,6 +56,18 @@ export const AUDIT_LABELS: Record<AuditAction, string> = {
   'domain.verified': 'Saját domain hitelesítve',
   'domain.removed': 'Saját domain eltávolítva',
   'plans.updated': 'Csomagbeállítás módosítva',
+  'billing.subscribed': 'Előfizetés indítva',
+  'billing.plan_changed': 'Csomagváltás',
+  'billing.canceled': 'Előfizetés lemondva',
+  'billing.resumed': 'Előfizetés folytatva',
+  'billing.expired': 'Előfizetés lejárt',
+  'admin.plan.lifetime': 'Élettartam csomag kiosztva',
+  'admin.plan.revoked': 'Csomag visszavonva (ingyenes)',
+  'shape.created': 'Alakzat feltöltve',
+  'shape.deleted': 'Alakzat törölve',
+  'blog.created': 'Blogbejegyzés létrehozva',
+  'blog.updated': 'Blogbejegyzés módosítva',
+  'blog.deleted': 'Blogbejegyzés törölve',
 }
 
 /**

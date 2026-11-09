@@ -41,7 +41,7 @@ const showGuideLink = computed(() => Boolean(guidePath.value) && route.path.repl
 
     <div
       v-if="attempted && !isValid"
-      class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+      class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2.5 text-sm text-red-700 dark:text-red-300"
       role="alert"
     >
       <Icon name="lucide:circle-alert" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -62,7 +62,7 @@ const showGuideLink = computed(() => Boolean(guidePath.value) && route.path.repl
     </div>
 
     <p class="mt-4 flex items-start gap-2 text-xs leading-relaxed text-ink-muted">
-      <Icon name="lucide:shield-check" class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+      <Icon name="lucide:shield-check" class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
       <span>
         A statikus QR-kód a böngésződben készül. Az itt megadott adatok nem kerülnek fel a szerverre,
         és nem tároljuk őket. Példa: <span class="font-medium text-ink-soft">{{ typeDefinition.examples }}</span>

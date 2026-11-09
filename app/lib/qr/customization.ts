@@ -1,4 +1,5 @@
 import { cloneCustomShape, isValidCustomShape, shapeCoverage } from '#shared/qr/custom-shape'
+import { silhouettePoints } from '#shared/qr/silhouette'
 import { BODY_SHAPES, EYE_BALL_SHAPES, EYE_FRAME_SHAPES } from './shapes'
 import type {
   CornerDotStyle,
@@ -46,6 +47,8 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   silhouette: 'none',
   silhouettePoints: null,
   silhouetteFill: true,
+  silhouetteBorderWidth: 0.9,
+  silhouetteId: '',
 }
 
 export const DOT_STYLE_OPTIONS: { value: DotStyle; label: string }[] = BODY_SHAPES.map(shape => ({
@@ -232,6 +235,37 @@ export function getCustomizationWarnings(customization: QrCustomization): string
   }
 
   return warnings
+}
+
+export function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+  const number = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(number)) return fallback
+  return Math.min(max, Math.max(min, number))
+}
+
+/**
+ * Minden módosítás ezen megy át, hogy a beállítás mindig konzisztens legyen:
+ * a számok a megengedett tartományba kerülnek, a hiányos saját formák
+ * visszaállnak a négyzetre, és az alakzat csak érvényes körvonallal marad be.
+ * Így nem marad „felemás” test a korábbi beállításokból.
+ */
+export function normalizeCustomization(input: QrCustomization): QrCustomization {
+  const next: QrCustomization = {
+    ...input,
+    logoSize: clampNumber(input.logoSize, 0.1, 0.4, 0.28),
+    logoMargin: Math.round(clampNumber(input.logoMargin, 0, 40, 8)),
+    margin: Math.round(clampNumber(input.margin, 0, 10, 4)),
+    frameFontScale: clampNumber(input.frameFontScale, 0.7, 1.4, 1),
+    silhouetteBorderWidth: clampNumber(input.silhouetteBorderWidth, 0, 3, 0.9),
+  }
+  if (next.dotStyle === 'custom' && !isValidCustomShape(input.customBody)) next.dotStyle = 'square'
+  if (next.cornerSquareStyle === 'custom' && !isValidCustomShape(input.customFrame)) next.cornerSquareStyle = 'square'
+  if (next.cornerDotStyle === 'custom' && !isValidCustomShape(input.customBall)) next.cornerDotStyle = 'square'
+  if ((next.silhouette ?? 'none') !== 'none' && !silhouettePoints(next.silhouette ?? 'none', next.silhouettePoints)) {
+    next.silhouette = 'none'
+    next.silhouetteId = ''
+  }
+  return next
 }
 
 export function cloneCustomization(customization: QrCustomization): QrCustomization {

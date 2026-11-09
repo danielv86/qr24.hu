@@ -196,7 +196,7 @@ function optionLabel(value: string): string {
         :title="option.label"
         :aria-label="option.label"
         :class="[
-          'relative grid aspect-square place-items-center overflow-hidden rounded-md border bg-white p-[2px] text-slate-900 transition-colors',
+          'relative grid aspect-square place-items-center overflow-hidden rounded-md border bg-slate-50 p-[2px] text-slate-900 transition-colors',
           isCustomOption(option.value) ? 'border-dashed' : '',
           modelValue === option.value
             ? 'border-brand-600 text-brand-700 ring-1 ring-brand-600'
@@ -219,12 +219,12 @@ function optionLabel(value: string): string {
         >
           <!-- A keretek gyűrűk, ezért evenodd kell; a test és a mag formái viszont
                átfedhetik egymást, ahol a nonzero szabály ad helyes uniót. -->
-          <path v-if="backdropPath" :d="backdropPath" fill="#E2E8F0" fill-rule="evenodd" />
+          <path v-if="backdropPath" :d="backdropPath" class="fill-slate-200" fill-rule="evenodd" />
           <path :d="mainPathFor(option.value)" :fill-rule="props.variant === 'frame' ? 'evenodd' : 'nonzero'" />
         </svg>
         <span
           v-if="(isCustomOption(option.value) && isValidCustomShape(customShape)) || modelValue === option.value"
-          class="absolute right-0.5 top-0.5 grid h-4 w-4 place-items-center rounded bg-white/95 text-brand-700 ring-1 ring-brand-200"
+          class="absolute right-0.5 top-0.5 grid h-4 w-4 place-items-center rounded bg-surface/95 text-brand-700 ring-1 ring-brand-300/60"
           title="Forma szerkesztése"
           @click.stop.prevent="isCustomOption(option.value) ? emit('edit-custom') : emit('edit-shape', option.value)"
         >

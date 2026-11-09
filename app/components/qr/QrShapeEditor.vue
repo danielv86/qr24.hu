@@ -163,10 +163,10 @@ const coverageStatus = computed(() => {
 
 const coverageClass = computed(() =>
   coverageStatus.value.tone === 'ok'
-    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+    ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
     : coverageStatus.value.tone === 'warn'
-      ? 'border-amber-200 bg-amber-50 text-amber-800'
-      : 'border-red-200 bg-red-50 text-red-700',
+      ? 'border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
+      : 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300',
 )
 
 const previewModules = computed(() => {
@@ -697,18 +697,18 @@ function save() {
                   'inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold transition-colors',
                   isActive(index)
                     ? 'border-brand-600 bg-brand-50 text-brand-800'
-                    : 'border-slate-200 bg-white text-ink-soft hover:border-brand-300',
+                    : 'border-slate-200 bg-surface text-ink-soft hover:border-brand-300',
                 ]"
                 @click="selectContour(index)"
               >
                 Alak {{ index + 1 }}
-                <span v-if="contour.mode === 'cut'" class="text-[10px] font-bold uppercase tracking-wide text-red-600">
+                <span v-if="contour.mode === 'cut'" class="text-[10px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
                   kivágás
                 </span>
               </button>
               <button
                 type="button"
-                class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-ink-muted hover:border-red-300 hover:text-red-600 disabled:opacity-40"
+                class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-surface text-ink-muted hover:border-red-300 dark:border-red-800 hover:text-red-600 dark:text-red-400 disabled:opacity-40"
                 :disabled="contours.length <= 1"
                 title="Aktív alakzat törlése"
                 aria-label="Aktív alakzat törlése"
@@ -733,7 +733,7 @@ function save() {
                   'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors',
                   mode === tool.id
                     ? 'border-brand-600 bg-brand-50 text-brand-800'
-                    : 'border-slate-200 bg-white text-ink-soft hover:border-brand-300',
+                    : 'border-slate-200 bg-surface text-ink-soft hover:border-brand-300',
                 ]"
                 @click="mode = tool.id"
               >
@@ -744,7 +744,7 @@ function save() {
                 type="button"
                 :aria-pressed="snap"
                 class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors"
-                :class="snap ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-slate-200 bg-white text-ink-soft'"
+                :class="snap ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-slate-200 bg-surface text-ink-soft'"
                 @click="snap = !snap"
               >
                 <Icon name="lucide:grid-3x3" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -752,7 +752,7 @@ function save() {
               </button>
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-soft hover:border-brand-300 disabled:opacity-40"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink-soft hover:border-brand-300 disabled:opacity-40"
                 :disabled="!history.length"
                 title="Visszavonás (Ctrl+Z)"
                 @click="undo"
@@ -847,7 +847,7 @@ function save() {
                   type="button"
                   :aria-pressed="activeContour?.mode === 'add'"
                   class="inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors"
-                  :class="activeContour?.mode === 'add' ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-slate-200 bg-white text-ink-soft'"
+                  :class="activeContour?.mode === 'add' ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-slate-200 bg-surface text-ink-soft'"
                   @click="setActiveMode('add')"
                 >
                   <Icon name="lucide:plus" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -857,7 +857,7 @@ function save() {
                   type="button"
                   :aria-pressed="activeContour?.mode === 'cut'"
                   class="inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors"
-                  :class="activeContour?.mode === 'cut' ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-ink-soft'"
+                  :class="activeContour?.mode === 'cut' ? 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300' : 'border-slate-200 bg-surface text-ink-soft'"
                   @click="setActiveMode('cut')"
                 >
                   <Icon name="lucide:minus" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -879,7 +879,7 @@ function save() {
                   ] as const"
                   :key="item.id"
                   type="button"
-                  class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-soft hover:border-brand-300 hover:text-brand-800"
+                  class="rounded-lg border border-slate-200 bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink-soft hover:border-brand-300 hover:text-brand-800"
                   @click="addContour(item.id)"
                 >
                   {{ item.label }}
@@ -909,7 +909,7 @@ function save() {
                   ] as const"
                   :key="`preset-${item.id}`"
                   type="button"
-                  class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11.5px] font-semibold text-ink-soft hover:border-brand-300 hover:text-brand-800"
+                  class="rounded-lg border border-slate-200 bg-surface px-2 py-1 text-[11.5px] font-semibold text-ink-soft hover:border-brand-300 hover:text-brand-800"
                   @click="applyPreset(item.id)"
                 >
                   {{ item.label }}

@@ -11,6 +11,7 @@ import {
   verifyPassword,
 } from '../../utils/auth'
 import { isDbConfigured } from '../../utils/db'
+import { assertTurnstile } from '../../utils/turnstile'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { assertSameOrigin, adminLoginSchema, readJsonBody } from '../../utils/validation'
 
@@ -35,6 +36,8 @@ export default defineApiHandler(async (event) => {
     windowSeconds: 15 * 60,
     message: 'Túl sok bejelentkezési kísérlet ehhez a fiókhoz.',
   })
+
+  await assertTurnstile(event, input.captchaToken)
 
   if (!isDbConfigured()) {
     throw new ApiProblem(503, 'database_not_configured', 'Az adminisztrációhoz nincs beállítva adatbázis.')

@@ -151,7 +151,7 @@ function formatDate(value: string | null | undefined): string {
       Vissza a QR-kódjaimhoz
     </NuxtLink>
 
-    <p v-if="loadError || !qr" class="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+    <p v-if="loadError || !qr" class="mt-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300" role="alert">
       A QR-kód nem található, vagy nem a te fiókodhoz tartozik.
     </p>
 
@@ -161,9 +161,9 @@ function formatDate(value: string | null | undefined): string {
         <span
           :class="[
             'rounded-full px-2.5 py-1 text-xs font-semibold',
-            qr.status === 'active' ? 'bg-emerald-50 text-emerald-700'
-            : qr.status === 'paused' ? 'bg-amber-50 text-amber-700'
-            : qr.status === 'expired' ? 'bg-red-50 text-red-700'
+            qr.status === 'active' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+            : qr.status === 'paused' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+            : qr.status === 'expired' ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300'
             : 'bg-slate-100 text-slate-600',
           ]"
         >
@@ -171,8 +171,8 @@ function formatDate(value: string | null | undefined): string {
         </span>
       </div>
 
-      <p v-if="saveMessage" class="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">{{ saveMessage }}</p>
-      <p v-if="saveError" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ saveError }}</p>
+      <p v-if="saveMessage" class="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300" role="status">{{ saveMessage }}</p>
+      <p v-if="saveError" class="mt-3 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">{{ saveError }}</p>
 
       <div class="mt-4 grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
         <div class="space-y-4">
@@ -204,7 +204,7 @@ function formatDate(value: string | null | undefined): string {
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+          <div class="rounded-xl border border-slate-200 bg-surface p-4 text-sm">
             <h2 class="text-sm font-semibold text-ink">Állapot</h2>
             <p class="mt-1 text-xs leading-relaxed text-ink-muted">
               Szüneteltetéskor és archiváláskor a beolvasó állapotoldalt lát, nem a régi célt. A rövid cím és a nyomtatott kód nem változik.
@@ -230,7 +230,7 @@ function formatDate(value: string | null | undefined): string {
         </div>
 
         <div class="space-y-4">
-          <form class="rounded-xl border border-slate-200 bg-white p-4" @submit.prevent="save">
+          <form class="rounded-xl border border-slate-200 bg-surface p-4" @submit.prevent="save">
             <h2 class="text-base font-semibold text-ink">Cél-URL módosítása</h2>
             <p class="mt-1 text-xs text-ink-muted">A QR-kód ugyanaz marad, csak az irányítás célja változik. A módosítás naplóba kerül.</p>
 
@@ -271,7 +271,7 @@ function formatDate(value: string | null | undefined): string {
             </div>
           </form>
 
-          <section class="rounded-xl border border-slate-200 bg-white p-4" aria-labelledby="analytics-title">
+          <section class="rounded-xl border border-slate-200 bg-surface p-4" aria-labelledby="analytics-title">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h2 id="analytics-title" class="text-base font-semibold text-ink">Beolvasási statisztikák</h2>
               <div class="flex gap-1" role="group" aria-label="Időtartomány">
@@ -294,7 +294,7 @@ function formatDate(value: string | null | undefined): string {
               </div>
               <div class="rounded-lg bg-slate-50 p-3">
                 <p class="text-[11px] text-ink-muted">Emberi</p>
-                <p class="text-xl font-semibold text-emerald-600">{{ analytics?.humanTotal ?? 0 }}</p>
+                <p class="text-xl font-semibold text-emerald-600 dark:text-emerald-400">{{ analytics?.humanTotal ?? 0 }}</p>
               </div>
               <div class="rounded-lg bg-slate-50 p-3">
                 <p class="text-[11px] text-ink-muted">Bot / előnézet</p>

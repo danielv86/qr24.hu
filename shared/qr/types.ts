@@ -286,6 +286,10 @@ export interface QrCustomization {
   silhouettePoints?: ShapePoint[] | null
   /** A kódmezőn kívüli terület kitöltése ugyanolyan modulokkal. */
   silhouetteFill?: boolean
+  /** Az alakzat körvonalának vastagsága modulban (0 = nincs körvonal). */
+  silhouetteBorderWidth: number
+  /** Adminban feltöltött alakzat azonosítója (a kijelölés és a felirat miatt). */
+  silhouetteId?: string
 }
 
 export interface QrDesignTemplate {

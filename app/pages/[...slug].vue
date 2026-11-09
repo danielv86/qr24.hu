@@ -141,7 +141,7 @@ const generatorLink = computed(() =>
         <article>
           <div
             v-if="providerDataMissing"
-            class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900"
+            class="mb-6 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm leading-relaxed text-amber-900 dark:text-amber-200"
             role="status"
           >
             <p class="flex items-start gap-2 font-medium">

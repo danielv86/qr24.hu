@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from './auth'
 import { getPublicSiteUrl, getSessionSecret } from './config'
 import { getPrisma, withDb } from './db'
 import { logger } from './logger'
+import { resolveActivePlan, type SubscriptionRow } from './subscription'
 
 const SESSION_COOKIE = 'qr_user'
 const SESSION_DAYS = 30
@@ -93,20 +94,65 @@ export async function getUserSession(event: H3Event): Promise<UserSession | null
       where: { tokenHash: sessionTokenHash(token) },
       select: {
         expiresAt: true,
-        user: { select: { id: true, email: true, name: true, plan: true, createdAt: true } },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            plan: true,
+            createdAt: true,
+            subscription: {
+              select: {
+                plan: true,
+                interval: true,
+                status: true,
+                trialEndsAt: true,
+                currentPeriodStart: true,
+                currentPeriodEnd: true,
+                cancelAtPeriodEnd: true,
+                canceledAt: true,
+                endedAt: true,
+              },
+            },
+          },
+        },
       },
     }),
   )
   if (!row || !row.user) return null
   if (row.expiresAt.getTime() <= Date.now()) return null
+  // Az előfizetés dönt a csomagról: lejárt próbaidő/időszak után ingyenes,
+  // akkor is, ha a users.plan mező még a régi értéket tartalmazza.
+  const subscribedPlan = resolveActivePlan(row.user.subscription as SubscriptionRow | null)
   return {
     id: Number(row.user.id),
     email: row.user.email,
     name: row.user.name,
-    plan: row.user.plan,
+    plan: subscribedPlan ?? (row.user.subscription ? 'free' : row.user.plan),
     createdAt: row.user.createdAt,
     expiresAt: row.expiresAt,
   }
+}
+
+/**
+ * A felhasználó összes munkamenetét lezárja, kivéve az éppen használtat.
+ * Jelszóváltásnál kötelező: egy ellopott süti ne maradjon érvényben.
+ */
+export async function revokeOtherUserSessions(
+  event: H3Event,
+  userId: bigint | number,
+): Promise<number> {
+  const token = getCookie(event, SESSION_COOKIE)
+  const currentHash = token ? sessionTokenHash(token) : ''
+  const result = await withDb(() =>
+    getPrisma().userSession.deleteMany({
+      where: {
+        userId: BigInt(userId),
+        ...(currentHash ? { tokenHash: { not: currentHash } } : {}),
+      },
+    }),
+  )
+  return result.count
 }
 
 export async function requireUser(event: H3Event): Promise<UserSession> {

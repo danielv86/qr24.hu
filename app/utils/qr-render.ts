@@ -9,7 +9,7 @@ import {
   silhouettePoints,
 } from '#shared/qr/silhouette'
 import { fillColor, isGradientFill } from '~/lib/qr/customization'
-import { EMPTY_NEIGHBOURS, bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
+import { bodyShapePath, eyeBallShapePath, eyeFrameShapePath } from '~/lib/qr/shapes'
 import type { Neighbours } from '~/lib/qr/shapes'
 import type { ErrorCorrectionLevel, QrCustomization, QrFill } from '#shared/qr/types'
 import { buildFramedSvg, escapeXml } from './qr-frame'
@@ -88,6 +88,58 @@ function fitPolygon(points: ShapePoint[], size: number, pad: number): ShapePoint
   return points.map(point => ({ x: offsetX + point.x * scale, y: offsetY + point.y * scale }))
 }
 
+function cellKey(x: number, y: number): string {
+  return `${Math.round(x * 1000)}:${Math.round(y * 1000)}`
+}
+
+export interface LogoBox {
+  /** A logólemez bal felső sarka, a logó és a margó együtt. */
+  x: number
+  y: number
+  /** Maga a logó mérete (a lemez ezen felül margót tartalmaz). */
+  size: number
+  box: number
+  padding: number
+}
+
+/**
+ * A logó helye minden keretnél és alakzatnál ugyanaz: a kódmező közepén van,
+ * a keresőmintáktól biztonságos távolságban. Alakzatnál a kódmező nem a vászon
+ * közepe, ezért a középre igazítás a kódmezőhöz képest történik, a méretet
+ * pedig a keresőminták belseje korlátozza, hogy a logó sose takarja el őket.
+ */
+export function resolveLogoBox(options: {
+  /** A kódmező bal felső sarka és oldalhossza a vásznon. */
+  left: number
+  top: number
+  side: number
+  /** A logó aránya a vászonhoz képest (0,1..0,4). */
+  ratio: number
+  /** A logó körüli margó 1024 px-es vászonra értve. */
+  margin: number
+  canvasSize: number
+  /** A kód modulszáma; a keresőminta 7 modul, 1 modul ráhagyással. */
+  moduleCount: number
+}): LogoBox {
+  const side = Math.max(1, options.side)
+  const ratio = Math.max(0.1, Math.min(0.4, options.ratio))
+  const padding = Math.max(
+    0,
+    Math.min(Math.round((options.margin / 1024) * options.canvasSize), Math.round(side * 0.04)),
+  )
+  const clearance = Math.max(0.12, (options.moduleCount / 2 - 8) / options.moduleCount)
+  const maxSize = side * clearance * 2 - padding * 2
+  const size = Math.max(1, Math.round(Math.min(options.canvasSize * ratio, Math.max(1, maxSize))))
+  const box = size + padding * 2
+  return {
+    x: options.left + (side - box) / 2,
+    y: options.top + (side - box) / 2,
+    size,
+    box,
+    padding,
+  }
+}
+
 export function buildQrContents(data: string, customization: QrCustomization, size: number): string {
   const matrix = buildQrMatrix(data, customization.errorCorrection)
   const count = matrix.length
@@ -156,8 +208,10 @@ export function buildQrContents(data: string, customization: QrCustomization, si
   const customBodyDefs =
     !bodyPathShape && customBody ? `<path id="qr-custom-body" d="${customShapePath(customBody, 0, 0, 1)}"/>` : ''
 
-  // Kitöltő modulok: pontosan ugyanaz a rajzoló, ugyanazokkal a színekkel és
-  // formákkal, mint a kód moduljai — így a kitöltés egynek látszik a kóddal.
+  // Kitöltő modulok: pontosan ugyanaz a rajzoló, ugyanazokkal a színekkel,
+  // formákkal ÉS szomszédságokkal, mint a kód moduljai. A szomszédok nélkül a
+  // lekerekített/vonalas/csempés formák másként néztek ki a kitöltésben, ezért
+  // lett a test „felemás” — most a kitöltés ugyanazt a geometriát kapja.
   const fillerModules: string[] = []
   const fillerCustom: string[] = []
   if (polygonAbs && customization.silhouetteFill !== false) {
@@ -167,6 +221,8 @@ export function buildQrContents(data: string, customization: QrCustomization, si
       gap,
       step: cell,
     })
+    const occupied = new Set(cells.map(point => cellKey(point.x, point.y)))
+    const isFilled = (x: number, y: number) => occupied.has(cellKey(x, y))
     for (const point of cells) {
       const x = point.x - cell / 2
       const y = point.y - cell / 2
@@ -176,7 +232,19 @@ export function buildQrContents(data: string, customization: QrCustomization, si
         )
         continue
       }
-      fillerModules.push(bodyPathShape(x, y, cell, EMPTY_NEIGHBOURS, 0, 0))
+      const neighbours: Neighbours = {
+        t: isFilled(point.x, point.y - cell),
+        b: isFilled(point.x, point.y + cell),
+        l: isFilled(point.x - cell, point.y),
+        r: isFilled(point.x + cell, point.y),
+        tl: isFilled(point.x - cell, point.y - cell),
+        tr: isFilled(point.x + cell, point.y - cell),
+        bl: isFilled(point.x - cell, point.y + cell),
+        br: isFilled(point.x + cell, point.y + cell),
+      }
+      const column = Math.round((point.x - originX) / cell)
+      const row = Math.round((point.y - originY) / cell)
+      fillerModules.push(bodyPathShape(x, y, cell, neighbours, row, column))
     }
   }
 
@@ -219,24 +287,29 @@ export function buildQrContents(data: string, customization: QrCustomization, si
   const logo = customization.logo
   let logoElement = ''
   if (logo) {
-    const ratio = Math.min(0.4, Math.max(0.1, customization.logoSize))
-    const logoSize = Math.round(size * ratio)
-    const pad = Math.round((customization.logoMargin / 1024) * size)
-    const box = logoSize + pad * 2
-    const x = (size - box) / 2
-    const y = (size - box) / 2
+    const box = resolveLogoBox({
+      left: originX,
+      top: originY,
+      side: cell * count,
+      ratio: customization.logoSize,
+      margin: customization.logoMargin,
+      canvasSize: size,
+      moduleCount: count,
+    })
     const plate = customization.transparentBackground ? '#FFFFFF' : customization.bgColor
     logoElement = [
-      `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${box}" height="${box}" rx="${Math.round(box * 0.14)}" fill="${plate}"/>`,
-      `<image x="${(x + pad).toFixed(2)}" y="${(y + pad).toFixed(2)}" width="${logoSize}" height="${logoSize}" href="${escapeXml(logo)}" preserveAspectRatio="xMidYMid meet"/>`,
+      `<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.box}" height="${box.box}" rx="${Math.round(box.box * 0.14)}" fill="${plate}"/>`,
+      `<image x="${(box.x + box.padding).toFixed(2)}" y="${(box.y + box.padding).toFixed(2)}" width="${box.size}" height="${box.size}" href="${escapeXml(logo)}" preserveAspectRatio="xMidYMid meet"/>`,
     ].join('')
   }
 
   // Az alakzat körvonala: a modulokat ráragozzuk, így a szél nem lesz lépcsős.
+  // A vastagság modulban állítható; 0 esetén nincs körvonal.
   const silhouettePath = polygonAbs ? pointsToPath(polygonAbs) : ''
   const clipId = polygonAbs ? `qr-silhouette-${++gradientCounter}` : ''
-  const outline = polygonAbs
-    ? `<path d="${silhouettePath}" fill="none" stroke="${bodyPaint.fill}" stroke-width="${Math.max(1, cell * 0.9).toFixed(2)}" stroke-linejoin="round"/>`
+  const silhouetteBorder = Math.max(0, Math.min(3, customization.silhouetteBorderWidth ?? 0.9))
+  const outline = polygonAbs && silhouetteBorder > 0
+    ? `<path d="${silhouettePath}" fill="none" stroke="${bodyPaint.fill}" stroke-width="${Math.max(0.35, cell * silhouetteBorder).toFixed(2)}" stroke-linejoin="round"/>`
     : ''
 
   const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}${customBodyDefs}${

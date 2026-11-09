@@ -60,8 +60,40 @@ model User {
   auditLogs                  AuditLog[]
   customDomains              CustomDomain[]
   apiKeys                    ApiKey[]
+  subscription               Subscription?
 
   @@map("users")
+}
+
+/**
+ * Fiókhoz tartozó előfizetés. Egy felhasználónak legfeljebb egy aktuális
+ * előfizetése van; a lemondás után a sor megmarad (státusz: expired), így a
+ * próbaidőszak kihasználtsága is nyomon követhető.
+ */
+model Subscription {
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId             BigInt    @unique @map("user_id") @db.UnsignedBigInt
+  plan               String    @db.VarChar(20)
+  interval           String    @db.VarChar(10)
+  status             String    @db.VarChar(20)
+  trialEndsAt        DateTime? @map("trial_ends_at")
+  currentPeriodStart DateTime  @map("current_period_start")
+  currentPeriodEnd   DateTime  @map("current_period_end")
+  cancelAtPeriodEnd  Boolean   @default(false) @map("cancel_at_period_end")
+  /**
+   * A vásárláskor rögzített időszakár forintban. Az admin árváltozása ezt nem
+   * írja felül, így a kifizetett időszak ára végig változatlan marad.
+   */
+  price              Int       @default(0) @db.UnsignedInt
+  /** Az ár pénzneme (jelenleg mindig HUF). */
+  currency           String    @default("HUF") @db.VarChar(3)
+  canceledAt         DateTime? @map("canceled_at")
+  endedAt            DateTime? @map("ended_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
 }
 
 model UserSession {

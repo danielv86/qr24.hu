@@ -66,6 +66,6 @@ watch(() => [props.data, props.size], render)
     :aria-label="alt"
   >
     <div ref="container" class="w-full [&>svg]:h-auto [&>svg]:w-full" aria-hidden="true" />
-    <p v-if="failed" class="text-sm text-red-600">A QR-kód előnézete nem tölthető be.</p>
+    <p v-if="failed" class="text-sm text-red-600 dark:text-red-400">A QR-kód előnézete nem tölthető be.</p>
   </div>
 </template>

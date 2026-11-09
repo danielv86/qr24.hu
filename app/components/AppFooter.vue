@@ -18,6 +18,7 @@ const typeLinks = [
 ]
 
 const infoLinks = [
+  { label: 'Blog', to: '/blog' },
   { label: 'QR-kód készítés', to: '/qr-kod-keszites' },
   { label: 'QR-kód generátor', to: '/qr-kod-generator' },
   { label: 'QR-kód típusok', to: '/qr-kod-tipusok' },

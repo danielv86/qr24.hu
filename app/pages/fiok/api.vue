@@ -117,18 +117,18 @@ const sampleCreate = computed(() =>
       </span>
     </div>
 
-    <div v-if="data && !data.available" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-      <p class="text-sm font-semibold text-amber-900">Az API-hozzáférés az Üzleti csomag része</p>
+    <div v-if="data && !data.available" class="mt-4 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4">
+      <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">Az API-hozzáférés az Üzleti csomag része</p>
       <p class="mt-1 text-sm text-amber-900/80">
         A csomagodban jelenleg nincs API-hozzáférés, ezért új kulcsot nem tudsz létrehozni. A csomagokat a Számlázás oldalon nézheted meg.
       </p>
       <NuxtLink to="/fiok/szamlazas" class="btn-secondary mt-3 px-3 py-2 text-xs">Csomagok megtekintése</NuxtLink>
     </div>
 
-    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+    <p v-if="actionMessage" class="mt-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300" role="status">
       {{ actionMessage }}
     </p>
-    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+    <p v-if="actionError" class="mt-4 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
       {{ actionError }}
     </p>
 
@@ -144,7 +144,7 @@ const sampleCreate = computed(() =>
           <Icon name="lucide:x" class="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3">
+      <div class="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface p-3">
         <code class="min-w-0 flex-1 break-all text-xs text-ink">{{ created.token }}</code>
         <button type="button" class="btn-secondary px-2.5 py-1.5 text-xs" @click="copy(created.token, 'new-token')">
           <Icon :name="copied === 'new-token' ? 'lucide:check' : 'lucide:copy'" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -179,14 +179,14 @@ const sampleCreate = computed(() =>
     <section class="mt-6" aria-labelledby="keys-title">
       <h2 id="keys-title" class="text-sm font-semibold text-ink">Kulcsaid</h2>
 
-      <p v-if="pending" class="mt-3 rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-ink-muted">
+      <p v-if="pending" class="mt-3 rounded-xl border border-slate-200 bg-surface p-6 text-center text-sm text-ink-muted">
         Betöltés…
       </p>
-      <p v-else-if="error" class="mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <p v-else-if="error" class="mt-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300" role="alert">
         Az API-kulcsok betöltése nem sikerült.
       </p>
 
-      <ul v-else-if="data?.items?.length" class="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+      <ul v-else-if="data?.items?.length" class="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-surface">
         <li v-for="key in data.items" :key="key.id" class="flex flex-wrap items-center gap-3 px-4 py-3">
           <div class="min-w-0 flex-1">
             <p class="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
@@ -220,7 +220,7 @@ const sampleCreate = computed(() =>
             <button
               v-else
               type="button"
-              class="btn-ghost px-2.5 py-1.5 text-xs text-red-600"
+              class="btn-ghost px-2.5 py-1.5 text-xs text-red-600 dark:text-red-400"
               @click="confirmRevoke = key.id"
             >
               <Icon name="lucide:trash-2" class="h-4 w-4" aria-hidden="true" />
@@ -230,7 +230,7 @@ const sampleCreate = computed(() =>
         </li>
       </ul>
 
-      <p v-else-if="data" class="mt-3 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-ink-muted">
+      <p v-else-if="data" class="mt-3 rounded-xl border border-dashed border-slate-300 bg-surface p-6 text-center text-sm text-ink-muted">
         Még nincs API-kulcsod.
       </p>
     </section>
@@ -246,7 +246,7 @@ const sampleCreate = computed(() =>
       <div class="mt-4 space-y-3">
         <div class="rounded-lg border border-slate-200 p-3">
           <p class="text-xs font-semibold text-ink">
-            <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-mono text-emerald-700">GET</span>
+            <span class="rounded bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 font-mono text-emerald-700 dark:text-emerald-300">GET</span>
             {{ apiBase }}/qr
           </p>
           <p class="mt-1 text-xs text-ink-soft">

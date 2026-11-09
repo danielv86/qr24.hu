@@ -165,6 +165,31 @@ Ha a kulcs hiányzik, a kódban lévő alapértelmezés él (`server/utils/plans
 Ingyenes 5 kód, Pro 100, Business 5000. A backend 30 másodperces cache-sel olvas,
 a felület a `GET /api/settings/public` válaszából kapja ugyanezeket.
 
+### Előfizetés és vásárlás
+
+A fiók előfizetése a `subscriptions` táblában él (`users.plan` ebből szinkronizálódik),
+a vásárlás kapcsolóit a `settings` tábla `billing` kulcsa tartja:
+
+```json
+{ "plansEnabled": false, "trialDays": 14 }
+```
+
+Az admin **Beállítások → Csomagvásárlás** szekciójában kapcsolható be a vásárlás és
+állítható a próbaidő (0–90 nap, tipikusan 14 vagy 30). Kikapcsolva a csomagoldalon
+„Hamarosan” gomb látszik, a meglévő előfizetések viszont az időszak végéig érvényesek.
+
+Fizetési szolgáltató nincs bekötve: a vásárlás fizetés nélküli aktiválást jelent,
+nincs automatikus megújítás és terhelés. A próbaidő vagy az első időszak végén a
+fiók automatikusan visszavált az ingyenes csomagra. A próbaidő fiókonként egyszer
+használható (a lejárt sor is megőrzi ezt). A fizetési szolgáltató bekötésekor a
+`server/utils/subscription.ts` `subscribeUser` függvénye és a `/api/billing/*`
+végpontok válthatók ki.
+
+- `GET /api/billing` – előfizetés, csomagok, kapcsolók
+- `POST /api/billing/subscribe` – csomag indítása vagy váltása (`planId`, `interval`)
+- `POST /api/billing/cancel` – lemondás az időszak végére
+- `POST /api/billing/resume` – lemondás visszavonása
+
 ## Biztonság
 
 - scrypt jelszó-hash, HMAC-olt munkamenet-tokenek, httpOnly + SameSite=Lax süti
@@ -192,8 +217,9 @@ kanonikus URL-ek és a sitemap is localhostra mutatnak.
 
 ## Ami még nincs kész
 
-- Fizetés / előfizetés: a csomag- és jogosultságkezelés rétege kész, fizetési
-  szolgáltató nincs bekötve.
+- Fizetés / előfizetés: a csomagkezelés, a vásárlás, a váltás, a lemondás és a
+  próbaidő kész; fizetési szolgáltató és számlázás nincs bekötve, ezért a vásárlás
+  fizetés nélküli aktiválás.
 - Időzített célcímváltás, CSV-import/export és csapatmunka: az adatmodell és a
   csomagkapcsolók előkészítve, a felület nem.
 - QR-kódhoz kapcsolódó saját céloldalak (étlap, névjegy, kupon): nincs implementálva.
