@@ -22,11 +22,16 @@ export default defineApiHandler(async (event) => {
   const lastmod = '2026-10-22'
   const entries: SitemapEntry[] = []
 
-  const push = (path: string, priority: number, changefreq: SitemapEntry['changefreq']) => {
+  const push = (
+    path: string,
+    priority: number,
+    changefreq: SitemapEntry['changefreq'],
+    modified: string = lastmod,
+  ) => {
     if (overrides[path]?.noindex) return
     entries.push({
       loc: absoluteUrl(siteUrl, path),
-      lastmod,
+      lastmod: modified,
       changefreq,
       priority,
     })
@@ -40,6 +45,7 @@ export default defineApiHandler(async (event) => {
   push('/qr-kod-olvaso', 0.6, 'monthly')
   push('/qr-kod-meret-kalkulator', 0.6, 'monthly')
   push('/csomagok', 0.7, 'monthly')
+  push('/blog', 0.7, 'weekly')
 
   for (const page of ALL_LANDING_PAGES) {
     push(page.slug, 0.7, 'monthly')
@@ -48,6 +54,16 @@ export default defineApiHandler(async (event) => {
   push('/kapcsolat', 0.4, 'yearly')
   for (const page of LEGAL_PAGES) {
     push(page.slug, 0.3, 'yearly')
+  }
+
+  // A blogbejegyzések a saját táblájukból kerülnek a sitemapba; ha az adatbázis
+  // nem érhető el, a többi oldal akkor is kiszolgálható marad.
+  try {
+    for (const post of await listPublishedForSitemap()) {
+      push(`/blog/${post.slug}`, 0.6, 'monthly', post.updatedAt.toISOString().slice(0, 10))
+    }
+  } catch {
+    // A blog kihagyása nem akadályozhatja a sitemap kiszolgálását.
   }
 
   const seen = new Set<string>()

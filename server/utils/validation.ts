@@ -293,6 +293,97 @@ export const seoOverrideSchema = z.object({
   noindex: z.boolean({ error: 'A noindex csak igaz/hamis lehet.' }).optional().default(false),
 }).strict()
 
+export const blogListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10_000).optional().default(1),
+  perPage: z.coerce.number().int().min(1).max(24).optional().default(9),
+  category: z.string().trim().max(60).optional().default(''),
+  q: z.string().trim().max(120).optional().default(''),
+})
+
+export const blogAdminListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10_000).optional().default(1),
+  perPage: z.coerce.number().int().min(1).max(50).optional().default(20),
+  status: z.enum(['all', 'draft', 'published']).optional().default('all'),
+  q: z.string().trim().max(120).optional().default(''),
+})
+
+const blogSlugSchema = z
+  .string({ error: 'A webcím csak szöveg lehet.' })
+  .trim()
+  .max(160, 'A webcím legfeljebb 160 karakter lehet.')
+  .regex(/^$|^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'A webcím csak kisbetűt, számot és kötőjelet tartalmazhat.')
+
+export const blogPostSchema = z.object({
+  title: z
+    .string({ error: 'A cím kötelező.' })
+    .trim()
+    .min(3, 'A cím legalább 3 karakter legyen.')
+    .max(160, 'A cím legfeljebb 160 karakter lehet.'),
+  slug: blogSlugSchema.optional().default(''),
+  excerpt: z
+    .string({ error: 'A kivonat csak szöveg lehet.' })
+    .trim()
+    .max(320, 'A kivonat legfeljebb 320 karakter lehet.')
+    .optional()
+    .default(''),
+  content: z
+    .string({ error: 'A tartalom kötelező.' })
+    .max(200_000, 'A tartalom túl hosszú.')
+    .optional()
+    .default(''),
+  coverImage: z
+    .string({ error: 'A borítókép csak hivatkozás lehet.' })
+    .trim()
+    .max(512, 'A borítókép hivatkozása túl hosszú.')
+    .optional()
+    .default(''),
+  category: z
+    .string({ error: 'A kategória csak szöveg lehet.' })
+    .trim()
+    .max(60, 'A kategória legfeljebb 60 karakter lehet.')
+    .optional()
+    .default(''),
+  tags: z
+    .array(z.string({ error: 'A címke csak szöveg lehet.' }).trim().max(30, 'A címke legfeljebb 30 karakter lehet.'))
+    .max(10, 'Legfeljebb 10 címke adható meg.')
+    .optional()
+    .default([]),
+  status: z.enum(['draft', 'published']).optional().default('draft'),
+  publishedAt: z
+    .string({ error: 'A megjelenési dátum csak szöveg lehet.' })
+    .trim()
+    .max(40, 'Érvénytelen megjelenési dátum.')
+    .optional()
+    .default(''),
+}).strict()
+
+export const libraryShapeCreateSchema = z.object({
+  label: z
+    .string({ error: 'Az alakzat neve csak szöveg lehet.' })
+    .trim()
+    .min(1, 'Adj nevet az alakzatnak.')
+    .max(48, 'A név legfeljebb 48 karakter lehet.'),
+  points: z
+    .array(
+      z
+        .object({
+          x: z.number({ error: 'Érvénytelen csomópont.' }),
+          y: z.number({ error: 'Érvénytelen csomópont.' }),
+        })
+        .strict(),
+    )
+    .min(3, 'Az alakzathoz legalább 3 csomópont kell.')
+    .max(24, 'Az alakzat legfeljebb 24 csomópontból állhat.'),
+}).strict()
+
+export const libraryShapeDeleteSchema = z.object({
+  id: z
+    .string({ error: 'Hiányzó alakzat-azonosító.' })
+    .trim()
+    .min(1, 'Hiányzó alakzat-azonosító.')
+    .max(40, 'Érvénytelen alakzat-azonosító.'),
+}).strict()
+
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(10_000).optional().default(1),
   perPage: z.coerce.number().int().min(1).max(100).optional().default(20),
@@ -305,6 +396,8 @@ export type DynamicQrUpdateInput = z.infer<typeof dynamicQrUpdateSchema>
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>
 export type AdminSettingsInput = z.infer<typeof adminSettingsSchema>
 export type SeoOverrideInput = z.infer<typeof seoOverrideSchema>
+export type LibraryShapeCreateInput = z.infer<typeof libraryShapeCreateSchema>
+export type BlogPostInput = z.infer<typeof blogPostSchema>
 export type ListQueryInput = z.infer<typeof listQuerySchema>
 export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>
 export type AccountPasswordInput = z.infer<typeof accountPasswordSchema>
@@ -319,13 +412,18 @@ function issuesToDetails(error: z.ZodError): Record<string, string> {
   return details
 }
 
-export async function readJsonBody<T>(event: H3Event, schema: z.ZodType<T>): Promise<T> {
+export async function readJsonBody<T>(
+  event: H3Event,
+  schema: z.ZodType<T>,
+  options: { maxBytes?: number } = {},
+): Promise<T> {
   const contentType = getHeader(event, 'content-type') || ''
   if (!contentType.toLowerCase().includes('application/json')) {
     throw new ApiProblem(415, 'unsupported_media_type', 'A kérés tartalmának JSON formátumúnak kell lennie.')
   }
+  const limit = options.maxBytes ?? MAX_BODY_BYTES
   const contentLength = Number(getHeader(event, 'content-length') || 0)
-  if (contentLength > MAX_BODY_BYTES) {
+  if (contentLength > limit) {
     throw new ApiProblem(413, 'payload_too_large', 'A kérés tartalma túl nagy.')
   }
 
