@@ -71,6 +71,36 @@ export interface BillingSettings {
   trialDays: number
 }
 
+/**
+ * Kimenő SMTP szerver beállításai. Az adminban állítható, ezért nem env-ben él.
+ * A jelszót a API sosem adja vissza, csak azt jelzi, hogy be van-e állítva.
+ */
+export interface MailSettings {
+  /** Igaz, ha a levelek ténylegesen kimennek (a tesztküldés ettől függetlenül működik). */
+  enabled: boolean
+  host: string
+  port: number
+  /** Igaz: azonnali TLS (jellemzően 465-ös port). Hamis: STARTTLS, ha a szerver kínálja. */
+  secure: boolean
+  user: string
+  password: string
+  fromEmail: string
+  fromName: string
+}
+
+/** Az admin felületnek visszaadott SMTP beállítás jelszó nélkül. */
+export interface MailSettingsView {
+  enabled: boolean
+  host: string
+  port: number
+  secure: boolean
+  user: string
+  fromEmail: string
+  fromName: string
+  /** Igaz, ha a szerveren van mentett jelszó. */
+  hasPassword: boolean
+}
+
 export type BillingInterval = 'monthly' | 'yearly' | 'lifetime'
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'expired'

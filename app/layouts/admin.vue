@@ -38,7 +38,7 @@ const nav: AdminNavItem[] = [
   { to: '/admin/statisztika', label: 'Statisztika', icon: 'lucide:chart-no-axes-column' },
   { to: '/admin/csomagok', label: 'Csomagok', icon: 'lucide:package' },
   { to: '/admin/felhasznalok', label: 'Felhasználók', icon: 'lucide:users' },
-  { to: '/admin/elofizetesek', label: 'Előfizetések', icon: 'lucide:receipt' },
+  { to: '/admin/elofizetesek', label: 'Előfizetések', icon: 'lucide:circle-dollar-sign' },
   {
     to: '/admin/beallitasok',
     label: 'Beállítások',
@@ -48,6 +48,7 @@ const nav: AdminNavItem[] = [
       { to: '/admin/beallitasok/adsense', label: 'AdSense', icon: 'lucide:badge-dollar-sign' },
       { to: '/admin/beallitasok/adatvedelem', label: 'Adatvédelem és jogi', icon: 'lucide:scale' },
       { to: '/admin/beallitasok/csomagvasarlas', label: 'Csomagvásárlás', icon: 'lucide:credit-card' },
+      { to: '/admin/smtp', label: 'SMTP beállítások', icon: 'lucide:server-cog' },
       { to: '/admin/seo', label: 'SEO metaadatok', icon: 'lucide:search' },
     ],
   },
@@ -254,7 +255,7 @@ function notifyBell() {
                 collapsed ? 'justify-center px-0' : 'gap-3.5 px-3.5',
                 isActive(item)
                   ? 'bg-[linear-gradient(90deg,#6D3ABF_0%,#7A46CC_45%,#5A30A8_100%)] text-white shadow-[0_14px_30px_-16px_rgba(110,62,176,0.95)] ring-1 ring-inset ring-white/10'
-                  : 'text-[#8B84AE] hover:bg-white/[0.05] hover:text-white',
+                  : 'text-white hover:bg-white/[0.05]',
               ]"
             >
               <Icon :name="item.icon" class="h-[19px] w-[19px] shrink-0" aria-hidden="true" />
@@ -271,7 +272,7 @@ function notifyBell() {
                   'flex items-center justify-center rounded-xl py-3 transition-colors',
                   isActive(item)
                     ? 'bg-[linear-gradient(90deg,#6D3ABF_0%,#7A46CC_45%,#5A30A8_100%)] text-white ring-1 ring-inset ring-white/10'
-                    : 'text-[#8B84AE] hover:bg-white/[0.05] hover:text-white',
+                    : 'text-white hover:bg-white/[0.05]',
                 ]"
               >
                 <Icon :name="item.icon" class="h-[19px] w-[19px]" aria-hidden="true" />
@@ -284,7 +285,7 @@ function notifyBell() {
                   :aria-controls="`admin-nav-group-${item.to.split('/').pop()}`"
                   :class="[
                     'flex w-full items-center gap-3.5 rounded-xl px-3.5 py-3 text-left text-[13.5px] font-medium transition-colors',
-                    isActive(item) ? 'text-white' : 'text-[#8B84AE] hover:bg-white/[0.05] hover:text-white',
+                    isActive(item) ? 'text-white' : 'text-white hover:bg-white/[0.05]',
                   ]"
                   @click="toggleGroup(item)"
                 >
@@ -309,8 +310,8 @@ function notifyBell() {
                       :class="[
                         'flex items-center gap-3 rounded-lg py-2 pl-[3.1rem] pr-2 text-[12.5px] transition-colors',
                         route.path === child.to
-                          ? 'font-semibold text-[#C77DFF]'
-                          : 'text-[#7F78A0] hover:text-white',
+                          ? 'bg-[#6D3ABF]/35 font-semibold text-white'
+                          : 'text-white hover:bg-white/[0.05]',
                       ]"
                     >
                       <Icon :name="child.icon" class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -424,7 +425,7 @@ function notifyBell() {
                 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
                 isActive(item)
                   ? 'bg-[#6D3ABF]/35 font-semibold text-white'
-                  : 'text-[#8B84AE] hover:bg-white/5 hover:text-white',
+                  : 'text-white hover:bg-white/5',
               ]"
             >
               <Icon :name="item.icon" class="h-3.5 w-3.5" aria-hidden="true" />

@@ -74,20 +74,6 @@ function toggleSort(key: SortKey) {
   sortDir.value = key === 'email' ? 'asc' : 'desc'
 }
 
-const selected = ref<Set<number>>(new Set())
-const allSelected = computed(() => items.value.length > 0 && items.value.every(item => selected.value.has(item.userId)))
-
-function toggleRow(id: number) {
-  const next = new Set(selected.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-  selected.value = next
-}
-
-function toggleAll() {
-  selected.value = allSelected.value ? new Set() : new Set(items.value.map(item => item.userId))
-}
-
 async function load(options: { silent?: boolean } = {}) {
   loading.value = true
   error.value = ''
@@ -103,7 +89,6 @@ async function load(options: { silent?: boolean } = {}) {
       { headers: { accept: 'application/json' }, cache: 'no-store' },
     )
     data.value = response.data
-    selected.value = new Set()
     if (!options.silent) toast.success('Előfizetések frissítve', `${response.data.total} fiók a szűrés szerint.`)
   } catch (cause) {
     error.value = apiErrorMessage(cause, 'Az előfizetések betöltése nem sikerült.')
@@ -257,7 +242,7 @@ function initial(email: string): string {
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="flex items-center gap-3.5">
         <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,#8B4CF0,#6D3ABF)] text-white shadow-[0_14px_30px_-14px_rgba(110,62,176,0.9)]">
-          <Icon name="lucide:receipt" class="h-6 w-6" aria-hidden="true" />
+          <Icon name="lucide:circle-dollar-sign" class="h-6 w-6" aria-hidden="true" />
         </span>
         <div>
           <h1 class="text-[28px] font-bold leading-tight tracking-tight text-white">Előfizetések</h1>
@@ -361,30 +346,13 @@ function initial(email: string): string {
       </div>
     </div>
 
-    <!-- Kiválasztás sáv -->
-    <div v-if="selected.size" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#8B5CF6]/35 bg-[#6D3ABF]/20 px-3.5 py-2 text-[12px] text-[#E7E2FA]">
-      <span>{{ selected.size }} fiók kiválasztva</span>
-      <button type="button" class="rounded-lg px-2 py-1 text-[#C9C2E4] transition-colors hover:bg-white/5 hover:text-white" @click="selected = new Set()">
-        Kijelölés törlése
-      </button>
-    </div>
-
     <!-- Táblázat -->
     <div class="overflow-hidden rounded-2xl border border-white/[0.06] bg-[#10132A]">
       <div class="overflow-x-auto">
         <table class="w-full min-w-[64rem] text-left text-[13px]">
           <thead>
             <tr class="border-b border-white/[0.06] bg-[#1E1F43] text-[12px] font-semibold text-white">
-              <th class="w-12 px-4 py-3">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 cursor-pointer rounded border-white/25 bg-white/10 accent-[#9147FD]"
-                  :checked="allSelected"
-                  aria-label="Minden sor kijelölése"
-                  @change="toggleAll"
-                >
-              </th>
-              <th class="px-3 py-3">
+              <th class="px-4 py-3">
                 <button type="button" class="inline-flex items-center gap-1.5 transition-colors hover:text-violet-100" @click="toggleSort('email')">
                   Felhasználó
                   <Icon :name="sortKey === 'email' ? (sortDir === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down') : 'lucide:arrow-up-down'" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -413,18 +381,9 @@ function initial(email: string): string {
             <tr
               v-for="item in sortedItems"
               :key="item.userId"
-              :class="['transition-colors odd:bg-[#121529] even:bg-[#101328] hover:bg-[#181C3A]', selected.has(item.userId) ? '!bg-[#6D3ABF]/25' : '']"
+              class="transition-colors odd:bg-[#121529] even:bg-[#101328] hover:bg-[#181C3A]"
             >
               <td class="px-4 py-3">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 cursor-pointer rounded border-white/25 bg-white/10 accent-[#9147FD]"
-                  :checked="selected.has(item.userId)"
-                  :aria-label="`${item.email} kijelölése`"
-                  @change="toggleRow(item.userId)"
-                >
-              </td>
-              <td class="px-3 py-3">
                 <div class="flex items-center gap-3">
                   <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#8B4CF0,#6D3ABF)] text-[12px] font-semibold text-white">
                     {{ initial(item.email) }}

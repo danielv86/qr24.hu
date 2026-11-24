@@ -174,6 +174,59 @@ export const accountUpdateSchema = z.object({
   message: 'Adj meg legalább egy módosítandó adatot.',
 })
 
+/**
+ * Kimenő SMTP szerver beállításai (admin → SMTP beállítások). A jelszó
+ * üresen hagyható: ilyenkor a korábban mentett jelszó marad érvényben.
+ */
+export const mailSettingsSchema = z.object({
+  enabled: z.boolean({ error: 'A küldés kapcsolója kötelező.' }),
+  host: z.string({ error: 'Az SMTP szerver címe csak szöveg lehet.' }).trim().max(190, 'A szerver címe legfeljebb 190 karakter lehet.').optional().default(''),
+  port: z
+    .number({ error: 'A port csak szám lehet.' })
+    .int('A port egész szám legyen.')
+    .min(1, 'A port 1 és 65535 között lehet.')
+    .max(65_535, 'A port 1 és 65535 között lehet.'),
+  secure: z.boolean({ error: 'A titkosítás kapcsolója kötelező.' }),
+  user: z.string({ error: 'A felhasználónév csak szöveg lehet.' }).trim().max(190, 'A felhasználónév legfeljebb 190 karakter lehet.').optional().default(''),
+  password: z.string({ error: 'A jelszó csak szöveg lehet.' }).max(200, 'A jelszó túl hosszú.').optional().default(''),
+  fromEmail: z
+    .string({ error: 'A feladó e-mail-címe csak szöveg lehet.' })
+    .trim()
+    .max(190, 'A feladó e-mail-címe legfeljebb 190 karakter lehet.')
+    .refine(value => value === '' || z.email().safeParse(value).success, 'Érvényes feladó e-mail-címet adj meg.')
+    .optional()
+    .default(''),
+  fromName: z.string({ error: 'A feladó neve csak szöveg lehet.' }).trim().max(120, 'A feladó neve legfeljebb 120 karakter lehet.').optional().default(''),
+}).strict()
+
+/** Teszt e-mail: a cím, ahová küldjük, és opcionálisan a még nem mentett beállítások. */
+export const mailTestSchema = z.object({
+  to: z
+    .email({ error: 'Érvényes e-mail-címet adj meg.' })
+    .trim()
+    .toLowerCase()
+    .max(190, 'Az e-mail-cím túl hosszú.'),
+  settings: mailSettingsSchema.optional(),
+}).strict()
+
+export const passwordResetRequestSchema = z.object({
+  email: z
+    .email({ error: 'Érvényes e-mail-címet adj meg.' })
+    .trim()
+    .toLowerCase()
+    .max(190, 'Az e-mail-cím túl hosszú.'),
+}).strict()
+
+export const passwordResetConfirmSchema = z.object({
+  token: z
+    .string({ error: 'Hiányzó visszaállító token.' })
+    .trim()
+    .min(20, 'A visszaállító hivatkozás érvénytelen.')
+    .max(300, 'A visszaállító hivatkozás érvénytelen.')
+    .regex(/^[A-Za-z0-9_-]+$/, 'A visszaállító hivatkozás érvénytelen.'),
+  newPassword: passwordSchema,
+}).strict()
+
 export const accountPasswordSchema = z.object({
   currentPassword: z
     .string({ error: 'A jelenlegi jelszó csak szöveg lehet.' })

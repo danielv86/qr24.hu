@@ -333,6 +333,12 @@ defineExpose({ switchMode })
         </button>
       </form>
 
+      <p v-if="mode === 'login'" class="mt-3 text-center text-xs text-ink-muted">
+        <NuxtLink to="/jelszo-emlekezteto" class="font-semibold text-brand-700 hover:underline">
+          Elfelejtett jelszó?
+        </NuxtLink>
+      </p>
+
       <p class="mt-3 text-center text-xs text-ink-muted">
         <template v-if="mode === 'login'">
           Még nincs fiókod?

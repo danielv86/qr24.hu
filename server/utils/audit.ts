@@ -15,6 +15,7 @@ export type AuditAction =
   | 'user.logout'
   | 'user.updated'
   | 'user.password_changed'
+  | 'user.password_reset'
   | 'user.deleted'
   | 'api_key.created'
   | 'api_key.revoked'
@@ -48,6 +49,7 @@ export const AUDIT_LABELS: Record<AuditAction, string> = {
   'user.oauth_login': 'Bejelentkezés külső szolgáltatóval',
   'user.logout': 'Kijelentkezés',
   'user.updated': 'Fiókadatok módosítva',
+  'user.password_reset': 'Jelszó visszaállítva (elfelejtett jelszó)',
   'user.password_changed': 'Jelszó módosítva',
   'user.deleted': 'Fiók törölve',
   'api_key.created': 'API-kulcs létrehozva',

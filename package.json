@@ -39,6 +39,7 @@
     "fflate": "0.8.2",
     "jsqr": "^1.4.0",
     "mariadb": "3.5.4",
+    "nodemailer": "7",
     "nuxt": "4.6.3",
     "nuxt-tiptap-editor": "^3.4.0",
     "qr-code-styling": "1.9.2",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@types/node": "24.10.1",
+    "@types/nodemailer": "^8.0.2",
     "@types/sanitize-html": "^2.16.2",
     "prisma": "7.10.1",
     "typescript": "5.9.3",
