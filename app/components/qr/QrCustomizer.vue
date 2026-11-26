@@ -638,21 +638,6 @@ const activeTemplate = computed(
         </div>
       </div>
 
-      <label class="mt-4 flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-surface p-3">
-        <input
-          type="checkbox"
-          class="mt-0.5 h-4 w-4 rounded border-slate-300 accent-brand-600"
-          :checked="customization.transparentBackground"
-          @change="update('transparentBackground', ($event.target as HTMLInputElement).checked)"
-        >
-        <span>
-          <span class="block text-sm font-medium text-ink">Átlátszó háttér</span>
-          <span class="mt-0.5 block text-xs text-ink-muted">
-            PNG, WebP és SVG exportnál a háttér átlátszó lesz. JPG és PDF mindig fehér hátteret kap.
-          </span>
-        </span>
-      </label>
-
       <p v-if="colorError" class="field-error" role="alert">{{ colorError }}</p>
       <p v-if="contrast !== null" class="mt-2 text-xs">
         <span
@@ -662,21 +647,6 @@ const activeTemplate = computed(
           Kontraszt: {{ contrast.toFixed(1) }}:1 – {{ contrastLabel }}
         </span>
       </p>
-
-      <div class="mt-4">
-        <label for="qr-export-size" class="field-label">Export méret: {{ customization.size }} × {{ customization.size }} px</label>
-        <input
-          id="qr-export-size"
-          type="range"
-          class="w-full"
-          min="256"
-          max="8192"
-          step="128"
-          :value="customization.size"
-          @input="update('size', Number(($event.target as HTMLInputElement).value))"
-        >
-        <p class="field-help">Nyomtatáshoz 1024 px vagy nagyobb ajánlott.</p>
-      </div>
 
     </div>
 
@@ -791,6 +761,36 @@ const activeTemplate = computed(
             @input="update('logoMargin', Number(($event.target as HTMLInputElement).value))"
           >
           <p class="field-help">A logó körüli üres sáv; nagyobb érték tisztább képet ad.</p>
+        </div>
+        <div>
+          <label for="qr-logo-image-radius" class="field-label">
+            Logó lekerekítés: {{ customization.logoImageRadius }}%
+          </label>
+          <input
+            id="qr-logo-image-radius"
+            type="range"
+            class="w-full"
+            min="0"
+            max="50"
+            step="1"
+            :value="customization.logoImageRadius"
+            @input="update('logoImageRadius', Number(($event.target as HTMLInputElement).value))"
+          >
+        </div>
+        <div>
+          <label for="qr-logo-radius" class="field-label">
+            Margó lekerekítése: {{ customization.logoRadius }}%
+          </label>
+          <input
+            id="qr-logo-radius"
+            type="range"
+            class="w-full"
+            min="0"
+            max="50"
+            step="1"
+            :value="customization.logoRadius"
+            @input="update('logoRadius', Number(($event.target as HTMLInputElement).value))"
+          >
         </div>
       </div>
     </div>

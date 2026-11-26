@@ -286,6 +286,7 @@ export function buildQrContents(data: string, customization: QrCustomization, si
 
   const logo = customization.logo
   let logoElement = ''
+  let logoClipDef = ''
   if (logo) {
     const box = resolveLogoBox({
       left: originX,
@@ -297,9 +298,18 @@ export function buildQrContents(data: string, customization: QrCustomization, si
       moduleCount: count,
     })
     const plate = customization.transparentBackground ? '#FFFFFF' : customization.bgColor
+    // A lekerekítés a lemez méretének százaléka (alapból 24%).
+    const radiusPercent = Math.max(0, Math.min(50, customization.logoRadius ?? 24))
+    const plateRadius = Math.round((box.box * radiusPercent) / 100)
+    // A logókép saját lekerekítése a kép méretéhez viszonyítva; alapból a
+    // margó görbéjét követi (22%), így a fehér sáv a sarkoknál is egyenletes.
+    const imageRadiusPercent = Math.max(0, Math.min(50, customization.logoImageRadius ?? 22))
+    const logoRadius = Math.round((box.size * imageRadiusPercent) / 100)
+    const logoClipId = `qr-logo-${++gradientCounter}`
+    logoClipDef = `<clipPath id="${logoClipId}"><rect x="${(box.x + box.padding).toFixed(2)}" y="${(box.y + box.padding).toFixed(2)}" width="${box.size}" height="${box.size}" rx="${logoRadius}"/></clipPath>`
     logoElement = [
-      `<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.box}" height="${box.box}" rx="${Math.round(box.box * 0.14)}" fill="${plate}"/>`,
-      `<image x="${(box.x + box.padding).toFixed(2)}" y="${(box.y + box.padding).toFixed(2)}" width="${box.size}" height="${box.size}" href="${escapeXml(logo)}" preserveAspectRatio="xMidYMid meet"/>`,
+      `<rect x="${box.x.toFixed(2)}" y="${box.y.toFixed(2)}" width="${box.box}" height="${box.box}" rx="${plateRadius}" fill="${plate}"/>`,
+      `<image clip-path="url(#${logoClipId})" x="${(box.x + box.padding).toFixed(2)}" y="${(box.y + box.padding).toFixed(2)}" width="${box.size}" height="${box.size}" href="${escapeXml(logo)}" preserveAspectRatio="xMidYMid meet"/>`,
     ].join('')
   }
 
@@ -312,7 +322,7 @@ export function buildQrContents(data: string, customization: QrCustomization, si
     ? `<path d="${silhouettePath}" fill="none" stroke="${bodyPaint.fill}" stroke-width="${Math.max(0.35, cell * silhouetteBorder).toFixed(2)}" stroke-linejoin="round"/>`
     : ''
 
-  const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}${customBodyDefs}${
+  const defs = `${bodyPaint.defs}${eyeFramePaint.defs}${eyeBallPaint.defs}${customBodyDefs}${logoClipDef}${
     clipId ? `<clipPath id="${clipId}"><path d="${silhouettePath}"/></clipPath>` : ''
   }`
 

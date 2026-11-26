@@ -137,7 +137,7 @@ useContentSeo({
         <div class="min-w-0 xl:col-span-2">
           <QrTypeMenu class="-mt-[4rem]" scroll-to="" @select="onTypeSelect" />
 
-          <QrGenerator class="mt-5" :initial-type="'url'" :show-type-tabs="false" />
+          <QrGenerator class="mt-5" :initial-type="'text'" :show-type-tabs="false" />
         </div>
 
         <div class="min-w-0">

@@ -266,7 +266,7 @@ function resetAppearance() {
                 role="tooltip"
                 class="pointer-events-none absolute left-1/2 top-6 z-30 w-56 -translate-x-1/2 rounded-lg bg-ink px-2.5 py-2 text-[11px] font-normal leading-relaxed text-white opacity-0 shadow-lift transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
               >
-                A letöltött kép oldalhossza pixelben. Nyomtatáshoz 1024 px vagy nagyobb ajánlott.
+                A letöltött kép oldalhossza pixelben.
               </span>
             </span>
           </span>
@@ -369,14 +369,14 @@ function resetAppearance() {
 
     <div
       v-if="warnings.length"
-      class="mt-3 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-3"
+      class="mt-3 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/50 p-3"
       role="status"
     >
-      <p class="flex items-center gap-1.5 text-xs font-semibold text-amber-900 dark:text-amber-200">
-        <Icon name="lucide:triangle-alert" class="h-4 w-4" aria-hidden="true" />
+      <p class="flex items-center gap-1.5 text-xs font-semibold text-red-800 dark:text-red-200">
+        <Icon name="lucide:circle-alert" class="h-4 w-4 shrink-0" aria-hidden="true" />
         A beolvashatóság ellenőrzése
       </p>
-      <ul class="mt-1.5 space-y-1 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
+      <ul class="mt-1.5 space-y-1 text-xs font-medium leading-relaxed text-red-800 dark:text-red-200">
         <li v-for="warning in warnings" :key="warning" class="flex gap-1.5">
           <span aria-hidden="true">•</span>
           <span>{{ warning }}</span>

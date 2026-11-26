@@ -261,6 +261,10 @@ export interface QrCustomization {
   logoName: string
   logoSize: number
   logoMargin: number
+  /** A logó körüli margó (lemez) lekerekítése a lemez méretének százalékában (0–50). */
+  logoRadius: number
+  /** A logókép saját lekerekítése a kép méretének százalékában (0–50). */
+  logoImageRadius: number
   size: number
   errorCorrection: ErrorCorrectionLevel
   margin: number

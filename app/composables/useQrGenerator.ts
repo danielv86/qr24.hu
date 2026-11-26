@@ -9,7 +9,7 @@ import {
 import type { QrFormValues, QrTypeId } from '#shared/qr/types'
 
 export function useQrGenerator() {
-  const activeType = useState<QrTypeId>('qr-active-type', () => 'url')
+  const activeType = useState<QrTypeId>('qr-active-type', () => 'text')
   const valuesByType = useState<Record<QrTypeId, QrFormValues>>('qr-values', () => {
     const initial = {} as Record<QrTypeId, QrFormValues>
     for (const type of QR_TYPES) initial[type.id] = createDefaultValues(type.id)
