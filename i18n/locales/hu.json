@@ -10,6 +10,8 @@
     "sizeCalculator": "QR-kód méretkalkulátor",
     "info": "NFO",
     "infoMenuLabel": "Információk menü",
+    "typeMenu": "TYP",
+    "typeMenuLabel": "QR-kód típusok menü",
     "guides": "QR-kód útmutató",
     "faq": "GYIK",
     "dynamic": "Dinamikus QR-kódok",

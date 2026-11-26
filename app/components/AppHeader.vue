@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { QR_MENU_ORDER, getQrType } from '#shared/qr/content'
+import { QR_TYPE_PATHS } from '#shared/content/type-pages'
+
 const open = ref(false)
 const route = useRoute()
 const { t } = useI18n()
@@ -58,21 +61,76 @@ const infoLinks = computed(() => [
   { label: t('nav.faq'), to: localePath('/qr-kod-generator') + '#gyik', icon: 'lucide:help-circle' },
 ])
 
+/** A „Típus” menü: minden QR-kód típus saját oldala. */
+const typeLinks = computed(() =>
+  QR_MENU_ORDER.map((id) => {
+    const definition = getQrType(id)
+    return { label: definition.label, to: localePath(QR_TYPE_PATHS[id]), icon: definition.icon }
+  }),
+)
+
 const appOpen = ref(false)
 const appRoot = ref<HTMLElement | null>(null)
 const infoOpen = ref(false)
 const infoRoot = ref<HTMLElement | null>(null)
+const typeOpen = ref(false)
+const typeRoot = ref<HTMLElement | null>(null)
+
+/**
+ * A lenyíló menük hoverre is nyílnak. A zárás rövid késleltetéssel történik, hogy a
+ * gomb és a panel közötti néhány pixelnyi résen átmozgatott egér ne csukja be a menüt.
+ */
+const CLOSE_DELAY = 160
+const menuRefs = { app: appOpen, info: infoOpen, types: typeOpen }
+type MenuKey = keyof typeof menuRefs
+const closeTimers: Partial<Record<MenuKey, ReturnType<typeof setTimeout>>> = {}
+
+function cancelClose(key: MenuKey) {
+  const timer = closeTimers[key]
+  if (timer) {
+    clearTimeout(timer)
+    delete closeTimers[key]
+  }
+}
+
+function openMenu(key: MenuKey) {
+  cancelClose(key)
+  for (const other of Object.keys(menuRefs) as MenuKey[]) {
+    if (other !== key) menuRefs[other].value = false
+  }
+  menuRefs[key].value = true
+}
+
+function toggleMenu(key: MenuKey) {
+  if (menuRefs[key].value) menuRefs[key].value = false
+  else openMenu(key)
+}
+
+function scheduleClose(key: MenuKey) {
+  cancelClose(key)
+  closeTimers[key] = setTimeout(() => {
+    menuRefs[key].value = false
+    delete closeTimers[key]
+  }, CLOSE_DELAY)
+}
+
+function closeAllMenus() {
+  for (const key of Object.keys(menuRefs) as MenuKey[]) {
+    cancelClose(key)
+    menuRefs[key].value = false
+  }
+}
 
 function onDocumentClick(event: MouseEvent) {
   const target = event.target as Node
   if (infoOpen.value && infoRoot.value && !infoRoot.value.contains(target)) infoOpen.value = false
   if (appOpen.value && appRoot.value && !appRoot.value.contains(target)) appOpen.value = false
+  if (typeOpen.value && typeRoot.value && !typeRoot.value.contains(target)) typeOpen.value = false
 }
 
 watch(() => route.fullPath, () => {
   open.value = false
-  infoOpen.value = false
-  appOpen.value = false
+  closeAllMenus()
 })
 
 watch(open, (value) => {
@@ -82,6 +140,7 @@ watch(open, (value) => {
 
 onBeforeUnmount(() => {
   stopScrollListener?.()
+  for (const key of Object.keys(menuRefs) as MenuKey[]) cancelClose(key)
   if (import.meta.client) document.documentElement.classList.remove('overflow-hidden')
 })
 </script>
@@ -116,14 +175,20 @@ onBeforeUnmount(() => {
           {{ link.label }}
         </NuxtLink>
 
-        <div ref="appRoot" class="relative">
+        <div
+          ref="appRoot"
+          class="relative flex"
+          @mouseenter="openMenu('app')"
+          @mouseleave="scheduleClose('app')"
+        >
           <button
             type="button"
             class="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
             aria-haspopup="menu"
             :aria-expanded="appOpen"
             aria-controls="header-app-menu"
-            @click="appOpen = !appOpen"
+            @click="toggleMenu('app')"
+            @focus="openMenu('app')"
             @keydown.esc="appOpen = false"
           >
             {{ t('nav.app') }}
@@ -151,14 +216,72 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div ref="infoRoot" class="relative">
+        <div
+          ref="typeRoot"
+          class="relative flex"
+          @mouseenter="openMenu('types')"
+          @mouseleave="scheduleClose('types')"
+        >
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
+            aria-haspopup="menu"
+            :aria-expanded="typeOpen"
+            aria-controls="header-type-menu"
+            @click="toggleMenu('types')"
+            @focus="openMenu('types')"
+            @keydown.esc="typeOpen = false"
+          >
+            {{ t('nav.typeMenu') }}
+            <Icon name="lucide:chevron-down" class="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+
+          <div
+            v-if="typeOpen"
+            id="header-type-menu"
+            role="menu"
+            :aria-label="t('nav.typeMenuLabel')"
+            class="absolute left-1/2 top-full z-50 mt-1 max-h-[70vh] w-[46rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-y-auto rounded-xl border border-slate-200 bg-surface p-1.5 shadow-lift"
+          >
+            <div class="grid grid-cols-3 gap-0.5">
+              <NuxtLink
+                v-for="link in typeLinks"
+                :key="link.to"
+                :to="link.to"
+                role="menuitem"
+                class="flex min-w-0 items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-soft hover:bg-slate-50 hover:text-brand-800"
+                @click="typeOpen = false"
+              >
+                <Icon :name="link.icon" class="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                <span class="truncate">{{ link.label }}</span>
+              </NuxtLink>
+            </div>
+            <NuxtLink
+              :to="localePath('/qr-kod-tipusok')"
+              role="menuitem"
+              class="mt-1 flex items-center gap-2 rounded-lg border-t border-slate-100 px-2.5 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+              @click="typeOpen = false"
+            >
+              <Icon name="lucide:shapes" class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ t('nav.types') }}
+            </NuxtLink>
+          </div>
+        </div>
+
+        <div
+          ref="infoRoot"
+          class="relative flex"
+          @mouseenter="openMenu('info')"
+          @mouseleave="scheduleClose('info')"
+        >
           <button
             type="button"
             class="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
             aria-haspopup="menu"
             :aria-expanded="infoOpen"
             aria-controls="header-info-menu"
-            @click="infoOpen = !infoOpen"
+            @click="toggleMenu('info')"
+            @focus="openMenu('info')"
             @keydown.esc="infoOpen = false"
           >
             {{ t('nav.info') }}

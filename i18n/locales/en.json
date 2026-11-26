@@ -10,6 +10,8 @@
     "sizeCalculator": "QR code size calculator",
     "info": "Information",
     "infoMenuLabel": "Information menu",
+    "typeMenu": "TYP",
+    "typeMenuLabel": "QR code types menu",
     "guides": "QR code guide",
     "faq": "FAQ",
     "dynamic": "Dynamic QR codes",
