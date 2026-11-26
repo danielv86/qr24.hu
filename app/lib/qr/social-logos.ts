@@ -53,7 +53,7 @@ export interface QrBrandLogo {
   path: string
 }
 
-/** A márkalogó négyzetének lekerekítése a 24 × 24-es nézetben. */
+/** A márkalogó négyzetének megszokott lekerekítése a 24 × 24-es nézetben (csak a felülethez). */
 export const BRAND_LOGO_CORNER_RX = 5.5
 
 /** A négyzet lekerekítése százalékban – a kijelölést is ehhez igazítjuk. */
@@ -143,7 +143,9 @@ export const SOCIAL_LOGO_MAP = new Map(SOCIAL_LOGOS.map(logo => [logo.id, logo])
 export function brandLogoDataUrl(logo: QrBrandLogo): string {
   const svg = [
     '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24">',
-    `<rect width="24" height="24" rx="${BRAND_LOGO_CORNER_RX}" fill="${logo.color}"/>`,
+    // A négyzet szándékosan szögletes: a QR-ben a „Logó lekerekítés” csúszka
+    // vágja le a sarkakat, így 0%-nál valóban szögletes lesz a logó.
+    `<rect width="24" height="24" rx="0" fill="${logo.color}"/>`,
     `<g transform="translate(4.8 4.8) scale(0.6)" fill="${logo.glyph}"><path d="${logo.path}"/></g>`,
     '</svg>',
   ].join('')

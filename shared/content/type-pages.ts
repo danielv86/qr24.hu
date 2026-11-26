@@ -9,7 +9,7 @@ const UPDATED = '2026. október 22.'
  * ugyanebből a térképből dolgoznak, így a belső linkek mindig helyesek.
  */
 export const QR_TYPE_PATHS: Record<QrTypeId, string> = {
-  url: '/url-qr-kod-generator',
+  url: '/weboldal-qr-kod-generator',
   contact: '/kapcsolat-qr-kod-generator',
   social: '/kozossegi-qr-kod-generator',
   wifi: '/wifi-qr-kod-generator',

@@ -171,6 +171,33 @@ function applySocialLogo(logo: QrBrandLogo) {
   setLogoData(brandLogoDataUrl(logo), logo.label)
 }
 
+/** A logó és a margó lekerekítése ilyenkor együtt mozog. */
+const linkLogoRadii = ref(false)
+/** Összekapcsoláskor érvényben lévő különbség (margó − logó); ezt tartja meg a két csúszka. */
+const logoRadiusOffset = ref(0)
+
+function toggleLogoRadiusLink() {
+  linkLogoRadii.value = !linkLogoRadii.value
+  if (linkLogoRadii.value) {
+    logoRadiusOffset.value = customization.value.logoRadius - customization.value.logoImageRadius
+  }
+}
+
+function clampRadius(value: number): number {
+  return Math.max(0, Math.min(50, Math.round(value)))
+}
+
+function setLogoRadius(key: 'logoRadius' | 'logoImageRadius', event: Event) {
+  const value = Number((event.target as HTMLInputElement).value)
+  update(key, value)
+  if (!linkLogoRadii.value) return
+  if (key === 'logoImageRadius') {
+    update('logoRadius', clampRadius(value + logoRadiusOffset.value))
+  } else {
+    update('logoImageRadius', clampRadius(value - logoRadiusOffset.value))
+  }
+}
+
 const bgFillLabel = computed(() => {
   const kind = customization.value.bgFill.kind
   return fillKinds.find(item => item.value === kind)?.label ?? 'Tömör'
@@ -762,35 +789,58 @@ const activeTemplate = computed(
           >
           <p class="field-help">A logó körüli üres sáv; nagyobb érték tisztább képet ad.</p>
         </div>
-        <div>
-          <label for="qr-logo-image-radius" class="field-label">
-            Logó lekerekítés: {{ customization.logoImageRadius }}%
-          </label>
-          <input
-            id="qr-logo-image-radius"
-            type="range"
-            class="w-full"
-            min="0"
-            max="50"
-            step="1"
-            :value="customization.logoImageRadius"
-            @input="update('logoImageRadius', Number(($event.target as HTMLInputElement).value))"
-          >
-        </div>
-        <div>
-          <label for="qr-logo-radius" class="field-label">
-            Margó lekerekítése: {{ customization.logoRadius }}%
-          </label>
-          <input
-            id="qr-logo-radius"
-            type="range"
-            class="w-full"
-            min="0"
-            max="50"
-            step="1"
-            :value="customization.logoRadius"
-            @input="update('logoRadius', Number(($event.target as HTMLInputElement).value))"
-          >
+        <div class="sm:col-span-2">
+          <div class="flex items-center justify-between gap-2">
+            <p class="field-label mb-0">Lekerekítés</p>
+            <button
+              id="qr-logo-radius-link"
+              type="button"
+              class="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors"
+              :class="linkLogoRadii
+                ? 'border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-950/40'
+                : 'border-slate-200 text-ink-muted hover:border-brand-300 hover:text-ink'"
+              :aria-pressed="linkLogoRadii"
+              :title="linkLogoRadii
+                ? 'Összekapcsolva: a két csúszka a beállított különbséget megtartva együtt mozog'
+                : 'Összekapcsolás: a két csúszka együtt mozog, a mostani lekerekítések megtartásával'"
+              @click="toggleLogoRadiusLink"
+            >
+              <Icon :name="linkLogoRadii ? 'lucide:link' : 'lucide:unlink'" class="h-3.5 w-3.5" aria-hidden="true" />
+              {{ linkLogoRadii ? 'Összekapcsolva' : 'Összekapcsolás' }}
+            </button>
+          </div>
+          <div class="mt-3 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="qr-logo-image-radius" class="field-label">
+                Logó lekerekítés: {{ customization.logoImageRadius }}%
+              </label>
+              <input
+                id="qr-logo-image-radius"
+                type="range"
+                class="w-full"
+                min="0"
+                max="50"
+                step="1"
+                :value="customization.logoImageRadius"
+                @input="setLogoRadius('logoImageRadius', $event)"
+              >
+            </div>
+            <div>
+              <label for="qr-logo-radius" class="field-label">
+                Margó lekerekítése: {{ customization.logoRadius }}%
+              </label>
+              <input
+                id="qr-logo-radius"
+                type="range"
+                class="w-full"
+                min="0"
+                max="50"
+                step="1"
+                :value="customization.logoRadius"
+                @input="setLogoRadius('logoRadius', $event)"
+              >
+            </div>
+          </div>
         </div>
       </div>
     </div>

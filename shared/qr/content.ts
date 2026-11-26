@@ -129,7 +129,7 @@ export const QR_TYPES: QrTypeDefinition[] = [
     icon: 'lucide:link',
     description: 'Weboldal, webshop vagy bármilyen webcím megnyitása egyetlen beolvasással.',
     examples: 'https://qrkod24.hu',
-    seoPath: '/url-qr-kod-generator',
+    seoPath: '/weboldal-qr-kod-generator',
     fields: [
       {
         key: 'url',
@@ -1625,7 +1625,7 @@ export function buildQrContent(typeId: QrTypeId, values: QrFormValues): QrBuildR
 }
 
 export const POPULAR_QR_TYPES = [
-  { id: 'url', label: 'Weboldal QR-kód', icon: 'lucide:link', path: '/url-qr-kod-generator' },
+  { id: 'url', label: 'Weboldal QR-kód', icon: 'lucide:link', path: '/weboldal-qr-kod-generator' },
   { id: 'vcard', label: 'Kapcsolat (vCard)', icon: 'lucide:id-card', path: '/vcard-qr-kod-generator' },
   { id: 'wifi', label: 'Wi-Fi megosztás', icon: 'lucide:wifi', path: '/wifi-qr-kod-generator' },
   { id: 'email', label: 'E-mail küldés', icon: 'lucide:mail', path: '/email-qr-kod-generator' },

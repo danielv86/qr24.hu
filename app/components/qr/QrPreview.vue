@@ -362,9 +362,6 @@ function resetAppearance() {
       </p>
       <p v-if="downloadError" class="field-error" role="alert">{{ downloadError }}</p>
 
-      <p class="mt-3 text-center text-[11px] leading-relaxed text-ink-muted">
-        A fájl a böngésződben készül, az adatok nem hagyják el az eszközödet.
-      </p>
     </div>
 
     <div

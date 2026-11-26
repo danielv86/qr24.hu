@@ -5,7 +5,7 @@ const { t } = useI18n()
 const year = computed(() => new Date().getFullYear())
 
 const typeLinks = [
-  { label: 'Weboldal QR-kód', to: '/url-qr-kod-generator' },
+  { label: 'Weboldal QR-kód', to: '/weboldal-qr-kod-generator' },
   { label: 'Wi-Fi QR-kód', to: '/wifi-qr-kod-generator' },
   { label: 'vCard QR-kód', to: '/vcard-qr-kod-generator' },
   { label: 'Névjegykártya QR-kód', to: '/nevjegykartya-qr-kod' },

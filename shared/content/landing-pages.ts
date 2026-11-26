@@ -169,7 +169,7 @@ export const LANDING_PAGES: LandingPageContent[] = [
     updated: UPDATED,
   },
   {
-    slug: '/url-qr-kod-generator',
+    slug: '/weboldal-qr-kod-generator',
     title: 'URL QR-kód készítése – weboldal QR-kód generátor',
     description:
       'Készíts URL QR-kódot weboldaladhoz, kampányodhoz vagy közösségi profilodhoz. Ingyenes, azonnal letölthető PNG és SVG, hasznos linkelési tippekkel.',
@@ -834,7 +834,7 @@ export const LANDING_PAGES: LandingPageContent[] = [
       },
     ],
     related: [
-      { label: 'URL QR-kód generátor', to: '/url-qr-kod-generator' },
+      { label: 'Weboldal QR-kód generátor', to: '/weboldal-qr-kod-generator' },
       { label: 'QR-kód nyomtatásra', to: '/qr-kod-nyomtatasra' },
       { label: 'QR-kód generátor', to: '/qr-kod-generator' },
     ],

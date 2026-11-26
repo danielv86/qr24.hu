@@ -298,8 +298,8 @@ export function buildQrContents(data: string, customization: QrCustomization, si
       moduleCount: count,
     })
     const plate = customization.transparentBackground ? '#FFFFFF' : customization.bgColor
-    // A lekerekítés a lemez méretének százaléka (alapból 24%).
-    const radiusPercent = Math.max(0, Math.min(50, customization.logoRadius ?? 24))
+    // A lekerekítés a lemez méretének százaléka (alapból 22%).
+    const radiusPercent = Math.max(0, Math.min(50, customization.logoRadius ?? 22))
     const plateRadius = Math.round((box.box * radiusPercent) / 100)
     // A logókép saját lekerekítése a kép méretéhez viszonyítva; alapból a
     // margó görbéjét követi (22%), így a fehér sáv a sarkoknál is egyenletes.

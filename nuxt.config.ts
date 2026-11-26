@@ -195,7 +195,9 @@ export default defineNuxtConfig({
 
   routeRules: {
     // A típusonkénti aloldalak új, SEO-barát címére irányítunk (301).
-    '/url-qr-kod': { redirect: { to: '/url-qr-kod-generator', statusCode: 301 } },
+    '/url-qr-kod': { redirect: { to: '/weboldal-qr-kod-generator', statusCode: 301 } },
+    // A típus URL-je a beszédesebb weboldal címre került; a régi cím 301-gyel követi.
+    '/url-qr-kod-generator': { redirect: { to: '/weboldal-qr-kod-generator', statusCode: 301 } },
     '/szoveg-qr-kod': { redirect: { to: '/szoveg-qr-kod-generator', statusCode: 301 } },
     '/wifi-qr-kod': { redirect: { to: '/wifi-qr-kod-generator', statusCode: 301 } },
     '/vcard-qr-kod': { redirect: { to: '/vcard-qr-kod-generator', statusCode: 301 } },

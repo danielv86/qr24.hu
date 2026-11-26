@@ -79,7 +79,7 @@ const GUIDE_STEPS = [
 ]
 
 const POPULAR_TYPES = [
-  { label: 'Weboldal QR-kód', icon: 'lucide:link', to: '/url-qr-kod-generator', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' },
+  { label: 'Weboldal QR-kód', icon: 'lucide:link', to: '/weboldal-qr-kod-generator', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' },
   { label: 'Kapcsolat (vCard)', icon: 'lucide:id-card', to: '/vcard-qr-kod-generator', color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' },
   { label: 'Wi-Fi megosztás', icon: 'lucide:wifi', to: '/wifi-qr-kod-generator', color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' },
   { label: 'E-mail küldés', icon: 'lucide:mail', to: '/email-qr-kod-generator', color: 'bg-violet-50 text-violet-600' },
@@ -102,7 +102,7 @@ const INTERNAL_LINKS = [
   { label: 'Google-értékelés', to: '/google-ertekeles-qr-kod-generator', text: 'Etikus értékeléskérés.' },
   { label: 'Étlap QR-kód', to: '/etlap-qr-kod-generator', text: 'Vendéglátás és asztali kártya.' },
   { label: 'Nyomtatásra', to: '/qr-kod-nyomtatasra', text: 'Méret, felbontás, anyag.' },
-  { label: 'URL QR-kód', to: '/url-qr-kod-generator', text: 'Webcímek megosztása.' },
+  { label: 'Weboldal QR-kód', to: '/weboldal-qr-kod-generator', text: 'Webcímek megosztása.' },
   { label: 'Szöveg QR-kód', to: '/szoveg-qr-kod-generator', text: 'Egyszerű szöveges tartalom.' },
   { label: 'Tömeges QR kód generátor', to: '/tomeges-qr-kod-generator', text: 'Akár 100 kód egyszerre, ZIP-ben.' },
 ]
