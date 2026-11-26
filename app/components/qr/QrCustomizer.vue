@@ -48,8 +48,8 @@ const tabs = [
   { id: 'shapes', label: 'Forma', icon: 'lucide:qr-code' },
   { id: 'colors', label: 'Színek', icon: 'lucide:palette' },
   { id: 'logo', label: 'Logó', icon: 'lucide:image' },
-  { id: 'text', label: 'Szöveg', icon: 'lucide:type' },
   { id: 'frame', label: 'Keret', icon: 'lucide:frame' },
+  { id: 'text', label: 'Szöveg', icon: 'lucide:type' },
 ] as const
 
 const CUSTOM_OPTION = { value: 'custom', label: 'Saját forma' }
