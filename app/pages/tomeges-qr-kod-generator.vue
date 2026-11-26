@@ -198,7 +198,7 @@ const steps = [
       <QrTypeMenu
         class="-mt-28"
         :model-value="type"
-        scroll-to="bulk-tool"
+        scroll-to="qr-type-selector"
         @update:model-value="selectType"
       />
 

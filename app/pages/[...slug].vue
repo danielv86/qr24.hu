@@ -44,6 +44,8 @@ const isGeneratorLanding = path === '/qr-kod-generator'
  * nélkül, így a fejléc, a leírás és az URL is az új típushoz igazodik.
  */
 function onTypeSelect(id: QrTypeId) {
+  // A generátor fő oldalán helyben váltunk típust, a választó pedig ott van,
+  // ahol a felhasználó épp kattintott – nincs szükség görgetésre.
   if (isGeneratorLanding) return
   const target = typePagePath(id)
   if (target && target !== path) {
@@ -175,7 +177,7 @@ const generatorLink = computed(() =>
       <div v-if="hasGenerator">
         <QrTypeMenu
           class="-mt-28"
-          :scroll-to="isGeneratorLanding ? 'qr-generator' : ''"
+          scroll-to=""
           @select="onTypeSelect"
         />
         <QrGenerator

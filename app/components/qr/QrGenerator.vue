@@ -11,7 +11,7 @@ const props = withDefaults(
 )
 
 const route = useRoute()
-const { activeType, selectType, typeDefinition, validateNow, payload } = useQrGenerator()
+const { activeType, selectType, typeDefinition, validateNow, payload, typeLoading } = useQrGenerator()
 const { user } = useUserSession()
 
 /** 1 = tartalom, 2 = stílus. Egyszerre mindig csak az aktív lépés látszik. */
@@ -136,9 +136,9 @@ function backToType() {
       <section
         v-if="step === 1"
         :id="`qr-panel-${typeDefinition.id}`"
+        class="card relative scroll-mt-24 p-4 sm:p-6 lg:col-start-1 lg:row-start-1"
         role="tabpanel"
         :aria-labelledby="showTypeTabs ? `qr-tab-${typeDefinition.id}` : 'qr-content-heading'"
-        class="card p-4 sm:p-6 lg:col-start-1 lg:row-start-1"
       >
         <QrStepHead
           :num="1"
@@ -246,6 +246,8 @@ function backToType() {
             </div>
           </div>
         </div>
+
+        <QrLoadingOverlay :show="typeLoading" />
       </section>
 
       <!-- 2. lépés: megjelenés -->

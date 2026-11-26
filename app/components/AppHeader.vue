@@ -146,20 +146,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <header
-    :class="[
-      'sticky top-0 z-40 border-b transition-[background-color,border-color,box-shadow] duration-300 ease-out',
-      overHero
-        ? 'border-transparent bg-transparent'
-        : 'border-slate-200/80 bg-surface/95 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.6)] backdrop-blur supports-[backdrop-filter]:bg-surface/80',
-    ]"
-  >
+  <!-- A fejléc helyfoglalása állandó (97 px), csak a sáv magassága húzódik össze.
+       Ha a fejléc magassága a dokumentumfolyamban is változna, a görgetéskor a
+       böngésző görgetés-rögzítése 32 px-et korrigálna, ami fel-le ugrásként látszik. -->
+  <header class="sticky top-0 z-40 min-h-[6.0625rem]">
     <div
       :class="[
-        'container-page flex items-center gap-3 transition-[height] duration-300 ease-out motion-reduce:transition-none lg:gap-6',
+        'border-b transition-[height,background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none',
         scrolled ? 'h-16' : 'h-24',
+        overHero
+          ? 'border-transparent bg-transparent'
+          : 'border-slate-200/80 bg-surface/95 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.6)] backdrop-blur supports-[backdrop-filter]:bg-surface/80',
       ]"
     >
+      <div class="container-page flex h-full items-center gap-3 lg:gap-6">
       <AppLogo
         class="shrink-0 origin-left transition-transform duration-300 ease-out motion-reduce:transition-none"
         :class="scrolled ? 'scale-90' : 'scale-100'"
@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
           v-for="link in mainLinks"
           :key="link.to"
           :to="link.to"
-          class="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
+          class="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-brand-800"
         >
           {{ link.label }}
         </NuxtLink>
@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
         >
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
+            class="relative inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-brand-800"
             aria-haspopup="menu"
             :aria-expanded="appOpen"
             aria-controls="header-app-menu"
@@ -192,7 +192,11 @@ onBeforeUnmount(() => {
             @keydown.esc="appOpen = false"
           >
             {{ t('nav.app') }}
-            <Icon name="lucide:chevron-down" class="h-3.5 w-3.5" aria-hidden="true" />
+            <Icon
+              name="lucide:chevron-down"
+              class="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-ink-muted"
+              aria-hidden="true"
+            />
           </button>
 
           <div
@@ -224,7 +228,7 @@ onBeforeUnmount(() => {
         >
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
+            class="relative inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-brand-800"
             aria-haspopup="menu"
             :aria-expanded="typeOpen"
             aria-controls="header-type-menu"
@@ -233,7 +237,11 @@ onBeforeUnmount(() => {
             @keydown.esc="typeOpen = false"
           >
             {{ t('nav.typeMenu') }}
-            <Icon name="lucide:chevron-down" class="h-3.5 w-3.5" aria-hidden="true" />
+            <Icon
+              name="lucide:chevron-down"
+              class="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-ink-muted"
+              aria-hidden="true"
+            />
           </button>
 
           <div
@@ -276,7 +284,7 @@ onBeforeUnmount(() => {
         >
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800"
+            class="relative inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-brand-800"
             aria-haspopup="menu"
             :aria-expanded="infoOpen"
             aria-controls="header-info-menu"
@@ -285,7 +293,11 @@ onBeforeUnmount(() => {
             @keydown.esc="infoOpen = false"
           >
             {{ t('nav.info') }}
-            <Icon name="lucide:chevron-down" class="h-3.5 w-3.5" aria-hidden="true" />
+            <Icon
+              name="lucide:chevron-down"
+              class="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-ink-muted"
+              aria-hidden="true"
+            />
           </button>
 
           <div
@@ -339,6 +351,7 @@ onBeforeUnmount(() => {
         >
           <Icon :name="open ? 'lucide:x' : 'lucide:menu'" class="h-5 w-5" />
         </button>
+      </div>
       </div>
     </div>
 

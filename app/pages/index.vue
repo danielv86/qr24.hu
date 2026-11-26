@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { typePagePath } from '#shared/content/landing-pages'
 import type { ContentFaq } from '#shared/content/types'
+import type { QrTypeId } from '#shared/qr/types'
 
 const HOME_FAQS: ContentFaq[] = [
   {
@@ -105,6 +107,16 @@ const INTERNAL_LINKS = [
   { label: 'Tömeges QR kód generátor', to: '/tomeges-qr-kod-generator', text: 'Akár 100 kód egyszerre, ZIP-ben.' },
 ]
 
+/**
+ * A főoldalon a típusválasztás a típus saját oldalára visz, ahol a generátor
+ * már az adott típussal nyílik meg. Ha egy típushoz nincs külön oldal, a
+ * generátor fő oldalára lépünk a típus megjelölésével.
+ */
+function onTypeSelect(id: QrTypeId) {
+  // A típus oldalán a típusválasztónál nyílunk, nem az oldal tetején.
+  void navigateTo(typePagePath(id) ?? `/qr-kod-generator?type=${id}`)
+}
+
 useContentSeo({
   slug: '/',
   title: 'Ingyenes QR-kód generátor – QRKOD24.hu',
@@ -123,7 +135,7 @@ useContentSeo({
     <div class="container-page py-8 lg:py-10">
       <div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18.75rem]">
         <div class="min-w-0 xl:col-span-2">
-          <QrTypeMenu class="-mt-28" />
+          <QrTypeMenu class="-mt-28" scroll-to="" @select="onTypeSelect" />
 
           <QrGenerator class="mt-5" :initial-type="'url'" :show-type-tabs="false" />
         </div>

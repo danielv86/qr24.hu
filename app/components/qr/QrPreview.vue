@@ -7,10 +7,13 @@ import type { QrDownloadFormat } from '~/composables/useQrDownload'
 const {
   activeType,
   payload,
+  previewPayload,
+  isSamplePreview,
   isValid,
   validateNow,
   resetCurrentType,
   clearCurrentContent,
+  typeLoading,
 } = useQrGenerator()
 const { customization, warnings, resetCustomization, update } = useQrCustomization()
 const { downloadQr, isDownloading, downloadingFormat, downloadError } = useQrDownload()
@@ -57,7 +60,7 @@ function setErrorLevel(index: number) {
 async function renderPreview() {
   if (!import.meta.client) return
   const token = ++renderToken
-  if (!payload.value) {
+  if (!previewPayload.value) {
     if (container.value) container.value.innerHTML = ''
     return
   }
@@ -67,7 +70,7 @@ async function renderPreview() {
   rendering.value = true
   renderError.value = ''
   try {
-    const svg = await renderQrSvg(payload.value, customization.value, PREVIEW_SIZE)
+    const svg = await renderQrSvg(previewPayload.value, customization.value, PREVIEW_SIZE)
     if (token !== renderToken || !container.value) return
     container.value.innerHTML = svg
   } catch {
@@ -90,7 +93,7 @@ function onDocumentClick(event: MouseEvent) {
 
 /** A kis előnézet SVG-jét nagyítja fel a modálban – vektor, ezért éles marad. */
 function openLarge() {
-  if (!isValid.value || !container.value) return
+  if (!previewPayload.value || !container.value) return
   largeImage.value = container.value.innerHTML
   showLarge.value = true
 }
@@ -120,7 +123,7 @@ onMounted(() => {
 })
 
 watch(
-  [payload, customization],
+  [previewPayload, customization],
   () => scheduleRender(),
   { deep: true, flush: 'post' },
 )
@@ -150,7 +153,8 @@ function resetAppearance() {
 
 <template>
   <div ref="panel" class="lg:sticky lg:top-24">
-    <div class="rounded-2xl border border-slate-200 bg-surface p-4 shadow-card">
+    <div class="relative rounded-2xl border border-slate-200 bg-surface p-4 shadow-card">
+      <QrLoadingOverlay :show="typeLoading" />
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-sm font-semibold text-ink">Előnézet</h2>
         <button
@@ -159,7 +163,7 @@ function resetAppearance() {
           class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-surface text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="QR-kód megnyitása nagyban"
           title="QR-kód megnyitása nagyban"
-          :disabled="!isValid"
+          :disabled="!previewPayload"
           @click="openLarge"
         >
           <Icon name="lucide:eye" class="h-4 w-4" aria-hidden="true" />
@@ -169,7 +173,7 @@ function resetAppearance() {
       <div class="relative mt-3 flex justify-center rounded-xl border border-slate-200 bg-white p-3">
         <div class="relative flex w-full max-w-[300px] items-center justify-center">
           <div
-            v-if="isValid"
+            v-if="previewPayload"
             ref="container"
             class="w-full [&>svg]:h-auto [&>svg]:w-full"
             aria-hidden="true"
@@ -189,7 +193,10 @@ function resetAppearance() {
         </div>
       </div>
 
-      <div v-if="rendering && isValid" class="sr-only" aria-live="polite">Előnézet frissítése…</div>
+      <p v-if="isSamplePreview" class="mt-2 text-center text-[11px] leading-relaxed text-ink-muted">
+        Minta előnézet – add meg az adataidat, és a kód a saját tartalmaddal frissül.
+      </p>
+      <div v-if="rendering && previewPayload" class="sr-only" aria-live="polite">Előnézet frissítése…</div>
       <p v-if="renderError" class="field-error justify-center" role="alert">{{ renderError }}</p>
 
       <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-3">

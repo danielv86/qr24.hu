@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { QrTypeId } from '#shared/qr/types'
+import { scrollToTypeSelector } from '~/utils/scroll'
 
 /**
  * A típusválasztó alapból a generátor állapotát vezérli. A tömeges generátor
@@ -22,13 +23,17 @@ const emit = defineEmits<{
   select: [id: QrTypeId]
 }>()
 
-const { activeType, selectType } = useQrGenerator()
+const { activeType, selectType, startTypeLoading } = useQrGenerator()
 const { templates } = useQrTemplates()
 
 const current = computed<QrTypeId>(() => props.modelValue ?? activeType.value)
 
-/** A választó alapból csak két sort mutat; a többi a „További QR kódok” alatt nyílik le. */
-const expanded = ref(false)
+/**
+ * A választó alapból csak két sort mutat; a többi a „További QR kódok” alatt nyílik le.
+ * Az állapot globális, mert a típusra kattintás másik oldalra navigál: így a lenyitott
+ * választó az új oldalon is lenyitva marad.
+ */
+const expanded = useState<boolean>('qr-type-menu-expanded', () => false)
 const perRow = ref(0)
 
 function syncColumns() {
@@ -55,11 +60,17 @@ function isHidden(index: number): boolean {
 }
 
 function choose(id: QrTypeId) {
-  if (props.modelValue !== undefined) emit('update:modelValue', id)
-  else selectType(id)
+  if (props.modelValue !== undefined) {
+    emit('update:modelValue', id)
+  } else {
+    startTypeLoading()
+    selectType(id)
+  }
   emit('select', id)
-  if (import.meta.client) {
-    document.getElementById(props.scrollTo)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (import.meta.client && props.scrollTo) {
+    // Ugyanaz az ugrás, mint a típusoldalakon: a választó a fix fejléc alá igazodik.
+    if (props.scrollTo === 'qr-type-selector') void scrollToTypeSelector(5)
+    else document.getElementById(props.scrollTo)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 </script>
