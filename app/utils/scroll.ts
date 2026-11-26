@@ -6,29 +6,76 @@ function findSelector(stale: HTMLElement | null): HTMLElement | null {
   return element && element !== stale ? element : null
 }
 
-/** A választó kívánt görgetési pozíciója (a fix fejléc alatt, ráhagyással). */
+/**
+ * A választó kívánt görgetési pozíciója. A dokumentumon belüli eltolásból
+ * számol, ezért a görgetés közben is ugyanazt adja – így animáció közben is
+ * újraszámolható, ha a fölötte lévő tartalom elmozdul.
+ */
 function targetTop(element: HTMLElement, gap: number): number {
   const marginTop = Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0
   return Math.max(0, Math.round(window.scrollY + element.getBoundingClientRect().top - marginTop - gap))
 }
 
-function align(element: HTMLElement, gap: number, behavior: ScrollBehavior): boolean {
-  const next = targetTop(element, gap)
-  if (Math.abs(window.scrollY - next) < 1) return false
-  window.scrollTo({ top: next, behavior })
-  return true
+/** Azonnali görgetés: a `scroll-behavior: smooth` ne indítson külön animációt. */
+function jumpTo(top: number) {
+  window.scrollTo({ top, behavior: 'instant' })
 }
 
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+
+/** Képkockára vár, de háttérben lévő lapnál (ahol nincs rAF) időkorláttal továbblép. */
+const nextFrameOr = (timeout = 50) =>
+  Promise.race([nextFrame(), new Promise<void>(resolve => setTimeout(resolve, timeout))])
+
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
+
+/**
+ * Rövid, saját animáció a célpozícióig. A cél minden képkockában újraszámolódik,
+ * ezért ha közben betöltődő tartalom elmozdítja a választót, nem ugrik a végén.
+ * A böngésző beépített smooth görgetését azért nem használjuk, mert az a fix
+ * célpontot követi, és a közben elmozduló tartalom miatt láthatóan ugrott.
+ */
+function animateTo(getTarget: () => number, signal: AbortSignal, duration: number): Promise<void> {
+  return new Promise((resolve) => {
+    const startY = window.scrollY
+    const started = performance.now()
+    let frameStarted = false
+
+    const step = (now: number) => {
+      frameStarted = true
+      if (signal.aborted) {
+        resolve()
+        return
+      }
+      const progress = Math.min(1, (now - started) / duration)
+      const target = getTarget()
+      jumpTo(Math.round(startY + (target - startY) * easeInOutCubic(progress)))
+      if (progress < 1) requestAnimationFrame(step)
+      else resolve()
+    }
+
+    // Háttérben lévő lapon nincs animációs képkocka: ilyenkor a célpozícióra ugrunk.
+    const guard = setTimeout(() => {
+      if (frameStarted) return
+      jumpTo(getTarget())
+      resolve()
+    }, 400)
+
+    requestAnimationFrame((now) => {
+      clearTimeout(guard)
+      step(now)
+    })
+  })
+}
 
 /**
  * A QR-típus választóhoz görget: a fix fejlécet a választó `scroll-mt-*`
  * értékéből veszi figyelembe, a kért ráhagyással (alapból 5 px).
  *
- * Az igazítás azonnali (nem animált), mert az oldal `scroll-behavior: smooth`
- * beállítása mellett az animált csúszás fel-le ugrálásnak látszott. Utána néhány
- * képkockán át figyeli, hogy a késve betöltődő tartalom nem mozdította-e el a
- * választót, és ha igen, azonnal korrigál – felhasználói görgetésnél leáll.
+ * Az igazítás rövid, lágy animációval történik (kb. 320 ms), csökkentett
+ * mozgás beállításnál viszont azonnali. Utána néhány képkockán át figyeli,
+ * hogy a késve betöltődő tartalom nem mozdította-e el a választót, és ha igen,
+ * azonnal korrigál – felhasználói görgetésnél minden korrekció leáll.
  */
 export async function scrollToTypeSelector(gap = 5, stale: HTMLElement | null = null): Promise<void> {
   if (!import.meta.client) return
@@ -38,26 +85,40 @@ export async function scrollToTypeSelector(gap = 5, stale: HTMLElement | null = 
   let element = findSelector(stale)
   // Ha a DOM-csere egy képkockával később fut, rövid ideig várunk rá.
   for (let frame = 0; !element && frame < 12; frame += 1) {
-    await nextFrame()
+    await nextFrameOr()
     element = findSelector(stale)
   }
   if (!element) return
+  const fallback = element
 
   const stop = new AbortController()
   const cancel = () => stop.abort()
   const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
   for (const event of events) window.addEventListener(event, cancel, { passive: true, once: true })
 
-  align(element, gap, 'instant')
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const distance = Math.abs(targetTop(element, gap) - window.scrollY)
+  const duration = reduced ? 0 : Math.min(420, Math.max(200, distance * 0.6))
 
+  if (duration > 0 && distance > 1) {
+    await animateTo(() => {
+      const current = findSelector(stale) ?? fallback
+      return targetTop(current, gap)
+    }, stop.signal, duration)
+  }
+
+  // Pontos zárópozíció, majd néhány képkockán át az utólagos elmozdulások ellen.
   let stable = 0
   for (let frame = 0; frame < 40 && !stop.signal.aborted; frame += 1) {
-    await nextFrame()
     const current = findSelector(stale)
     if (!current) break
     element = current
-    stable = align(element, gap, 'instant') ? 0 : stable + 1
+    const target = targetTop(element, gap)
+    const moved = Math.abs(window.scrollY - target) >= 1
+    if (moved) jumpTo(target)
+    stable = moved ? 0 : stable + 1
     if (stable > 8) break
+    await nextFrameOr()
   }
 
   for (const event of events) window.removeEventListener(event, cancel)
