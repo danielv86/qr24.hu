@@ -12,7 +12,7 @@ import type {
 } from '#shared/qr/types'
 
 export const DEFAULT_CUSTOMIZATION: QrCustomization = {
-  fgColor: '#0F172A',
+  fgColor: '#000000',
   bgColor: '#FFFFFF',
   dotStyle: 'square',
   cornerSquareStyle: 'square',
@@ -21,7 +21,7 @@ export const DEFAULT_CUSTOMIZATION: QrCustomization = {
   cornerDotColor: '',
   cornerSquareFill: { kind: 'solid', color: '', color2: '#2563EB', rotation: 45 },
   cornerDotFill: { kind: 'solid', color: '', color2: '#2563EB', rotation: 45 },
-  bodyFill: { kind: 'solid', color: '#0F172A', color2: '#2563EB', rotation: 45 },
+  bodyFill: { kind: 'solid', color: '#000000', color2: '#2563EB', rotation: 45 },
   bgFill: { kind: 'solid', color: '#FFFFFF', color2: '#E2E8F0', rotation: 45 },
   transparentBackground: false,
   logo: '',
@@ -123,7 +123,7 @@ export const FRAME_FONT_OPTIONS = [
 
 /** Fix, jól bevált márkaszínek a gyors színválasztáshoz. */
 export const QUICK_COLORS: { name: string; value: string }[] = [
-  { name: 'Fekete', value: '#0F172A' },
+  { name: 'Fekete', value: '#000000' },
   { name: 'Kék', value: '#2563EB' },
   { name: 'Zöld', value: '#059669' },
   { name: 'Lila', value: '#7C3AED' },
@@ -147,7 +147,7 @@ export function normalizeHexColor(value: string): string {
 
 /** A kitöltés aktuális első színe (a test színe). */
 export function fillColor(fill: QrFill): string {
-  return isValidHexColor(fill.color) ? fill.color : '#0F172A'
+  return isValidHexColor(fill.color) ? fill.color : '#000000'
 }
 
 export function isGradientFill(fill: QrFill): boolean {

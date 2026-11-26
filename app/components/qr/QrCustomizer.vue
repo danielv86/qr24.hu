@@ -394,7 +394,7 @@ const activeTemplate = computed(
             <input
               id="qr-fg-color-picker"
               type="color"
-              :value="isValidHexColor(customization.bodyFill.color) ? customization.bodyFill.color : '#0F172A'"
+              :value="isValidHexColor(customization.bodyFill.color) ? customization.bodyFill.color : '#000000'"
               class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
               aria-label="Test színének kiválasztása"
               @input="setFill('bodyFill', { color: ($event.target as HTMLInputElement).value.toUpperCase() })"
@@ -670,7 +670,7 @@ const activeTemplate = computed(
           type="range"
           class="w-full"
           min="256"
-          max="2048"
+          max="8192"
           step="128"
           :value="customization.size"
           @input="update('size', Number(($event.target as HTMLInputElement).value))"

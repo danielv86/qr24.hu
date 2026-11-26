@@ -17,7 +17,7 @@ const TEMPLATE_DEFINITIONS: Omit<QrDesignTemplate, 'logo'>[] = [
     frameColor: '#0F172A',
     labelColor: '#2563EB',
     labelTextColor: '#FFFFFF',
-    fgColor: '#0F172A',
+    fgColor: '#000000',
     bgColor: '#FFFFFF',
     dotStyle: 'square',
     cornerSquareStyle: 'square',

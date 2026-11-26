@@ -176,6 +176,8 @@ function backToType() {
             </button>
             <NuxtLink
               :to="option.to"
+              target="_blank"
+              rel="noopener noreferrer"
               class="mt-1.5 inline-flex items-center gap-1 pl-12 text-xs font-semibold text-brand-700 hover:underline"
             >
               {{ option.linkLabel }}
