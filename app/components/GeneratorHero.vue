@@ -64,10 +64,13 @@ const badges = computed(() => props.badges ?? HERO_BADGES)
       aria-hidden="true"
       class="pointer-events-none absolute inset-0 hidden h-full w-full object-cover dark:block"
     >
-    <div class="relative container-page pb-28 pt-3 sm:pt-5">
-      <AdSlot placement="top" :min-height="90" class="mx-auto max-w-3xl" />
+    <div class="relative container-page">
+      <!-- A hirdetősáv a 4rem-es térközön kívül, közvetlenül a fejléc alatt van. -->
+      <div class="pt-6">
+        <AdSlot placement="top" :min-height="90" class="mx-auto max-w-3xl" />
+      </div>
 
-      <div class="mt-7 grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div class="grid items-center gap-8 py-[4rem] lg:grid-cols-[minmax(0,1fr)_300px]">
         <div class="text-left" aria-labelledby="generator-hero-heading">
           <span class="eyebrow">
             <Icon name="lucide:sparkles" class="h-3.5 w-3.5" aria-hidden="true" />
@@ -101,9 +104,14 @@ const badges = computed(() => props.badges ?? HERO_BADGES)
         </div>
 
         <div class="hidden justify-self-end lg:block">
+          <!-- A méretek azért kellenek, hogy a kép helye már betöltés előtt foglalt
+               legyen: különben a fejléc utólag megnyúlik, és elmozdítja az alatta
+               lévő típusválasztót. -->
           <img
             :src="heroQrImage"
             alt="QR-kód előnézet"
+            width="1316"
+            height="1195"
             class="w-[280px] drop-shadow-2xl"
             loading="eager"
           >

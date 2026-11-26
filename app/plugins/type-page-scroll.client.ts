@@ -16,8 +16,9 @@ export default defineNuxtPlugin(() => {
     // Friss betöltésnél (nincs előző oldal) nem avatkozunk be.
     if (from.matched.length === 0) return
     if (!TYPE_PAGE_PATHS.has(to.path)) return
-    // Az előző oldal választója még a DOM-ban lehet, azt hagyjuk ki.
+    // Az előző oldal választója még a DOM-ban lehet, azt hagyjuk ki. Az új oldal
+    // fejléce eltérő magasságú, ezért itt azonnali az igazítás (nincs ugrás).
     const stale = document.getElementById('qr-type-selector')
-    void scrollToTypeSelector(5, stale)
+    void scrollToTypeSelector(5, stale, { animate: false })
   })
 })

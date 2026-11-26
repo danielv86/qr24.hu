@@ -135,7 +135,7 @@ useContentSeo({
     <div class="container-page py-8 lg:py-10">
       <div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18.75rem]">
         <div class="min-w-0 xl:col-span-2">
-          <QrTypeMenu class="-mt-28" scroll-to="" @select="onTypeSelect" />
+          <QrTypeMenu class="-mt-[4rem]" scroll-to="" @select="onTypeSelect" />
 
           <QrGenerator class="mt-5" :initial-type="'url'" :show-type-tabs="false" />
         </div>

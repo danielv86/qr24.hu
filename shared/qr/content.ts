@@ -1057,8 +1057,8 @@ export const QR_TYPES: QrTypeDefinition[] = [
 
 /** A főoldali típusválasztó és a generátor fülei ebben a sorrendben jelennek meg. */
 export const QR_MENU_ORDER: QrTypeId[] = [
-  'url',
   'text',
+  'url',
   'vcard',
   'contact',
   'wifi',

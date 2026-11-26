@@ -19,20 +19,30 @@ export function useQrGenerator() {
   const attempted = useState<boolean>('qr-attempted', () => false)
   /** Igaz, amíg a típusváltás töltő animációja látszik a panelen és az előnézeten. */
   const typeLoading = useState<boolean>('qr-type-loading', () => false)
-  let typeLoadingTimer: ReturnType<typeof setTimeout> | undefined
+  /** A töltő réteg beúszása, majd a váltás utáni rövid kitartás (ms). */
+  const TYPE_LOADING_IN = 220
+  const TYPE_LOADING_HOLD = 240
+  let typeLoadingToken = 0
 
   /**
-   * A típusváltás rövid töltő animációja. Fix ideig látszik, hogy a váltás
-   * érzékelhető legyen, de ne lassítsa érdemben a munkát.
+   * Típusváltás töltő animációval: előbb a glassmorphism réteg jelenik meg a régi
+   * tartalom fölött, csak utána vált a tartalom, végül a réteg eltűnik. Így a
+   * felhasználó nem a réteg alatt átvillanó adatot látja.
    */
-  function startTypeLoading(duration = 550) {
-    if (!import.meta.client) return
-    if (typeLoadingTimer) clearTimeout(typeLoadingTimer)
+  async function withTypeLoading(change: () => void): Promise<void> {
+    if (!import.meta.client) {
+      change()
+      return
+    }
+    const token = ++typeLoadingToken
     typeLoading.value = true
-    typeLoadingTimer = setTimeout(() => {
-      typeLoading.value = false
-      typeLoadingTimer = undefined
-    }, duration)
+    await new Promise(resolve => setTimeout(resolve, TYPE_LOADING_IN))
+    // Közben másik típusra kattintottak: az újabb hívás viszi tovább a folyamatot.
+    if (token !== typeLoadingToken) return
+    change()
+    await new Promise(resolve => setTimeout(resolve, TYPE_LOADING_HOLD))
+    if (token !== typeLoadingToken) return
+    typeLoading.value = false
   }
 
   const typeDefinition = computed(() => getQrType(activeType.value))
@@ -124,7 +134,7 @@ export function useQrGenerator() {
     warnings,
     attempted,
     typeLoading,
-    startTypeLoading,
+    withTypeLoading,
     selectType,
     setValue,
     markTouched,

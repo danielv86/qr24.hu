@@ -23,7 +23,7 @@ const emit = defineEmits<{
   select: [id: QrTypeId]
 }>()
 
-const { activeType, selectType, startTypeLoading } = useQrGenerator()
+const { activeType, selectType, withTypeLoading } = useQrGenerator()
 const { templates } = useQrTemplates()
 
 const current = computed<QrTypeId>(() => props.modelValue ?? activeType.value)
@@ -60,13 +60,13 @@ function isHidden(index: number): boolean {
 }
 
 function choose(id: QrTypeId) {
-  if (props.modelValue !== undefined) {
-    emit('update:modelValue', id)
-  } else {
-    startTypeLoading()
-    selectType(id)
-  }
-  emit('select', id)
+  // Előbb a töltő réteg úszik be, és csak utána vált a tartalom (és lép tovább
+  // az oldal), így nem villan át a régi/új adat a réteg alatt.
+  void withTypeLoading(() => {
+    if (props.modelValue !== undefined) emit('update:modelValue', id)
+    else selectType(id)
+    emit('select', id)
+  })
   if (import.meta.client && props.scrollTo) {
     // Ugyanaz az ugrás, mint a típusoldalakon: a választó a fix fejléc alá igazodik.
     if (props.scrollTo === 'qr-type-selector') void scrollToTypeSelector(5)
@@ -104,7 +104,7 @@ function choose(id: QrTypeId) {
           ]"
           @click="choose(type.id)"
         >
-          <Icon :name="type.icon" class="qr-type-icon h-6 w-6" aria-hidden="true" />
+          <Icon :name="type.icon" class="qr-type-icon h-8 w-8" aria-hidden="true" />
           <span class="w-full truncate text-[11px] font-medium leading-tight">{{ type.shortLabel }}</span>
         </button>
 
@@ -116,7 +116,7 @@ function choose(id: QrTypeId) {
           data-type="bulk"
           class="qr-type-tile flex h-[80px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-surface px-1 text-center text-ink-soft shadow-sm transition-colors hover:border-brand-300 hover:text-brand-700"
         >
-          <Icon name="lucide:layers" class="qr-type-icon h-6 w-6" aria-hidden="true" />
+          <Icon name="lucide:layers" class="qr-type-icon h-8 w-8" aria-hidden="true" />
           <span class="w-full truncate text-[11px] font-medium leading-tight">Tömeges</span>
         </NuxtLink>
       </div>

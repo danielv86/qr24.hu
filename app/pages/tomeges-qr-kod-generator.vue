@@ -196,7 +196,7 @@ const steps = [
 
     <div class="container-page py-8 lg:py-10">
       <QrTypeMenu
-        class="-mt-28"
+        class="-mt-[4rem]"
         :model-value="type"
         scroll-to="qr-type-selector"
         @update:model-value="selectType"

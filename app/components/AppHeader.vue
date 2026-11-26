@@ -8,10 +8,18 @@ const { t } = useI18n()
 const localePath = useLocalePath()
 const { user } = useUserSession()
 
-/** A generátor oldalain (főoldal, /qr-kod-generator) a fejléc a fejlécsáv
- * képére simul, görgetés után kap hátteret. */
+/**
+ * Minden olyan oldal, amelynek a tetején a fejlécsáv (hero) kép van: ezeken a
+ * fejléc a sávra simul, és csak görgetés után kap hátteret.
+ */
+const HERO_PATHS = [
+  '/',
+  '/qr-kod-generator',
+  '/tomeges-qr-kod-generator',
+  ...Object.values(QR_TYPE_PATHS),
+]
 const scrolled = ref(false)
-const transparentRoutes = computed(() => [localePath('/'), localePath('/qr-kod-generator')])
+const transparentRoutes = computed(() => HERO_PATHS.map(path => localePath(path)))
 const overHero = computed(() => transparentRoutes.value.includes(route.path) && !scrolled.value)
 
 let stopScrollListener: (() => void) | undefined

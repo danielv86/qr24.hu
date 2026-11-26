@@ -72,12 +72,20 @@ function animateTo(getTarget: () => number, signal: AbortSignal, duration: numbe
  * A QR-típus választóhoz görget: a fix fejlécet a választó `scroll-mt-*`
  * értékéből veszi figyelembe, a kért ráhagyással (alapból 5 px).
  *
- * Az igazítás rövid, lágy animációval történik (kb. 320 ms), csökkentett
- * mozgás beállításnál viszont azonnali. Utána néhány képkockán át figyeli,
- * hogy a késve betöltődő tartalom nem mozdította-e el a választót, és ha igen,
- * azonnal korrigál – felhasználói görgetésnél minden korrekció leáll.
+ * `animate: true` esetén rövid, lágy animáció fut (oldalon belüli váltásnál),
+ * `animate: false` esetén azonnali az igazítás. Oldalváltásnál azért kell az
+ * azonnali: az új oldal más magasságú fejléccel renderelődik, így az animáció
+ * a rossz pozícióból indulna – az látható ugrásként jelenne meg.
+ *
+ * Utána néhány képkockán át figyeli, hogy a késve betöltődő tartalom nem
+ * mozdította-e el a választót, és ha igen, azonnal korrigál – felhasználói
+ * görgetésnél minden korrekció leáll.
  */
-export async function scrollToTypeSelector(gap = 5, stale: HTMLElement | null = null): Promise<void> {
+export async function scrollToTypeSelector(
+  gap = 5,
+  stale: HTMLElement | null = null,
+  { animate = true }: { animate?: boolean } = {},
+): Promise<void> {
   if (!import.meta.client) return
 
   await nextTick()
@@ -96,7 +104,7 @@ export async function scrollToTypeSelector(gap = 5, stale: HTMLElement | null = 
   const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const
   for (const event of events) window.addEventListener(event, cancel, { passive: true, once: true })
 
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reduced = !animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const distance = Math.abs(targetTop(element, gap) - window.scrollY)
   const duration = reduced ? 0 : Math.min(420, Math.max(200, distance * 0.6))
 
@@ -107,18 +115,23 @@ export async function scrollToTypeSelector(gap = 5, stale: HTMLElement | null = 
     }, stop.signal, duration)
   }
 
-  // Pontos zárópozíció, majd néhány képkockán át az utólagos elmozdulások ellen.
-  let stable = 0
-  for (let frame = 0; frame < 40 && !stop.signal.aborted; frame += 1) {
+  // Pontos zárópozíció, majd kb. egy másodpercig figyeljük az utólagos
+  // elmozdulásokat (betűtípus, kép, hirdetés betöltése), és azonnal korrigálunk.
+  // Enélkül a választó néhányszor 10 px-et csúszna a megérkezés után.
+  const deadline = performance.now() + 1000
+  let expected = window.scrollY
+  while (!stop.signal.aborted && performance.now() < deadline) {
+    // Ha a felhasználó (vagy más) nagyot görgetett, nem húzzuk vissza.
+    if (Math.abs(window.scrollY - expected) > 60) break
     const current = findSelector(stale)
     if (!current) break
     element = current
     const target = targetTop(element, gap)
-    const moved = Math.abs(window.scrollY - target) >= 1
-    if (moved) jumpTo(target)
-    stable = moved ? 0 : stable + 1
-    if (stable > 8) break
-    await nextFrameOr()
+    if (Math.abs(window.scrollY - target) >= 1) {
+      jumpTo(target)
+      expected = target
+    }
+    await nextFrameOr(60)
   }
 
   for (const event of events) window.removeEventListener(event, cancel)

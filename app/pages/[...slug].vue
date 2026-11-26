@@ -176,7 +176,7 @@ const generatorLink = computed(() =>
 
       <div v-if="hasGenerator">
         <QrTypeMenu
-          class="-mt-28"
+          class="-mt-[4rem]"
           scroll-to=""
           @select="onTypeSelect"
         />

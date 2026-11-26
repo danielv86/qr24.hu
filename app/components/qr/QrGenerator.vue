@@ -274,7 +274,9 @@ function backToType() {
       </section>
 
       <!-- Előnézet és letöltés -->
-      <div class="min-w-0 lg:sticky lg:top-[calc(var(--header-height)+1rem)] lg:col-start-2 lg:row-start-1">
+      <!-- A relatív + z-30 azért kell, hogy a letöltés menüje (z-20) a később
+           renderelt oldalsáv („Ezen az oldalon”) fölött nyíljon ki. -->
+      <div class="relative z-30 min-w-0 lg:sticky lg:top-[calc(var(--header-height)+1rem)] lg:col-start-2 lg:row-start-1">
         <QrPreview />
       </div>
     </div>
