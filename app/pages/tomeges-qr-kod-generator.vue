@@ -2,7 +2,8 @@
 import { BULK_LIMIT, buildSequence, bulkColumns, bulkSample, parseBulkInput } from '#shared/bulk'
 import { QR_MENU_ORDER, getQrType } from '#shared/qr/content'
 import type { QrTypeId } from '#shared/qr/types'
-import type { ContentFaq } from '#shared/content/types'
+import type { ContentFaq, ContentSection, RelatedLink } from '#shared/content/types'
+import { contentAnchor } from '~/utils/content'
 
 /** A tömeges listában a szöveg az első, mert ehhez kell a legkevesebb oszlop. */
 const BULK_TYPE_ORDER: QrTypeId[] = ['text', ...QR_MENU_ORDER.filter(id => id !== 'text')]
@@ -22,9 +23,8 @@ const previewRow = computed(() => result.value.valid[0] ?? null)
 const columns = computed(() => bulkColumns(type.value))
 const placeholder = computed(() => bulkSample(type.value))
 const hint = computed(() => {
-  const keys = definition.value.fields.map(field => field.key)
   const required = definition.value.fields.filter(field => field.required).map(field => field.key)
-  return `Oszlopok: ${columns.value.join('; ')} – a név (name) elhagyható, és fejlécsor is használható.`
+  return `${definition.value.description} Oszlopok: ${columns.value.join('; ')} – a név (name) elhagyható, és fejlécsor is használható.`
     + (required.length ? ` Kötelező: ${required.join(', ')}.` : '')
 })
 
@@ -46,6 +46,73 @@ function createSequence() {
     ? `${raw.value.replace(/\n+$/, '')}\n${values.join('\n')}`
     : values.join('\n')
 }
+
+const HERO_BADGES = [
+  { label: `${typeOptions.length} QR-típus`, icon: 'lucide:layout-grid', color: 'bg-brand-100 text-brand-700' },
+  { label: `${BULK_LIMIT} kód / tétel`, icon: 'lucide:layers', color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
+  { label: 'ZIP: PNG vagy SVG', icon: 'lucide:download', color: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
+]
+
+const intro = [
+  'A tömeges generátorral egyetlen menetben készíthetsz akár száz QR-kódot ugyanazzal a motorral, mint az egyedi generátor: csak beillesztesz egy listát, feltöltesz egy CSV-t vagy előállítasz egy sorszám-sorozatot, és a kész kódokat ZIP-ben, nyomtatóíven vagy CSV-riporttal viheted tovább.',
+  'A típus kiválasztásával az oszlopok és a minta is a választott típushoz igazodik – webcím, szöveg, Wi-Fi, névjegy, kupon és a többi. A kódok a böngésződben készülnek, a lista nem kerül fel a szerverre, és fiók sem kell hozzá.',
+]
+
+const sections: ContentSection[] = [
+  {
+    heading: 'Hogyan készül el a tömeges QR-kód?',
+    paragraphs: [
+      'A lista minden érvényes sora egy-egy önálló QR-kódot eredményez. A generátor soronként összeállítja a tartalmat a választott típus mezőiből, majd ugyanazzal a beállítással rajzolja ki a képet – így a tételek kinézete egységes marad.',
+      'A feldolgozás előtt a program ellenőrzi a sorokat: jelzi a hiányzó kötelező mezőket, a hibás formátumot és az ismétlődő tartalmat. Csak az érvényes sorokból lesz kód, a hibás sorok javítására a lista mellett külön figyelmeztetést kapsz.',
+    ],
+    bullets: [
+      'Válaszd ki a típust a felső választóból – ezzel az oszlopok is beállnak.',
+      'Illessz be egy listát, tölts fel CSV-t, vagy generálj sorszám-sorozatot.',
+      'Ellenőrizd a darabszámot és a hibás sorokat, majd állítsd be a megjelenést.',
+      'Töltsd le ZIP-ben, nyomtatóíven vagy CSV-riporttal.',
+    ],
+    tip: 'A fejlécsor használatával a sorrend nem számít, csak az oszlopnevek egyezzenek a mezőnevekkel – így egy korábbi táblázatot változtatás nélkül újrahasználhatsz.',
+  },
+  {
+    heading: 'Milyen QR-kódot készíthetsz tömegesen?',
+    paragraphs: [
+      'A generátor minden típusa elérhető: webcím, szöveg, Wi-Fi, vCard névjegy, telefonszám, e-mail, SMS, WhatsApp, banki átutalás, PayPal, kupon, esemény, étlap, PDF, alkalmazás, közösségi profil, helyszín és a többi. Egy tételen belül mindig egy típus szerepel, mert az oszlopok a típus mezőihez igazodnak.',
+      'A gyakorlatban ez azt jelenti, hogy például száz különböző asztal és száz étlap-link, száz kuponkód vagy száz termék Wi-Fi-adatlapja egyetlen listából készülhet el. Ha több típusra van szükség, készíts több tételt – a beállítások a következő tételnél is megmaradnak.',
+    ],
+    bullets: [
+      'Kuponok és egyedi kódok sorszám-sorozattal, elő- és utótaggal.',
+      'Névjegyek és Wi-Fi adatok CSV-importból, fejlécsorral.',
+      'Étlapok, árlisták és események linkjei egy kattintással.',
+    ],
+  },
+  {
+    heading: 'Testreszabás és letöltés',
+    paragraphs: [
+      'A megjelenés beállításai – előtér- és háttérszín, pontok, sarokelemek, keret, logó, hibajavítási szint és csendes zóna – a teljes tételre érvényesek, így a kódok egységes arculatot kapnak. Az előnézet az első kódot mutatja, a letöltés viszont minden érvényes sort tartalmaz.',
+      'ZIP-ben fájlonként egy képet kapsz PNG vagy SVG formátumban, a fájlnevek a sorszámból és a megadott névből képződnek. A CSV-riport a fájlneveket és a tartalmat tartalmazza, az A4-es nyomtatóív pedig kivágásra kész rácsban rendezi a kódokat.',
+    ],
+    bullets: [
+      'PNG 512 vagy 1024 pixel szélességben – webes használatra és üzenetküldésre.',
+      'SVG vektorosan – nyomdai méretezéshez, minőségvesztés nélkül.',
+      'A4-es nyomtatóív – asztali kártyákhoz és szórólapokhoz.',
+      'CSV-riport – a fájlnevek és a tartalom áttekintéséhez.',
+    ],
+    tip: 'Nyomdai anyaghoz mindig SVG-t használj, és a ZIP kibontása után ellenőrizz néhány kódot a végleges méretben.',
+  },
+  {
+    heading: 'Hogyan marad jól beolvasható?',
+    paragraphs: [
+      'A tömeges gyártás legnagyobb kockázata, hogy a hiba csak a nyomtatás után derül ki. Ezért érdemes a tétel első és utolsó kódját, valamint egy-egy középső elemet beolvasni még a nyomtatás előtt – a minta ugyanis minden kódon azonos felépítésű.',
+      'A kontraszt legyen erős: sötét minta világos háttéren. A túl halvány színek, a nagy logó és a levágra kerülő csendes zóna mind rontja az olvashatóságot. Kisebb méretnél növeld a hibajavítási szintet, és hagyj elegendő üres sávot a kód körül.',
+    ],
+    bullets: [
+      'A kód körül maradjon legalább 4 modulnyi üres sáv.',
+      'Nyomtatásnál legalább 2 × 2 cm, üzleti használatban 3–4 cm.',
+      'Ne tedd tükröződő felületre vagy erős UV-fénynek kitett helyre.',
+      'Ellenőrizd a kódot legalább kétféle telefonnal, a valós méretben.',
+    ],
+  },
+]
 
 const faqs: ContentFaq[] = [
   {
@@ -75,15 +142,29 @@ const faqs: ContentFaq[] = [
   },
 ]
 
+const related: RelatedLink[] = [
+  { label: 'QR-kód generátor', to: '/qr-kod-generator', description: 'Egyedi kód élő előnézettel.' },
+  { label: 'QR-kód készítés útmutató', to: '/qr-kod-keszites', description: 'A tervezéstől a tesztelésig.' },
+  { label: 'Dinamikus QR-kód', to: '/dinamikus-qr-kod', description: 'Módosítható cél, statisztika.' },
+  { label: 'QR-kód típusok', to: '/qr-kod-tipusok', description: 'Melyik típus mire való.' },
+]
+
 useContentSeo({
   slug: '/tomeges-qr-kod-generator',
-  title: 'Tömeges QR-kód generálás – akár 100 kód, minden típusból',
+  title: 'Tömeges QR-kód generátor – akár 100 kód, minden típusból',
   description:
     'Készíts egyszerre akár 100 QR-kódot bármelyik típusból: webcím, szöveg, Wi-Fi, vCard, kupon és a többi. Illessz be listát vagy tölts fel CSV-t, használj sorszám-sorozatot, majd töltsd le ZIP-ben (PNG, SVG), A4-es nyomtatóíven vagy CSV-riporttal – fiók nélkül, a böngésződben.',
-  h1: 'Tömeges QR-kód generálás',
+  h1: 'Tömeges QR-kód generátor',
   faqs,
   isWebApp: true,
 })
+
+const tocItems = computed(() =>
+  sections.map(section => ({
+    label: section.heading,
+    href: `#${contentAnchor(section.heading)}`,
+  })),
+)
 
 const steps = [
   {
@@ -106,73 +187,30 @@ const steps = [
 
 <template>
   <div>
-    <section class="border-b border-slate-200/80 bg-surface">
-      <div class="container-page pb-9 pt-5">
-        <ContentBreadcrumbs :items="[{ label: 'Főoldal', to: '/' }, { label: 'Tömeges QR-kód generálás', to: undefined }]" />
-        <div class="mt-6 max-w-3xl">
-          <span class="eyebrow">Eszköz</span>
-          <h1 class="mt-3 text-3xl leading-tight sm:text-4xl">Tömeges QR-kód generálás</h1>
-          <p class="mt-4 text-[1.02rem] leading-relaxed text-ink-soft">
-            Készíts egyszerre akár {{ BULK_LIMIT }} QR-kódot bármelyik típusból: webcím, szöveg, Wi-Fi,
-            névjegy, kupon és a többi. Illessz be egy listát, tölts fel CSV-t vagy generálj sorszám-sorozatot,
-            majd vidd el ZIP-ben, nyomtatóíven vagy riporttal. A kódok a böngésződben készülnek.
-          </p>
+    <GeneratorHero
+      eyebrow="Eszköz"
+      heading="Tömeges QR-kód generátor"
+      description="Készíts egyszerre akár száz QR-kódot bármelyik típusból. Illessz be egy listát, tölts fel CSV-t vagy generálj sorszám-sorozatot, majd vidd el ZIP-ben, nyomtatóíven vagy riporttal – regisztráció nélkül, a böngésződben."
+      :badges="HERO_BADGES"
+    />
 
-          <ul class="mt-5 flex flex-wrap gap-2 text-xs font-medium">
-            <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">{{ typeOptions.length }} QR-típus</li>
-            <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">{{ BULK_LIMIT }} kód / tétel</li>
-            <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">ZIP: PNG vagy SVG</li>
-            <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">A4-es nyomtatóív</li>
-            <li class="rounded-full bg-brand-50 px-3 py-1 text-brand-800">Fiók nélkül</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    <div class="container-page py-8 lg:py-10">
+      <QrTypeMenu
+        class="-mt-28"
+        :model-value="type"
+        scroll-to="bulk-tool"
+        @update:model-value="selectType"
+      />
 
-    <div class="container-page py-8">
-      <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
+      <div id="bulk-tool" class="mt-5 grid scroll-mt-24 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
         <div class="space-y-6">
-          <section class="card p-5 sm:p-6" aria-labelledby="bulk-type-heading">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">1. lépés</p>
-            <h2 id="bulk-type-heading" class="mt-1 text-xl">QR-típus</h2>
-            <p class="mt-2 text-sm leading-relaxed text-ink-soft">
-              A választott típus dönti el, milyen oszlopokat vár a lista.
-            </p>
-            <div class="mt-4 flex max-h-64 flex-wrap gap-2 overflow-y-auto pr-1">
-              <button
-                v-for="option in typeOptions"
-                :key="option.id"
-                type="button"
-                :aria-pressed="type === option.id"
-                :class="[
-                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors',
-                  type === option.id
-                    ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-slate-200 bg-surface text-ink-soft hover:border-brand-300 hover:text-brand-800',
-                ]"
-                @click="selectType(option.id)"
-              >
-                <Icon :name="option.icon" class="h-4 w-4" aria-hidden="true" />
-                {{ option.shortLabel }}
-              </button>
-            </div>
-
-            <div class="mt-4 rounded-lg bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-ink-muted">
-              <span class="font-semibold text-ink">Oszlopok:</span>
-              <span class="ml-1 font-mono">{{ columns.join('; ') }}</span>
-              <span class="mt-1 block">
-                {{ definition.description }}
-              </span>
-            </div>
-          </section>
-
           <BulkInput
             v-model="raw"
             :result="result"
             :limit="BULK_LIMIT"
             :hint="hint"
             :placeholder="placeholder"
-            step-label="2. lépés"
+            step-label="1. lépés"
             title="Adatok"
           >
             <template #actions>
@@ -234,7 +272,7 @@ const steps = [
           </details>
 
           <section class="card p-5 sm:p-6" aria-labelledby="bulk-design-heading">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">3. lépés</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">2. lépés</p>
             <h2 id="bulk-design-heading" class="mt-1 text-xl">Megjelenés</h2>
             <p class="mt-2 text-sm leading-relaxed text-ink-soft">
               Ezek a beállítások minden kódra érvényesek. A jobb oldali előnézet azonnal követi a változtatásokat.
@@ -245,7 +283,7 @@ const steps = [
           </section>
 
           <section class="card p-5 sm:p-6" aria-labelledby="bulk-download-heading">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">4. lépés</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">3. lépés</p>
             <h2 id="bulk-download-heading" class="mt-1 text-xl">Letöltés</h2>
             <p class="mt-2 text-sm leading-relaxed text-ink-soft">
               {{ result.valid.length }} {{ definition.shortLabel }} kód áll készen. A ZIP-ben fájlonként egy kép és egy
@@ -353,21 +391,59 @@ const steps = [
         </aside>
       </div>
 
-      <section class="mt-12" aria-labelledby="bulk-how-heading">
-        <h2 id="bulk-how-heading" class="text-2xl">Hogyan működik?</h2>
-        <div class="mt-5 grid gap-3 sm:grid-cols-3">
-          <div v-for="step in steps" :key="step.title" class="card p-4">
-            <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
-              <Icon :name="step.icon" class="h-5 w-5" aria-hidden="true" />
-            </span>
-            <h3 class="mt-3 text-base font-semibold">{{ step.title }}</h3>
-            <p class="mt-1 text-sm leading-relaxed text-ink-soft">{{ step.text }}</p>
+      <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18.5rem]">
+        <article class="min-w-0">
+          <div class="mb-8 space-y-3 text-[1.02rem] leading-relaxed text-ink-soft">
+            <p v-for="paragraph in intro" :key="paragraph">{{ paragraph }}</p>
           </div>
-        </div>
-      </section>
 
-      <div class="mt-12 max-w-3xl">
-        <ContentFaqAccordion :faqs="faqs" heading="Gyakori kérdések a tömeges generálásról" />
+          <ContentArticle :sections="sections" :show-guide-ad="true" />
+
+          <ContentFaqAccordion :faqs="faqs" id="gyik" heading="Gyakori kérdések a tömeges generálásról" class="mt-10" />
+
+          <ContentRelatedLinks :links="related" />
+
+          <section class="mt-12" aria-labelledby="bulk-how-heading">
+            <h2 id="bulk-how-heading" class="text-2xl">Hogyan működik?</h2>
+            <div class="mt-5 grid gap-3 sm:grid-cols-3">
+              <div v-for="step in steps" :key="step.title" class="card p-4">
+                <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                  <Icon :name="step.icon" class="h-5 w-5" aria-hidden="true" />
+                </span>
+                <h3 class="mt-3 text-base font-semibold">{{ step.title }}</h3>
+                <p class="mt-1 text-sm leading-relaxed text-ink-soft">{{ step.text }}</p>
+              </div>
+            </div>
+          </section>
+        </article>
+
+        <aside class="hidden lg:block" aria-label="Oldalsáv">
+          <div class="sticky top-24 space-y-5">
+            <nav class="card p-4" aria-labelledby="toc-heading">
+              <h2 id="toc-heading" class="text-sm font-semibold text-ink">Ezen az oldalon</h2>
+              <ul class="mt-2.5 space-y-1.5">
+                <li v-for="item in tocItems" :key="item.href">
+                  <a
+                    :href="item.href"
+                    class="block rounded px-1 py-1 text-xs leading-relaxed text-ink-muted hover:text-brand-700"
+                  >
+                    {{ item.label }}
+                  </a>
+                </li>
+              </ul>
+            </nav>
+
+            <div class="card p-5">
+              <h2 class="text-base font-semibold">Egyetlen kód kell?</h2>
+              <p class="mt-2 text-sm leading-relaxed text-ink-soft">
+                Az egyedi generátorban élő előnézettel, logóval és több exportformátummal dolgozhatsz.
+              </p>
+              <NuxtLink to="/qr-kod-generator" class="btn-primary mt-3 w-full justify-center">
+                QR-kód generátor
+              </NuxtLink>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   </div>

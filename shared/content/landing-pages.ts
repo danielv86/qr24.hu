@@ -1,5 +1,6 @@
 import type { LandingPageContent } from './types'
-import { TYPE_PAGES } from './type-pages'
+import { QR_TYPE_PATHS, TYPE_PAGES } from './type-pages'
+import type { QrTypeId } from '../qr/types'
 
 const UPDATED = '2026. október 22.'
 
@@ -919,4 +920,13 @@ export const LANDING_PAGE_MAP = new Map(ALL_LANDING_PAGES.map(page => [page.slug
 
 export function getLandingPage(slug: string): LandingPageContent | undefined {
   return LANDING_PAGE_MAP.get(slug.startsWith('/') ? slug : `/${slug}`)
+}
+
+/**
+ * A QR-típushoz tartozó aloldal, ha létezik ilyen. A típusválasztó ezzel tud
+ * oldalbetöltés nélkül átlépni a megfelelő oldalra.
+ */
+export function typePagePath(id: QrTypeId): string | undefined {
+  const slug = QR_TYPE_PATHS[id]
+  return slug && LANDING_PAGE_MAP.has(slug) ? slug : undefined
 }

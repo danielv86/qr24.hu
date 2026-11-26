@@ -1,8 +1,31 @@
 <script setup lang="ts">
 import type { QrTypeId } from '#shared/qr/types'
 
+/**
+ * A típusválasztó alapból a generátor állapotát vezérli. A tömeges generátor
+ * oldala `modelValue`-vel köti be a saját típusát, ilyenkor a választás nem a
+ * generátor állapotába kerül, hanem eseményként megy vissza.
+ */
+const props = withDefaults(
+  defineProps<{
+    modelValue?: QrTypeId
+    scrollTo?: string
+  }>(),
+  {
+    modelValue: undefined,
+    scrollTo: 'qr-generator',
+  },
+)
+const emit = defineEmits<{
+  'update:modelValue': [id: QrTypeId]
+  /* Minden választásnál jelezzük, hogy az oldal szükség esetén továbbléphessen. */
+  select: [id: QrTypeId]
+}>()
+
 const { activeType, selectType } = useQrGenerator()
 const { templates } = useQrTemplates()
+
+const current = computed<QrTypeId>(() => props.modelValue ?? activeType.value)
 
 /** A választó alapból csak két sort mutat; a többi a „További QR kódok” alatt nyílik le. */
 const expanded = ref(false)
@@ -32,9 +55,11 @@ function isHidden(index: number): boolean {
 }
 
 function choose(id: QrTypeId) {
-  selectType(id)
+  if (props.modelValue !== undefined) emit('update:modelValue', id)
+  else selectType(id)
+  emit('select', id)
   if (import.meta.client) {
-    document.getElementById('qr-generator')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById(props.scrollTo)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 </script>
@@ -56,13 +81,13 @@ function choose(id: QrTypeId) {
           v-for="(type, index) in templates"
           :key="`menu-${type.id}`"
           type="button"
-          :aria-current="activeType === type.id ? 'true' : undefined"
+          :aria-current="current === type.id ? 'true' : undefined"
           :tabindex="isHidden(index) ? -1 : undefined"
           :aria-hidden="isHidden(index) ? 'true' : undefined"
           :data-type="type.id"
           :class="[
             'qr-type-tile flex h-[80px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-1 text-center shadow-sm transition-colors',
-            activeType === type.id
+            current === type.id
               ? 'border-brand-400 bg-brand-50 text-brand-700 ring-1 ring-brand-400/50'
               : 'border-slate-200 bg-surface text-ink-soft hover:border-brand-300 hover:text-brand-700',
           ]"

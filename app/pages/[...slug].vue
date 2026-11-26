@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { getLandingPage } from '#shared/content/landing-pages'
+import { getLandingPage, typePagePath } from '#shared/content/landing-pages'
 import { getLegalPage } from '#shared/content/legal-pages'
+import type { QrTypeId } from '#shared/qr/types'
 import { contentAnchor } from '~/utils/content'
 
 const route = useRoute()
 const path = route.path.replace(/\/+$/, '') || '/'
+
+// A típusoldalak ugyanazt az oldalkomponenst használják, ezért a cím (és így a
+// fejléc, a leírás és a SEO) csak akkor frissül, ha az útvonal változásakor
+// újraindul a komponens – ez kliensoldali navigációnál oldalbetöltés nélkül fut.
+definePageMeta({ key: current => current.fullPath })
+
 const landing = getLandingPage(path)
 const legal = getLegalPage(path)
 
@@ -21,6 +28,31 @@ const isLegal = Boolean(legal)
 // A típusonkénti oldalak is beágyazzák a generátort, mert a keresőből érkező
 // látogató azonnal készíthet kódot a saját típusával.
 const hasGenerator = Boolean(landing?.showGenerator || landing?.qrType)
+
+// A típusonkénti oldalon már a render előtt beállítjuk az aktív típust, hogy a
+// felső típusválasztó és a generátor ugyanazt mutassa (nincs hidratálási villanás).
+const { activeType, selectType } = useQrGenerator()
+if (landing?.qrType && activeType.value !== landing.qrType) {
+  selectType(landing.qrType)
+}
+
+const isGeneratorLanding = path === '/qr-kod-generator'
+
+/**
+ * A generátor fő oldalán helyben váltunk típust, a típusonkénti oldalakon
+ * viszont átlépünk a választott típus oldalára – kliensoldalon, oldalbetöltés
+ * nélkül, így a fejléc, a leírás és az URL is az új típushoz igazodik.
+ */
+function onTypeSelect(id: QrTypeId) {
+  if (isGeneratorLanding) return
+  const target = typePagePath(id)
+  if (target && target !== path) {
+    void navigateTo(target)
+    return
+  }
+  // Ha valamelyik típushoz nincs külön oldal, a generátor fő oldalára lépünk.
+  if (!target) void navigateTo(`/qr-kod-generator?type=${id}`)
+}
 
 useContentSeo({
   slug: path,
@@ -91,7 +123,16 @@ const generatorLink = computed(() =>
 
 <template>
   <div>
-    <section class="border-b border-slate-200/80 bg-surface">
+    <!-- A generátoros oldalak (főoldali generátor és típusonkénti oldalak) ugyanazt
+         a fejlécet kapják, csak a cím és a leírás származik az adott oldalból. -->
+    <GeneratorHero
+      v-if="hasGenerator"
+      :eyebrow="landing?.kicker"
+      :heading="page.h1"
+      :description="filledIntro"
+    />
+
+    <section v-else class="border-b border-slate-200/80 bg-surface">
       <div class="container-page pb-9 pt-5">
         <ContentBreadcrumbs :items="breadcrumbs" />
 
@@ -123,7 +164,7 @@ const generatorLink = computed(() =>
       </div>
     </section>
 
-    <div class="container-page py-8">
+    <div :class="['container-page', hasGenerator ? 'py-8 lg:py-10' : 'py-8']">
       <AdSlot
         v-if="landing && !hasGenerator"
         placement="top"
@@ -131,14 +172,20 @@ const generatorLink = computed(() =>
         class="mb-8"
       />
 
-      <QrGenerator
-        v-if="hasGenerator"
-        class="mt-2"
-        :initial-type="landing?.qrType"
-      />
+      <div v-if="hasGenerator">
+        <QrTypeMenu
+          class="-mt-28"
+          :scroll-to="isGeneratorLanding ? 'qr-generator' : ''"
+          @select="onTypeSelect"
+        />
+        <QrGenerator
+          class="mt-5"
+          :show-type-tabs="false"
+        />
+      </div>
 
       <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18.5rem]">
-        <article>
+        <article class="min-w-0">
           <div
             v-if="providerDataMissing"
             class="mb-6 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm leading-relaxed text-amber-900 dark:text-amber-200"

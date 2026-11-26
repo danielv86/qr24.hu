@@ -5,9 +5,11 @@ const { t } = useI18n()
 const localePath = useLocalePath()
 const { user } = useUserSession()
 
-/** A főoldalon a fejléc a fejlécsáv képére simul, görgetés után kap hátteret. */
+/** A generátor oldalain (főoldal, /qr-kod-generator) a fejléc a fejlécsáv
+ * képére simul, görgetés után kap hátteret. */
 const scrolled = ref(false)
-const overHero = computed(() => route.name === 'index' && !scrolled.value)
+const transparentRoutes = computed(() => [localePath('/'), localePath('/qr-kod-generator')])
+const overHero = computed(() => transparentRoutes.value.includes(route.path) && !scrolled.value)
 
 let stopScrollListener: (() => void) | undefined
 
