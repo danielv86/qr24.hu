@@ -10,7 +10,7 @@ defineProps<{
 <template>
   <header class="mb-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1">
     <span
-      class="row-start-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700"
+      class="row-start-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white"
       aria-hidden="true"
     >
       {{ num }}

@@ -76,10 +76,12 @@ function choose(id: QrTypeId) {
 </script>
 
 <template>
-  <div class="relative z-10">
+  <!-- A „További QR kódok” fül az alsó élre ül, így a kártya csak a felirat
+       szélességében mélyül, a többi részen nem keletkezik üres csík. -->
+  <div class="relative z-10 pb-[29px]">
     <nav
       id="qr-type-selector"
-      class="scroll-mt-24 rounded-2xl border border-slate-200 bg-surface p-2.5 shadow-card sm:p-3.5"
+      class="relative scroll-mt-24 rounded-2xl rounded-bl-none border border-slate-200 bg-surface p-2.5 sm:p-3.5"
       aria-label="QR-kód típus választó"
     >
       <div
@@ -120,16 +122,16 @@ function choose(id: QrTypeId) {
           <span class="w-full truncate text-[11px] font-medium leading-tight">Tömeges</span>
         </NuxtLink>
       </div>
-    </nav>
 
-    <a
-      href="#qr-type-selector"
-      class="qr-more-pulse mt-2 inline-flex items-center gap-1 px-1 text-xs font-medium text-brand-700 hover:underline"
-      :aria-expanded="expanded"
-      @click.prevent="expanded = !expanded"
-    >
-      {{ expanded ? 'Kevesebb QR-kód típus' : 'További QR kódok' }}
-      <Icon :name="expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="h-3.5 w-3.5" aria-hidden="true" />
-    </a>
+      <a
+        href="#qr-type-selector"
+        class="absolute -left-px top-full inline-flex items-center gap-1 whitespace-nowrap rounded-b-xl border border-t-0 border-slate-200 bg-surface px-[19px] pb-3 pt-0 text-xs font-medium text-brand-700"
+        :aria-expanded="expanded"
+        @click.prevent="expanded = !expanded"
+      >
+        {{ expanded ? 'Kevesebb QR-kód típus' : 'További QR kód típusok' }}
+        <Icon :name="expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="h-3.5 w-3.5" aria-hidden="true" />
+      </a>
+    </nav>
   </div>
 </template>

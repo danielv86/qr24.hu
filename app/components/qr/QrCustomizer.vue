@@ -286,8 +286,8 @@ const activeTemplate = computed(
         :class="[
           'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-semibold transition-colors',
           activeTab === tab.id
-            ? 'bg-surface text-brand-700 shadow-sm ring-1 ring-brand-200'
-            : 'text-ink-muted hover:text-ink',
+            ? 'bg-brand-600 text-white shadow-sm'
+            : 'text-brand-700 hover:bg-brand-50 dark:hover:bg-brand-950/40',
         ]"
         @click="activeTab = tab.id"
       >

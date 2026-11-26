@@ -164,14 +164,14 @@ function backToType() {
               class="flex w-full items-center gap-3 text-left"
               @click="selectMode(option.id)"
             >
-              <span
+              <Icon
+                :name="option.icon"
                 :class="[
-                  'grid h-9 w-9 shrink-0 place-items-center rounded-lg',
-                  mode === option.id ? 'bg-brand-600 text-white' : 'bg-slate-100 text-ink-soft',
+                  'h-9 w-9 shrink-0',
+                  mode === option.id ? 'text-brand-600' : 'text-ink-soft',
                 ]"
-              >
-                <Icon :name="option.icon" class="h-4.5 w-4.5" aria-hidden="true" />
-              </span>
+                aria-hidden="true"
+              />
               <span class="block text-sm font-semibold text-ink">{{ option.title }}</span>
             </button>
             <NuxtLink
