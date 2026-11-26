@@ -1,5 +1,7 @@
 import { setResponseHeader } from 'h3'
+import { sendAccountNotification, subscriptionCanceledEmail } from '../../utils/account-emails'
 import { apiSuccess, defineApiHandler } from '../../utils/api'
+import { getPublicSiteUrl } from '../../utils/config'
 import { buildSubscriptionSummary, cancelUserSubscription } from '../../utils/subscription'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { loadBillingSettings } from '../../utils/settings'
@@ -21,9 +23,21 @@ export default defineApiHandler(async (event) => {
 
   const subscription = await cancelUserSubscription(user.id)
   const [billing, plans] = await Promise.all([loadBillingSettings({ force: true }), loadPlans()])
+  const summary = buildSubscriptionSummary(subscription, plans)
+  await sendAccountNotification({
+    to: user.email,
+    kind: 'billing.canceled',
+    userId: user.id,
+    email: subscriptionCanceledEmail({
+      name: user.name,
+      summary,
+      siteUrl: getPublicSiteUrl(event),
+    }),
+  })
+
   return apiSuccess(event, {
     billing,
     plans,
-    subscription: buildSubscriptionSummary(subscription, plans),
+    subscription: summary,
   })
 })

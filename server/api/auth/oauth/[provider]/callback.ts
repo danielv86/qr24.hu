@@ -8,8 +8,10 @@ import {
   setResponseHeader,
   type H3Event,
 } from 'h3'
+import { sendAccountNotification, welcomeEmail } from '../../../../utils/account-emails'
 import { defineApiHandler, getClientIp } from '../../../../utils/api'
 import { writeAudit } from '../../../../utils/audit'
+import { getPublicSiteUrl } from '../../../../utils/config'
 import { logger } from '../../../../utils/logger'
 import {
   OAUTH_STATE_COOKIE,
@@ -20,6 +22,7 @@ import {
   unpackState,
   verifyIdToken,
 } from '../../../../utils/oauth'
+import { loadPlans } from '../../../../utils/plans'
 import { enforceRateLimit } from '../../../../utils/rate-limit'
 import { createUserSession, findOrCreateOAuthUser } from '../../../../utils/user-auth'
 
@@ -79,7 +82,7 @@ export default defineApiHandler(async (event) => {
       verifier: stored.verifier,
     })
     const identity = await verifyIdToken(provider, idToken, stored.nonce)
-    const { userId } = await findOrCreateOAuthUser({
+    const { userId, created } = await findOrCreateOAuthUser({
       provider,
       providerAccountId: identity.providerAccountId,
       email: identity.email,
@@ -87,6 +90,21 @@ export default defineApiHandler(async (event) => {
     })
     await createUserSession(event, userId)
     await writeAudit({ action: 'user.oauth_login', userId, details: { provider } })
+
+    if (created) {
+      const plans = await loadPlans()
+      await sendAccountNotification({
+        to: identity.email,
+        kind: 'account.welcome',
+        userId,
+        email: welcomeEmail({
+          name: identity.name,
+          siteUrl: getPublicSiteUrl(event),
+          plan: plans.free,
+        }),
+      })
+    }
+
     return sendRedirect(event, '/fiok', 302)
   } catch (error) {
     logger.warn('OAuth login failed', {

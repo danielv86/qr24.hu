@@ -1,7 +1,9 @@
 import { setResponseHeader } from 'h3'
+import { emailChangedEmail, sendAccountNotification } from '../../utils/account-emails'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
 import { verifyPassword } from '../../utils/auth'
+import { getPublicSiteUrl } from '../../utils/config'
 import { getPrisma, withDb } from '../../utils/db'
 import { issueVerificationCode } from '../../utils/email-verification'
 import { enforceRateLimit } from '../../utils/rate-limit'
@@ -99,5 +101,22 @@ export default defineApiHandler(async (event) => {
   }
 
   await writeAudit({ action: 'user.updated', userId: session.id })
+
+  // A régi címre megy az értesítés: ha valaki átállította a fiókot, a
+  // postafiók tulajdonosa ebből veszi észre.
+  if (data.email) {
+    await sendAccountNotification({
+      to: current.email,
+      kind: 'account.email_changed',
+      userId: session.id,
+      email: emailChangedEmail({
+        name: current.name,
+        newEmail: updated.email,
+        when: new Date(),
+        siteUrl: getPublicSiteUrl(event),
+      }),
+    })
+  }
+
   return apiSuccess(event, serializeUser(updated))
 })

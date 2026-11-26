@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto'
+import { greetingFor, renderEmail } from './account-emails'
 import { ApiProblem } from './api'
 import { getPrisma, withDb } from './db'
 import { sendMail } from './mailer'
@@ -36,60 +37,16 @@ function codeDigest(userId: bigint | number, code: string): string {
   return hashIdentifier(`email-verify:${userId}:${normalizeVerificationCode(code)}`)
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
 function verificationEmail(code: string, name?: string | null) {
-  const greeting = name?.trim() ? `Szia ${escapeHtml(name.trim())}!` : 'Szia!'
-  const text = `${greeting}
-
-A QRKOD24.hu fiókod megerősítő kódja: ${code}
-
-A kód ${VERIFICATION_TTL_MINUTES} percig érvényes, és egyszer használható.
-Ha nem te regisztráltál, hagyd figyelmen kívül ezt a levelet.
-
-QRKOD24.hu – ingyenes QR-kód generátor`
-
-  const html = `<!doctype html>
-<html lang="hu">
-<body style="margin:0;padding:24px;background:#f5f3ff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#0f172a">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #ddd6fe;border-radius:16px">
-    <tr>
-      <td style="padding:28px 28px 8px">
-        <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6d28d9">QRKOD24.hu</p>
-        <h1 style="margin:14px 0 0;font-size:22px;line-height:1.3">Erősítsd meg az e-mail-címedet</h1>
-        <p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:#475569">${greeting}</p>
-        <p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#475569">Írd be a kapott 8 karakteres kódot a regisztrációs oldalon:</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:18px 28px">
-        <div style="border-radius:12px;background:#f5f3ff;border:1px solid #ddd6fe;padding:18px;text-align:center">
-          <span style="font-size:30px;font-weight:800;letter-spacing:.22em;color:#4c1d95">${code}</span>
-        </div>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:0 28px 26px">
-        <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b">
-          A kód ${VERIFICATION_TTL_MINUTES} percig érvényes, és egyszer használható.
-          Ha nem te regisztráltál, hagyd figyelmen kívül ezt a levelet – a fiók megerősítés nélkül nem használható.
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`
-
   return {
     subject: `${code} – QRKOD24.hu e-mail megerősítő kód`,
-    html,
-    text,
+    ...renderEmail({
+      title: 'Erősítsd meg az e-mail-címedet',
+      greeting: greetingFor(name),
+      paragraphs: ['Írd be a kapott 8 karakteres kódot a regisztrációs oldalon:'],
+      code,
+      footnote: `A kód ${VERIFICATION_TTL_MINUTES} percig érvényes, és egyszer használható. Ha nem te regisztráltál, hagyd figyelmen kívül ezt a levelet – a fiók megerősítés nélkül nem használható.`,
+    }),
   }
 }
 
@@ -131,6 +88,8 @@ export async function issueVerificationCode(
 export interface VerifiedEmail {
   userId: bigint
   email: string
+  /** Most történt-e meg a megerősítés (az üdvözlő levélhez). */
+  freshlyVerified: boolean
 }
 
 /**
@@ -157,7 +116,7 @@ export async function verifyEmailCode(email: string, code: string): Promise<Veri
     throw new ApiProblem(422, 'invalid_code', 'A kód nem megfelelő vagy lejárt.')
   }
   if (row.emailVerified) {
-    return { userId: row.id, email: row.email }
+    return { userId: row.id, email: row.email, freshlyVerified: false }
   }
   if (!row.emailVerificationCodeHash || !row.emailVerificationExpiresAt) {
     throw new ApiProblem(422, 'invalid_code', 'Nincs aktív megerősítő kód. Kérj új kódot.')
@@ -197,7 +156,7 @@ export async function verifyEmailCode(email: string, code: string): Promise<Veri
     }),
   )
 
-  return { userId: row.id, email: row.email }
+  return { userId: row.id, email: row.email, freshlyVerified: true }
 }
 
 export interface ResendResult extends IssuedVerification {

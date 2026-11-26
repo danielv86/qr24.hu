@@ -1,5 +1,7 @@
 import { setResponseHeader } from 'h3'
+import { sendAccountNotification, subscriptionStartedEmail } from '../../utils/account-emails'
 import { apiSuccess, defineApiHandler } from '../../utils/api'
+import { getPublicSiteUrl } from '../../utils/config'
 import { buildSubscriptionSummary, subscribeUser } from '../../utils/subscription'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { loadBillingSettings } from '../../utils/settings'
@@ -29,9 +31,21 @@ export default defineApiHandler(async (event) => {
     loadBillingSettings({ force: true }),
     loadPlans(),
   ])
+  const summary = buildSubscriptionSummary(subscription, plans)
+  await sendAccountNotification({
+    to: user.email,
+    kind: 'billing.subscribed',
+    userId: user.id,
+    email: subscriptionStartedEmail({
+      name: user.name,
+      summary,
+      siteUrl: getPublicSiteUrl(event),
+    }),
+  })
+
   return apiSuccess(event, {
     billing,
     plans,
-    subscription: buildSubscriptionSummary(subscription, plans),
+    subscription: summary,
   })
 })

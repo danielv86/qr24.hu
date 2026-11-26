@@ -1,7 +1,10 @@
 import { setResponseHeader } from 'h3'
+import { sendAccountNotification, welcomeEmail } from '../../utils/account-emails'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
+import { getPublicSiteUrl } from '../../utils/config'
 import { verifyEmailCode } from '../../utils/email-verification'
+import { loadPlans } from '../../utils/plans'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { hashIdentifier } from '../../utils/security'
 import { createUserSession, findUserByEmail, serializeUser } from '../../utils/user-auth'
@@ -35,5 +38,20 @@ export default defineApiHandler(async (event) => {
 
   await createUserSession(event, user.id)
   await writeAudit({ action: 'user.verified', userId: user.id })
+
+  if (verified.freshlyVerified) {
+    const plans = await loadPlans()
+    await sendAccountNotification({
+      to: user.email,
+      kind: 'account.welcome',
+      userId: user.id,
+      email: welcomeEmail({
+        name: user.name,
+        siteUrl: getPublicSiteUrl(event),
+        plan: plans.free,
+      }),
+    })
+  }
+
   return apiSuccess(event, { user: serializeUser(user) })
 })

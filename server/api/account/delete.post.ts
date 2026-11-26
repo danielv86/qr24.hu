@@ -1,4 +1,5 @@
 import { setResponseHeader } from 'h3'
+import { accountDeletedEmail, sendAccountNotification } from '../../utils/account-emails'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { verifyPassword } from '../../utils/auth'
 import { getPrisma, withDb } from '../../utils/db'
@@ -51,7 +52,7 @@ export default defineApiHandler(async (event) => {
   const current = await withDb(() =>
     prisma.user.findUnique({
       where: { id: BigInt(session.id) },
-      select: { id: true, passwordHash: true },
+      select: { id: true, email: true, name: true, passwordHash: true },
     }),
   )
   if (!current) {
@@ -74,5 +75,16 @@ export default defineApiHandler(async (event) => {
 
   await deleteAccountData(current.id)
   await destroyUserSession(event)
+
+  // A fiók már nincs meg, ezért a címre közvetlenül küldjük a visszaigazolást.
+  await sendAccountNotification({
+    to: current.email,
+    kind: 'account.deleted',
+    email: accountDeletedEmail({
+      name: current.name,
+      when: new Date(),
+    }),
+  })
+
   return apiSuccess(event, { deleted: true })
 })

@@ -1,7 +1,9 @@
 import { setResponseHeader } from 'h3'
+import { passwordChangedEmail, sendAccountNotification } from '../../utils/account-emails'
 import { ApiProblem, apiSuccess, defineApiHandler, getClientIp } from '../../utils/api'
 import { writeAudit } from '../../utils/audit'
 import { hashPassword, verifyPassword } from '../../utils/auth'
+import { getPublicSiteUrl } from '../../utils/config'
 import { getPrisma, withDb } from '../../utils/db'
 import { enforceRateLimit } from '../../utils/rate-limit'
 import { requireUser, revokeOtherUserSessions } from '../../utils/user-auth'
@@ -24,7 +26,7 @@ export default defineApiHandler(async (event) => {
   const current = await withDb(() =>
     prisma.user.findUnique({
       where: { id: BigInt(session.id) },
-      select: { id: true, passwordHash: true },
+      select: { id: true, email: true, name: true, passwordHash: true },
     }),
   )
   if (!current) {
@@ -61,5 +63,17 @@ export default defineApiHandler(async (event) => {
     userId: session.id,
     details: { otherSessions },
   })
+
+  await sendAccountNotification({
+    to: current.email,
+    kind: 'account.password_changed',
+    userId: session.id,
+    email: passwordChangedEmail({
+      name: current.name,
+      siteUrl: getPublicSiteUrl(event),
+      firstTime: !current.passwordHash,
+    }),
+  })
+
   return apiSuccess(event, { updated: true, otherSessions })
 })
