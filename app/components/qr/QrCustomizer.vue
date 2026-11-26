@@ -32,7 +32,7 @@ const {
   applyTemplate,
 } = useQrCustomization()
 
-const activeTab = ref<'shapes' | 'colors' | 'logo' | 'frame'>('shapes')
+const activeTab = ref<'shapes' | 'colors' | 'logo' | 'text' | 'frame'>('shapes')
 
 // A keret és az alakzat kizárja egymást; ezt a useQrCustomization.update()
 // kezeli, hogy minden módosítási útvonalon érvényes legyen.
@@ -48,6 +48,7 @@ const tabs = [
   { id: 'shapes', label: 'Forma', icon: 'lucide:qr-code' },
   { id: 'colors', label: 'Színek', icon: 'lucide:palette' },
   { id: 'logo', label: 'Logó', icon: 'lucide:image' },
+  { id: 'text', label: 'Szöveg', icon: 'lucide:type' },
   { id: 'frame', label: 'Keret', icon: 'lucide:frame' },
 ] as const
 
@@ -242,7 +243,7 @@ const activeTemplate = computed(
     </div>
 
     <div
-      class="mt-4 grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 sm:grid-cols-4"
+      class="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 sm:grid-cols-5"
       role="tablist"
       aria-label="Testreszabási kategóriák"
     >
@@ -794,9 +795,178 @@ const activeTemplate = computed(
       </div>
     </div>
 
+    <!-- SZÖVEG -->
+    <div
+      v-else-if="activeTab === 'text'"
+      id="custom-panel-text"
+      class="mt-4 space-y-4"
+      role="tabpanel"
+      aria-labelledby="custom-tab-text"
+    >
+      <div
+        v-if="customization.frame === 'none'"
+        class="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm leading-relaxed text-ink-soft dark:border-amber-900 dark:bg-amber-950/30"
+      >
+        <p class="font-medium text-ink">A szöveg a keret része.</p>
+        <p class="mt-1">
+          Előbb válassz keretet, amelyen van felirat – például szalagot, kártyát vagy jelvényt –, itt
+          pedig beállíthatod a feliratot, a betűtípust és a színeket.
+        </p>
+        <button type="button" class="btn-secondary mt-2.5 h-9 px-3 text-sm" @click="activeTab = 'frame'">
+          Keret választása
+        </button>
+      </div>
+
+      <div
+        v-else-if="!needsLabel"
+        class="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-sm leading-relaxed text-ink-soft dark:border-amber-900 dark:bg-amber-950/30"
+      >
+        <p class="font-medium text-ink">A választott keret nem tartalmaz szöveget.</p>
+        <p class="mt-1">
+          A felirathoz, a betűtípushoz és a szövegszínhez válassz szalagos, kártya vagy jelvény típusú
+          keretet.
+        </p>
+        <button type="button" class="btn-secondary mt-2.5 h-9 px-3 text-sm" @click="activeTab = 'frame'">
+          Keret választása
+        </button>
+      </div>
+
+      <template v-else>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="qr-frame-text" class="field-label">
+              {{ pillFrame ? 'Gomb felirata' : 'Felirat a kereten' }}
+            </label>
+            <input
+              id="qr-frame-text"
+              type="text"
+              class="field-input"
+              maxlength="48"
+              placeholder="Letöltés"
+              :value="customization.frameText"
+              @input="update('frameText', ($event.target as HTMLInputElement).value)"
+            >
+          </div>
+          <div v-if="customization.frame === 'card'">
+            <label for="qr-frame-subtitle" class="field-label">Alsó kiegészítő szöveg</label>
+            <input
+              id="qr-frame-subtitle"
+              type="text"
+              class="field-input"
+              maxlength="48"
+              placeholder="PDF dokumentum"
+              :value="customization.frameSubtitle"
+              @input="update('frameSubtitle', ($event.target as HTMLInputElement).value)"
+            >
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="qr-frame-font" class="field-label">Betűtípus</label>
+            <select
+              id="qr-frame-font"
+              class="field-input"
+              :value="customization.frameFont"
+              @change="update('frameFont', ($event.target as HTMLSelectElement).value)"
+            >
+              <option v-for="font in FRAME_FONT_OPTIONS" :key="font" :value="font">{{ font }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="qr-frame-font-scale" class="field-label">
+              Szövegméret: {{ Math.round(customization.frameFontScale * 100) }}%
+            </label>
+            <input
+              id="qr-frame-font-scale"
+              type="range"
+              class="w-full"
+              min="0.7"
+              max="1.4"
+              step="0.05"
+              :value="customization.frameFontScale"
+              @input="update('frameFontScale', Number(($event.target as HTMLInputElement).value))"
+            >
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="qr-frame-color" class="field-label">Keret színe</label>
+            <div class="flex gap-2">
+              <input
+                id="qr-frame-color"
+                type="color"
+                :value="isValidHexColor(customization.frameColor) ? customization.frameColor : '#0F172A'"
+                class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
+                aria-label="Keret színének kiválasztása"
+                @input="setFill('frameFill', { color: ($event.target as HTMLInputElement).value.toUpperCase() })"
+              >
+              <input
+                type="text"
+                class="field-input font-mono uppercase"
+                :value="customization.frameColor"
+                maxlength="7"
+                spellcheck="false"
+                @change="commitHex('frame', $event)"
+              >
+            </div>
+          </div>
+          <div v-if="pillFrame">
+            <label for="qr-label-color" class="field-label">Gomb színe</label>
+            <div class="flex gap-2">
+              <input
+                id="qr-label-color"
+                type="color"
+                :value="isValidHexColor(customization.labelColor) ? customization.labelColor : '#FFFFFF'"
+                class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
+                aria-label="Gomb színének kiválasztása"
+                @input="update('labelColor', ($event.target as HTMLInputElement).value.toUpperCase())"
+              >
+              <input
+                type="text"
+                class="field-input font-mono uppercase"
+                :value="customization.labelColor"
+                maxlength="7"
+                spellcheck="false"
+                @change="commitHex('label', $event)"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="qr-label-text-color" class="field-label">Szöveg színe</label>
+          <div class="flex gap-2">
+            <input
+              id="qr-label-text-color"
+              type="color"
+              :value="isValidHexColor(customization.labelTextColor) ? customization.labelTextColor : '#0F172A'"
+              class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
+              aria-label="Szöveg színének kiválasztása"
+              @input="update('labelTextColor', ($event.target as HTMLInputElement).value.toUpperCase())"
+            >
+            <input
+              type="text"
+              class="field-input font-mono uppercase"
+              :value="customization.labelTextColor"
+              maxlength="7"
+              spellcheck="false"
+              @change="commitHex('labelText', $event)"
+            >
+          </div>
+        </div>
+
+        <p class="text-xs leading-relaxed text-ink-muted">
+          A felirat a keret része, ezért a keret és a gomb színe is itt állítható. A szöveg az
+          előnézetben és minden exportban ugyanúgy jelenik meg.
+        </p>
+      </template>
+    </div>
+
     <!-- KERET -->
     <div
-      v-else
+      v-else-if="activeTab === 'frame'"
       id="custom-panel-frame"
       class="mt-4"
       role="tabpanel"
@@ -885,132 +1055,17 @@ const activeTemplate = computed(
         <QrSilhouettePicker />
       </div>
 
-      <template v-if="needsLabel">
-        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label for="qr-frame-text" class="field-label">
-              {{ pillFrame ? 'Gomb felirata' : 'Felirat a kereten' }}
-            </label>
-            <input
-              id="qr-frame-text"
-              type="text"
-              class="field-input"
-              maxlength="48"
-              placeholder="Olvasd be telefonnal"
-              :value="customization.frameText"
-              @input="update('frameText', ($event.target as HTMLInputElement).value)"
-            >
-          </div>
-          <div v-if="customization.frame === 'card'">
-            <label for="qr-frame-subtitle" class="field-label">Alsó kiegészítő szöveg</label>
-            <input
-              id="qr-frame-subtitle"
-              type="text"
-              class="field-input"
-              maxlength="48"
-              placeholder="Instagram"
-              :value="customization.frameSubtitle"
-              @input="update('frameSubtitle', ($event.target as HTMLInputElement).value)"
-            >
-          </div>
-        </div>
-
-        <div class="mt-3 grid gap-3 sm:grid-cols-2">
-          <div>
-            <label for="qr-frame-font" class="field-label">Betűtípus</label>
-            <select
-              id="qr-frame-font"
-              class="field-input"
-              :value="customization.frameFont"
-              @change="update('frameFont', ($event.target as HTMLSelectElement).value)"
-            >
-              <option v-for="font in FRAME_FONT_OPTIONS" :key="font" :value="font">{{ font }}</option>
-            </select>
-          </div>
-          <div>
-            <label for="qr-frame-font-scale" class="field-label">
-              Szövegméret: {{ Math.round(customization.frameFontScale * 100) }}%
-            </label>
-            <input
-              id="qr-frame-font-scale"
-              type="range"
-              class="w-full"
-              min="0.7"
-              max="1.4"
-              step="0.05"
-              :value="customization.frameFontScale"
-              @input="update('frameFontScale', Number(($event.target as HTMLInputElement).value))"
-            >
-          </div>
-        </div>
-      </template>
-
-      <div v-if="customization.frame !== 'none'" class="mt-4 grid gap-3 sm:grid-cols-2">
-        <div>
-          <label for="qr-frame-color" class="field-label">Keret színe</label>
-          <div class="flex gap-2">
-            <input
-              id="qr-frame-color"
-              type="color"
-              :value="isValidHexColor(customization.frameColor) ? customization.frameColor : '#0F172A'"
-              class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
-              aria-label="Keret színének kiválasztása"
-              @input="setFill('frameFill', { color: ($event.target as HTMLInputElement).value.toUpperCase() })"
-            >
-            <input
-              type="text"
-              class="field-input font-mono uppercase"
-              :value="customization.frameColor"
-              maxlength="7"
-              spellcheck="false"
-              @change="commitHex('frame', $event)"
-            >
-          </div>
-        </div>
-        <div v-if="pillFrame">
-          <label for="qr-label-color" class="field-label">Gomb színe</label>
-          <div class="flex gap-2">
-            <input
-              id="qr-label-color"
-              type="color"
-              :value="isValidHexColor(customization.labelColor) ? customization.labelColor : '#FFFFFF'"
-              class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
-              aria-label="Gomb színének kiválasztása"
-              @input="update('labelColor', ($event.target as HTMLInputElement).value.toUpperCase())"
-            >
-            <input
-              type="text"
-              class="field-input font-mono uppercase"
-              :value="customization.labelColor"
-              maxlength="7"
-              spellcheck="false"
-              @change="commitHex('label', $event)"
-            >
-          </div>
-        </div>
-      </div>
-
-      <div v-if="labelFrame" class="mt-3">
-        <label for="qr-label-text-color" class="field-label">Szöveg színe</label>
-        <div class="flex gap-2">
-          <input
-            id="qr-label-text-color"
-            type="color"
-            :value="isValidHexColor(customization.labelTextColor) ? customization.labelTextColor : '#0F172A'"
-            class="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-surface p-1"
-            aria-label="Szöveg színének kiválasztása"
-            @input="update('labelTextColor', ($event.target as HTMLInputElement).value.toUpperCase())"
-          >
-          <input
-            type="text"
-            class="field-input font-mono uppercase"
-            :value="customization.labelTextColor"
-            maxlength="7"
-            spellcheck="false"
-            @change="commitHex('labelText', $event)"
-          >
-        </div>
-      </div>
+      <p class="mt-3 text-xs leading-relaxed text-ink-muted">
+        A keret feliratát, betűtípusát, méretét és szövegszíneit a
+        <button
+          type="button"
+          class="font-semibold text-brand-700 hover:underline"
+          @click="activeTab = 'text'"
+        >
+          Szöveg
+        </button>
+        fülön állíthatod.
+      </p>
 
       <p class="mt-3 text-xs leading-relaxed text-ink-muted">
         A keret az előnézetben és minden exportban (PNG, JPG, WebP, SVG, PDF) ugyanúgy jelenik meg.
